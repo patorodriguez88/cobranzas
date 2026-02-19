@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="utf-8" />
+        <title>Cobranzas | Control</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta content="A fully featured admin theme which can be used to build CRM, CMS, etc." name="description" />
+        <meta content="Coderthemes" name="author" />
+        <!-- App favicon -->
+        <link rel="shortcut icon" href="img/favicon.png">
+
+        <!-- Datatables css -->
+        <link href="saas/assets/css/vendor/dataTables.bootstrap5.css" rel="stylesheet" type="text/css" />
+        <link href="saas/assets/css/vendor/responsive.bootstrap5.css" rel="stylesheet" type="text/css" />
+
+        <!-- App css -->
+        <link href="saas/assets/css/icons.min.css" rel="stylesheet" type="text/css" />
+        <link href="saas/assets/css/app.min.css" rel="stylesheet" type="text/css" id="app-style"/>
+    </head>
+
+    <body class="loading" data-layout-color="light" data-leftbar-theme="dark" data-layout-mode="fluid" data-leftbar-compact-mode="condensed">
+        <!-- Begin page -->
+        <div class="wrapper">
+            <!-- ========== Left Sidebar Start ========== -->
+            <div class="leftside-menu">
+    
+                <!-- LOGO -->
+                <a href="conciliados.html" class="logo text-center logo-light">
+                    <span class="logo-lg bg-light">
+                        <img src="images/dinterDark.png" alt="" height="36">
+                    </span>
+                    <span class="logo-sm bg-white">
+                        <img src="img/icon_64.png" alt="" height="36">
+                    </span>
+                </a>
+
+                <div class="h-100 bg-light" id="leftside-menu-container" data-simplebar>
+
+                    <!--- Sidemenu -->
+                    <ul class="side-nav">
+
+                        <li class="side-nav-title side-nav-item">Menu</li>
+
+                        <li class="side-nav-item">
+                            <a data-bs-toggle="collapse1" href="https://www.dintersa.com.ar/cobranza/pendientes.html" aria-expanded="false" aria-controls="sidebarMultiLevel" class="side-nav-link">
+                                <i class="mdi mdi-archive-cancel-outline"></i>
+                                <span id="total_no_conciliados" class="badge bg-danger float-end"></span>
+                                <span> Pendientes </span>                                
+                            </a>
+                        </li>
+
+                        <li class="side-nav-item">
+                            <a href="https://www.dintersa.com.ar/cobranza/conciliados.html" class="side-nav-link">
+                                <i class="mdi mdi-archive-check-outline text-dark"></i>
+                                <span id="total_conciliados" class="badge bg-success float-end"></span>
+                                <span class="text-dark"> Conciliados </span>
+                            </a>                            
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="https://www.dintersa.com.ar/cobranza/exportados.html" class="side-nav-link">
+                                <i class="mdi mdi-cloud-download-outline"></i>
+                                <span id="total_exportados" class="badge bg-warning float-end"></span>
+                                <span> Exportados </span>
+                            </a>                            
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="https://www.dintersa.com.ar/cobranza/Clientes.html" class="side-nav-link">
+                                <i class="mdi mdi-account"></i>
+                                <span id="total_exportados" class="badge bg-warning float-end"></span>
+                                <span> Clientes </span>
+                            </a>                            
+                        </li>
+                        
+                    </ul>
+
+                    <!-- End Sidebar -->
+
+                    <div class="clearfix"></div>
+
+                </div>
+                <!-- Sidebar -left -->
+
+            </div>
+            <!-- Left Sidebar End -->
+
+            <!-- ============================================================== -->
+            <!-- Start Page Content here -->
+            <!-- ============================================================== -->
+
+            <div class="content-page">
+                <div class="content">
+                    <!-- Topbar Start -->
+                    <div class="navbar-custom">
+                        <ul class="list-unstyled topbar-menu float-end mb-0">
+                            <li class="dropdown notification-list d-lg-none">
+                                <a class="nav-link dropdown-toggle arrow-none" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="false" aria-expanded="false">
+                                    <i class="dripicons-search noti-icon"></i>
+                                </a>
+                                <div class="dropdown-menu dropdown-menu-animated dropdown-lg p-0">
+                                    <form class="p-3">
+                                        <input type="text" class="form-control" placeholder="Search ..." aria-label="Recipient's username">
+                                    </form>
+                                </div>
+                            </li>
+
+                            <li class="dropdown notification-list">
+                                     <a class="nav-link dropdown-toggle nav-user arrow-none me-0" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="false" aria-expanded="false">
+                                     <span class="account-user-avatar" > 
+                                        <div class="avatar-xs">
+                                            <span id="avatar" class="avatar-title bg-warning rounded-circle">
+                                                
+                                            </span>
+                                        </div>                                        
+                                    </span>
+                                    <span>
+                                        <span id="user_name" class="account-user-name"></span>
+                                        <span id="user_perfil" class="account-position"></span>
+                                    </span>
+                                </a>
+                                <div class="dropdown-menu dropdown-menu-end dropdown-menu-animated topbar-dropdown-menu profile-dropdown">
+
+                                <!-- item-->
+                                <a href="https://www.dintersa.com.ar/cobranza/inicio_control.html" class="dropdown-item notify-item">
+                                    <i class="mdi mdi-logout me-1"></i>
+                                    <span>Logout</span>
+                                </a>
+                                    
+                                </div>
+                            </li>
+
+                        </ul>
+                        <button class="button-menu-mobile open-left">
+                            <i class="mdi mdi-menu"></i>
+                        </button>
+                        <div class="app-search dropdown d-none d-lg-block">
+
+                        </div>
+                    </div>
+                    <!-- end Topbar -->
+
+                    <!-- Start Content-->
+                    <div class="container-fluid">
+    
+                        <!-- start page title -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="page-title-box">
+                                    <div class="page-title-right">
+                                        <ol class="breadcrumb m-0">
+                                            <li class="breadcrumb-item"><a href="javascript: void(0);">Movimientos</a></li>
+                                            <!-- <li class="breadcrumb-item"><a href="javascript: void(0);"></a></li> -->
+                                            <li class="breadcrumb-item active">Conciliados</li>
+                                        </ol>
+                                    </div>
+                                    <h4 class="page-title">Movimientos Conciliados</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- end page title --> 
+
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-body">  
+                                            <div class="col-sm-12">
+                                                <div class="text-sm-end">
+                                                    
+                                                    <button type="button" id="filtro_pendientes" class="btn btn-success mb-2 me-1">Pendientes</button>
+                                                    <button type="button" id="filtro_todos"class="btn btn-light mb-2">Todos</button>
+                                                </div>
+                                            </div><!-- end col-->
+
+                                        <table id="cobranzas_tabla" class="table dt-responsive nowrap w-100" style="max-width:100px">
+                                            <thead>
+                                                <tr>
+                                                    <th>Id</th>
+                                                    <th>Fecha | Hora</th>                                                    
+                                                    <th>Cliente</th>
+                                                    <th>Banco</th>
+                                                    <th>Importe</th>
+                                                    <th>Estado</th>
+                                                    <th>Datos</th> 
+                                                    <th style="width: 20px;">
+                                                        <div class="form-check">
+                                                            <input type="checkbox" class="form-check-input" id="selectAll">
+                                                            <label class="form-check-label" for="selectAll">&nbsp;</label>
+                                                        </div>
+                                                    </th>                                                                                                                                           
+                                                </tr>
+                                            </thead>                        
+                                            <tbody style="font-size:10px">
+                                            </tbody>
+                                        </table>
+                                        
+                                        <div class="modal-footer" style="display:none">
+                                            <div class="col-md-6">
+                                                <div class="card border-success border">
+                                                    <div class="card-body">
+                                                        <h5 class="card-title text-success">Generando Archivo de Exportacion</h5>
+                                                        <p class="card-text">Se exportaran un total de <a id="total_exportar">  </a>
+                                                             por un importe final de <a id="total_importe_exportar">  </a> .</p>
+                                                             <div class="text-sm-end">
+                                                                <a id="btn_exportar" class="btn btn-success float-right">Exportar</a>
+                                                            </div>
+                                                        <!-- <a href="javascript: void(0);" class="btn btn-success btn-sm">Button</a> -->
+                                                    </div> <!-- end card-body-->
+                                                </div> <!-- end card-->
+                                            </div> <!-- end col-->
+                                        </div>    
+                                        </div>
+                                    </div> <!-- end card-body-->
+                                </div> <!-- end card-->
+                            </div> <!-- end col -->
+                        </div>
+                        <!-- end row --> 
+                        
+                    </div> <!-- container -->
+
+                </div> <!-- content -->
+
+                <!-- Footer Start -->
+                <footer class="footer">
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <script>document.write(new Date().getFullYear())</script> © Dinter - Gestión de Cobranzas
+                            </div>
+                            <!-- <div class="col-md-6">
+                                <div class="text-md-end footer-links d-none d-md-block">
+                                    <a href="javascript: void(0);">About</a>
+                                    <a href="javascript: void(0);">Support</a>
+                                    <a href="javascript: void(0);">Contact Us</a>
+                                </div>
+                            </div> -->
+                        </div>
+                    </div>
+                </footer>
+                <!-- end Footer -->
+
+            </div>
+
+            <!-- ============================================================== -->
+            <!-- End Page content -->
+            <!-- ============================================================== -->
+
+
+        </div>
+        <!-- END wrapper -->
+
+        <!-- <div class="rightbar-overlay"></div> -->
+        <!-- /End-bar -->
+
+        <!-- bundle -->
+        <script src="saas/assets/js/vendor.min.js"></script>
+        <script src="saas/assets/js/app.min.js"></script>
+        <!-- Datatables js -->
+        <script src="saas/assets/js/vendor/jquery.dataTables.min.js"></script>
+        <script src="saas/assets/js/vendor/dataTables.bootstrap5.js"></script>
+        <script src="saas/assets/js/vendor/dataTables.responsive.min.js"></script>
+        <script src="saas/assets/js/vendor/responsive.bootstrap5.min.js"></script>
+        <!-- third party js -->
+        <script src="saas/assets/js/vendor/jquery.dataTables.min.js"></script>
+        <script src="saas/assets/js/vendor/dataTables.bootstrap5.js"></script>
+        <script src="saas/assets/js/vendor/dataTables.responsive.min.js"></script>
+        <script src="saas/assets/js/vendor/responsive.bootstrap5.min.js"></script>
+        <script src="saas/assets/js/vendor/dataTables.buttons.min.js"></script>
+        <script src="saas/assets/js/vendor/buttons.bootstrap5.min.js"></script>
+        <script src="saas/assets/js/vendor/buttons.html5.min.js"></script>
+        <script src="saas/assets/js/vendor/buttons.flash.min.js"></script>
+        <script src="saas/assets/js/vendor/buttons.print.min.js"></script>
+        <!--    enlases externos para botonera-->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+        <!--excel-->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+        <!--pdf-->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+        <!--pdf-->
+        <script src="https://cdn.datatables.net/select/1.3.3/js/dataTables.select.min.js"></script>
+
+        <script src="control/procesos/js/conexion.js"></script>                
+        <script src="control/procesos/js/totales.js"></script>
+        <script src="control/procesos/js/panel.js"></script>
+        
+
+    </body>
+</html>
