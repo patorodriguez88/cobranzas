@@ -1,1 +1,1 @@
-Sistema de cobranzas de Dinter.
+Sistema de cobranzas de Dinter S.A.
