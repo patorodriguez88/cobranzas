@@ -51,7 +51,7 @@ function enviarFormulario() {
       banco != "" &&
       noperacion != "" &&
       importe != "" &&
-      tipocomprobante != ""
+      tipooperacion != ""
     ) {
       $.ajax({
         type: "POST",
