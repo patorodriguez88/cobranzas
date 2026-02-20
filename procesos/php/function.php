@@ -2,96 +2,86 @@
 session_start();
 include_once "../../conexion/conexioni.php";
 
-if($_POST['NComprobante']==1){
+if (isset($_POST['NComprobante'])) {
 
-    $_SESSION['NComprobante']=$_POST['n'];    
-
+    $_SESSION['NComprobante'] = $_POST['n'];
 }
 
-if($_POST['Ingreso']==1){
-    
-    $doc=$_POST[doc];
-    
-    if($doc<>""){
+if (isset($_POST['Ingreso'])) {
 
-        $sql=$mysqli->query("SELECT id FROM Clientes WHERE Dni='$doc'");
-        
-            $row=$sql->fetch_array(MYSQLI_ASSOC);
-            
-            if($row['id']<>0 && $row['id']<>NULL){
+    $doc = $_POST['doc'];
 
-                $rows=array();
-            
-                $rows[]=$row;
-                
-                $_SESSION['user']=$row['id'];
+    if ($doc <> "") {
 
-                echo json_encode(array('success'=>1,'data'=>$rows));
-                
-                }else{
+        $sql = $mysqli->query("SELECT id FROM Clientes WHERE Dni='$doc'");
 
-                echo json_encode(array('success'=>0));    
+        $row = $sql->fetch_array(MYSQLI_ASSOC);
 
-            }
-        
-        }else{
-    
-        echo json_encode(array('success'=>0));    
-    
+        if ($row['id'] <> 0 && $row['id'] <> NULL) {
+
+            $rows = array();
+
+            $rows[] = $row;
+
+            $_SESSION['user'] = $row['id'];
+
+            echo json_encode(array('success' => 1, 'data' => $rows));
+        } else {
+
+            echo json_encode(array('success' => 0));
+        }
+    } else {
+
+        echo json_encode(array('success' => 0));
     }
 }
 
-if($_POST['IngresarPago']==1){
-     
- $hora = date("H:i:s");
-//BUSCO DUPLICIDAD
-$sql=$mysqli->query("SELECT * FROM Cobranza WHERE Fecha='$_POST[fecha]' AND Operacion='$_POST[noperacion]' AND
+if (isset($_POST['IngresarPago'])) {
+
+    $hora = date("H:i:s");
+    //BUSCO DUPLICIDAD
+    $sql = $mysqli->query("SELECT * FROM Cobranza WHERE Fecha='$_POST[fecha]' AND Operacion='$_POST[noperacion]' AND
 Banco='$_POST[banco]' AND Importe='$_POST[importe]'");
 
-$row=$sql->fetch_array(MYSQLI_ASSOC);
+    $row = $sql->fetch_array(MYSQLI_ASSOC);
 
-if($sql->num_rows){
-  $Alerta=1;
-}else{
-  $Alerta=0;    
+    if ($sql->num_rows) {
+        $Alerta = 1;
+    } else {
+        $Alerta = 0;
+    }
+
+    if ($mysqli->query("INSERT INTO `Cobranza`(`NombreCliente`, `NumeroCliente`, `Fecha`, `Hora`, `Banco`, `Operacion`, `Importe`,`AlertaDuplicidad`,`TipoOperacion`) 
+ VALUES ('" . $_POST['name'] . "','" . $_POST['ncliente'] . "','" . $_POST['fecha'] . "','" . $hora . "','" . $_POST['banco'] . "','" . $_POST['noperacion'] . "',
+ '" . $_POST['importe'] . "','" . $Alerta . "','" . $_POST['tipooperacion'] . "')")) {
+
+        $id = $mysqli->insert_id;
+
+        echo json_encode(array('success' => 1, 'idIngreso' => $id));
+    } else {
+
+        echo json_encode(array('success' => 0));
+    }
 }
 
- if($mysqli->query("INSERT INTO `Cobranza`(`NombreCliente`, `NumeroCliente`, `Fecha`, `Hora`, `Banco`, `Operacion`, `Importe`,`AlertaDuplicidad`) 
- VALUES ('".$_POST[name]."','".$_POST[ncliente]."','".$_POST[fecha]."','".$hora."','".$_POST[banco]."','".$_POST[noperacion]."',
- '".$_POST[importe]."','".$Alerta."')")){
 
-    $id=$mysqli->insert_id;
+if (isset($_POST['Datos'])) {
 
-    echo json_encode(array('success' => 1,'idIngreso'=>$id));
+    $id = $_SESSION['user'];
 
-    }else{
- 
-    echo json_encode(array('success' => 0));
- 
- }
+    $sql = $mysqli->query("SELECT * FROM Clientes WHERE id='$id'");
 
-}
-if($_POST['Datos']==1){
+    if ($row = $sql->fetch_array(MYSQLI_ASSOC)) {
 
-    $id=$_SESSION['user'];
+        $rows = array();
 
-    $sql=$mysqli->query("SELECT * FROM Clientes WHERE id='$id'");
-        
-    if($row=$sql->fetch_array(MYSQLI_ASSOC)){
+        $rows[] = $row;
 
-        $rows=array();
-    
-        $rows[]=$row;
-        
-        $_SESSION['user']=$row['id'];
+        $_SESSION['user'] = $row['id'];
 
-        echo json_encode(array('success'=>1,'data'=>$rows));
-        
-        }else{
+        echo json_encode(array('success' => 1, 'data' => $rows));
+    } else {
 
-        echo json_encode(array('success'=>0));    
-
+        echo json_encode(array('success' => 0));
     }
 };
-
-?>
