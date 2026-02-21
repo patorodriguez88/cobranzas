@@ -20,16 +20,23 @@ $(document).ready(function () {
       {
         data: null,
         render: function (data, type, row) {
-          return (
-            `<td>${row.Fecha}</br>` +
-            `<small class="text-muted"> ${row.Hora}</small></td>`
-          );
+          // Formato fecha dd/mm/YYYY
+          var fechaFormateada = row.Fecha
+            ? row.Fecha.split("-").reverse().join("/")
+            : "";
+
+          return `
+            ${fechaFormateada}<br>
+            <small class="text-muted">${row.Hora || ""}</small>
+          `;
         },
       },
-
       { data: "Banco" },
       { data: "Operacion" },
-      { data: "Importe" },
+      {
+        data: "Importe",
+        render: $.fn.dataTable.render.number(",", ".", 2, "$ "),
+      },
     ],
   });
 });
