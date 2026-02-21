@@ -118,7 +118,7 @@ $("#ingreso_btn").click(function () {
 
         if (jsonData.success == 1) {
           window.location.href =
-            "https://www.dintersa.com.ar/cobranza/ppp.html";
+            "https://www.dintersa.com.ar/cobranza/cargarpagos.html";
         } else {
           $("#error_text").html("Número de D.N.I. Incorrecto");
 

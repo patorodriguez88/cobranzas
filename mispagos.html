@@ -36,6 +36,7 @@
     <link rel="apple-touch-icon" href="./dinterDark.png" />
     <link rel="apple-touch-startup-image" href="./dinterDark.png" />
     <link rel="manifest" href="manifest.json" />
+    <link rel="stylesheet" href="procesos/css/app-extra.css" />
   </head>
 
   <body
@@ -76,20 +77,16 @@
       </div>
     </div>
     <!-- </div> -->
-    <footer class="footer footer-alt position-fixed">
-      <div class="tab-content">
-        <div class="tab-pane show active" id="icon-buttons-preview">
-          <div class="button-list">
-            <button type="button" class="btn btn-outline-btn-light">
-              <i class="mdi mdi-24px mdi-account-cash"></i>
-            </button>
-            <button type="button" class="btn btn-outline-btn-light">
-              <i class="mdi mdi-24px mdi-cash-plus"></i>
-            </button>
-          </div>
-        </div>
-        <!-- end preview-->
-      </div>
+    <footer class="bottomnav">
+      <a href="mispagos.html" class="bottomnav-item active" aria-current="page">
+        <i class="mdi mdi-24px mdi-account-cash"></i>
+        <span>Mis Pagos</span>
+      </a>
+
+      <a href="cargarpagos.html" class="bottomnav-item">
+        <i class="mdi mdi-24px mdi-cash-plus"></i>
+        <span>Cargar Pagos</span>
+      </a>
     </footer>
     <script src="saas/assets/js/vendor.min.js"></script>
     <script src="saas/assets/js/app.min.js"></script>

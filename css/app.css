@@ -1,0 +1,66 @@
+/* ===== Bottom nav (tipo app) ===== */
+body {
+  padding-bottom: calc(72px + env(safe-area-inset-bottom));
+}
+
+.bottomnav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  height: 72px;
+  padding-bottom: env(safe-area-inset-bottom);
+
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-around;
+
+  background: #ffffff;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.06);
+
+  z-index: 1050;
+}
+
+.bottomnav-item {
+  flex: 1;
+  height: 52px;
+  margin: 0 10px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  border-radius: 14px;
+  text-decoration: none;
+
+  color: #6c757d; /* gris bootstrap */
+  background: rgba(0, 0, 0, 0.03);
+
+  transition:
+    transform 0.08s ease,
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.bottomnav-item:active {
+  transform: scale(0.98);
+}
+
+.bottomnav-item i {
+  line-height: 1;
+}
+
+.bottomnav-item span {
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.2px;
+}
+
+.bottomnav-item.active {
+  color: #0d6efd; /* azul bootstrap */
+  background: rgba(13, 110, 253, 0.12);
+}
