@@ -1,85 +1,102 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ES">
-    <head>        
-        <meta charset="utf-8" />
-        <title>Dinter | Cargar Pagos</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta content="A fully featured admin theme which can be used to build CRM, CMS, etc." name="description" />
-        <meta content="Coderthemes" name="author" />
-        <!-- App favicon -->
-        <link rel="shortcut icon" href="img/favicon.ico">
-        <!-- App css -->
-        <link href="saas/assets/css/icons.min.css" rel="stylesheet" type="text/css" />
-        <link href="saas/assets/css/app.min.css" rel="stylesheet" type="text/css" id="app-style"/>
-        <!-- pwa -->
-        <meta name="theme-color" content="#273746">
-        <meta name="MobileOptimized" content="width">
-        <meta name="HandheldFriendly" content="true">
-        <meta name="apple-mobile-web-app-capable" content="yes">
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-        <link rel="shortcut icon" type="image/png" href="./images/dinterDark.png">
-        <link rel="apple-touch-icon" href="./dinterDark.png">
-        <link rel="apple-touch-startup-image" href="./dinterDark.png">
-        <link rel="manifest" href="manifest.json">
-    </head>
+  <head>
+    <meta charset="utf-8" />
+    <title>Dinter | Cargar Pagos</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      content="A fully featured admin theme which can be used to build CRM, CMS, etc."
+      name="description"
+    />
+    <meta content="Coderthemes" name="author" />
+    <!-- App favicon -->
+    <link rel="shortcut icon" href="img/favicon.ico" />
+    <!-- App css -->
+    <link
+      href="saas/assets/css/icons.min.css"
+      rel="stylesheet"
+      type="text/css"
+    />
+    <link
+      href="saas/assets/css/app.min.css"
+      rel="stylesheet"
+      type="text/css"
+      id="app-style"
+    />
+    <!-- pwa -->
+    <meta name="theme-color" content="#273746" />
+    <meta name="MobileOptimized" content="width" />
+    <meta name="HandheldFriendly" content="true" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <link rel="shortcut icon" type="image/png" href="./images/dinterDark.png" />
+    <link rel="apple-touch-icon" href="./dinterDark.png" />
+    <link rel="apple-touch-startup-image" href="./dinterDark.png" />
+    <link rel="manifest" href="manifest.json" />
+  </head>
 
-    <body class="loading" data-layout="topnav" data-layout-config='{"darkMode":false}'>
-        <!-- Begin page -->
-        <!-- <div class="wrapper"> -->
-            <div class="content-page">
-                <div class="content">
-                    <!-- Topbar Start -->
-                        <div class="container-fluid">
-                            <div class="row">
-                                <div class="col-12">
-                                    <div class="page-title-box">
-                                        <h4 class="page-title">Ingresos de Pagos Dinter S.A.</h4>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- LOGO -->
-                            <div class="col-12">
-                                
-                                <table class="table table-centered mb-0" id="mis_pagos">
-                                    <thead class="table-dark">
-                                        <tr>
-                                            <th>Product</th>
-                                            <th>Courier</th>
-                                            <th>Process</th>
-                                            <th>Status</th>
-                                            <th>Status</th>
-                                            <th>Status</th>
-                                            <th>Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                    </tbody>
-                                </table>
-
-                        </div>
-                    </div>
-                </div>
+  <body
+    class="loading"
+    data-layout="topnav"
+    data-layout-config='{"darkMode":false}'
+  >
+    <!-- Begin page -->
+    <!-- <div class="wrapper"> -->
+    <div class="content-page">
+      <div class="content">
+        <!-- Topbar Start -->
+        <div class="container-fluid">
+          <div class="row">
+            <div class="col-12">
+              <div class="page-title-box">
+                <h4 class="page-title">Ingresos de Pagos Dinter S.A.</h4>
+              </div>
             </div>
-    <!-- </div> -->
-    <footer class="footer footer-alt position-fixed">        
-        <div class="tab-content">
-            <div class="tab-pane show active" id="icon-buttons-preview">
-                <div class="button-list">
-                    <button type="button" class="btn btn-outline-btn-light"><i class="mdi mdi-24px mdi-account-cash"></i></button>
-                    <button type="button" class="btn btn-outline-btn-light"><i class="mdi mdi-24px mdi-cash-plus"></i></button>
-                </div>
-            </div> <!-- end preview-->
+          </div>
+
+          <!-- LOGO -->
+          <div class="col-12">
+            <table class="table table-centered mb-0" id="mis_pagos">
+              <thead class="table-dark">
+                <tr>
+                  <th>Fecha</th>
+                  <th>Operacion</th>
+                  <th>Importe</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
         </div>
-     </footer>
+      </div>
+    </div>
+    <!-- </div> -->
+    <footer class="footer footer-alt position-fixed">
+      <div class="tab-content">
+        <div class="tab-pane show active" id="icon-buttons-preview">
+          <div class="button-list">
+            <button type="button" class="btn btn-outline-btn-light">
+              <i class="mdi mdi-24px mdi-account-cash"></i>
+            </button>
+            <button type="button" class="btn btn-outline-btn-light">
+              <i class="mdi mdi-24px mdi-cash-plus"></i>
+            </button>
+          </div>
+        </div>
+        <!-- end preview-->
+      </div>
+    </footer>
     <script src="saas/assets/js/vendor.min.js"></script>
-    <script src="saas/assets/js/app.min.js"></script>    
+    <script src="saas/assets/js/app.min.js"></script>
     <script src="procesos/js/mispagos.js"></script>
-    <script src="procesos/js/conexion.js"></script>       
+    <script src="procesos/js/conexion.js"></script>
     <!-- plugin js -->
     <script src="saas/assets/js/vendor/dropzone.min.js"></script>
     <!-- init js -->
     <script src="saas/assets/js/ui/component.fileupload.js"></script>
-    <script src="./script.js"></script>       
-</body>
+    <script src="./script.js"></script>
+  </body>
 </html>

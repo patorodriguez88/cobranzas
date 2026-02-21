@@ -2,13 +2,14 @@
 session_start();
 include_once "../../conexion/conexioni.php";
 
-if ($_POST['Mis_pagos'] == 1) {
+if (isset($_POST['Mis_pagos'])) {
 
+    $Ncliente = $_SESSION['Ncliente'];
     $doc = $_POST['doc'];
 
     if ($doc <> "") {
-        $id = '10';
-        $sql = $mysqli->query("SELECT * FROM Conciliados WHERE NumeroCliente='$id'");
+
+        $sql = $mysqli->query("SELECT * FROM Cobranza WHERE NumeroCliente='$Ncliente' ORDER BY id DESC");
 
         $row = $sql->fetch_array(MYSQLI_ASSOC);
 
