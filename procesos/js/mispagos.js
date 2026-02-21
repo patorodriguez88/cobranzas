@@ -11,7 +11,7 @@ $(document).ready(function () {
       [10, 25, 50, "All"],
     ],
     ajax: {
-      url: "control/procesos/php/mispagos.php",
+      url: "procesos/php/mispagos.php",
       data: { Mis_pagos: 1 },
       type: "post",
     },
