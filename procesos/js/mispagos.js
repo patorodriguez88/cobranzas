@@ -60,42 +60,58 @@ $(document).ready(function () {
     columns: [
       { data: "id", defaultContent: "" },
 
+      // FECHA
       {
         data: null,
         defaultContent: "",
         render: function (data, type, row) {
-          var fecha = row.Fecha ? row.Fecha.split("-").reverse().join("/") : "";
-          var hora = row.Hora || "";
+          const fecha = row.Fecha
+            ? row.Fecha.split("-").reverse().join("/")
+            : "";
+          const hora = row.Hora || "";
           return `
-            <div class="dt-fecha">
-              <div class="dt-fecha-main">${fecha}</div>
-              ${hora ? `<div class="dt-fecha-sub">${hora}</div>` : ""}
-            </div>
-          `;
+        <div class="mp-fecha">
+          <div class="mp-fecha-main">${fecha}</div>
+          ${hora ? `<div class="mp-fecha-sub">${hora}</div>` : ""}
+        </div>
+      `;
         },
       },
 
+      // BANCO + OPERACIÓN (en el mismo bloque visual)
       {
-        data: "Banco",
+        data: null,
         defaultContent: "",
         render: function (data, type, row) {
-          return `<span class="badge bg-light text-dark border dt-banco">${data || ""}</span><br>
-          <span class="badge bg-dark-lighten text-dark border dt-banco">${row["Operacion"] || ""}</span><br>
-          <span class="badge bg-warning-lighten text-dark border dt-banco">${row["TipoOperacion"] || ""}</span>`;
+          const banco = row.Banco || "-";
+          const op = row.Operacion || "";
+          const tipo = (row.Tipo || "").toLowerCase(); // si tenés campo tipo (transferencia/deposito)
+          const pillClass =
+            tipo === "transferencia"
+              ? "mp-pill mp-pill-warn"
+              : tipo === "deposito"
+                ? "mp-pill mp-pill-info"
+                : "mp-pill mp-pill-muted";
+
+          return `
+        <div class="mp-bank">
+          <div class="mp-bank-name">${banco}</div>
+          ${op ? `<div class="mp-bank-op">${escapeHtml(op)}</div>` : ""}
+          ${tipo ? `<div class="${pillClass}">${escapeHtml(tipo)}</div>` : ""}
+        </div>
+      `;
         },
       },
 
-      { data: "Operacion", defaultContent: "" },
-
+      // IMPORTE
       {
         data: "Importe",
         defaultContent: "",
         render: function (data) {
-          // mantiene tu formato $ con 2 decimales
           const formatted = $.fn.dataTable.render
             .number(",", ".", 2, "$ ")
             .display(data || 0);
-          return `<span class="dt-importe">${formatted}</span>`;
+          return `<div class="mp-amount">${formatted}</div>`;
         },
       },
     ],
@@ -119,3 +135,17 @@ $(document).ready(function () {
     ],
   });
 });
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"'`=\/]/g, function (s) {
+    return {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;",
+      "/": "&#x2F;",
+      "`": "&#x60;",
+      "=": "&#x3D;",
+    }[s];
+  });
+}
