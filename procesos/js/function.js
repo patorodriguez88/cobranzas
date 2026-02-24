@@ -120,7 +120,7 @@ $("#ingreso_btn").click(function () {
           window.location.href =
             "https://www.dintersa.com.ar/cobranza/cargarpagos.html";
         } else {
-          $("#error_text").html("Número de D.N.I. Incorrecto");
+          $("#error_text").html(jsonData.error);
 
           $("#error_alert").css("display", "block");
         }
