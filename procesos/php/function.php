@@ -13,26 +13,43 @@ if (isset($_POST['Ingreso'])) {
 
     if ($doc <> "") {
 
-        $sql = $mysqli->query("SELECT id FROM Clientes WHERE Dni='$doc' AND Suspendido=0");
+        $sql = $mysqli->query("SELECT id FROM Clientes WHERE Dni='$doc'");
 
-        $row = $sql->fetch_array(MYSQLI_ASSOC);
+        if ($row = $sql->fetch_array(MYSQLI_ASSOC)) {
 
-        if ($row['id'] <> 0 && $row['id'] <> NULL) {
+            // 🔴 Caso 1: Cliente suspendido
+            if ((int)$row['Suspendido'] === 1) {
+                echo json_encode([
+                    'success' => 0,
+                    'error'   => 'Cliente no habilitado para carga de comprobantes. Comuníquese con administración.'
+                ]);
+                exit;
+            }
 
-            $rows = array();
+            // 🟡 Caso 2: Cliente sin número
+            if (empty($row['Ncliente'])) {
+                echo json_encode([
+                    'success' => 0,
+                    'error'   => 'No se encuentra el número de cliente.'
+                ]);
+                exit;
+            }
 
-            $rows[] = $row;
+            // 🟢 Caso 3: Cliente activo OK
+            $_SESSION['ncliente_cobranza'] = $row['Ncliente'];
 
-            $_SESSION['user_cobranza'] = $row['id'];
-
-            echo json_encode(array('success' => 1, 'data' => $rows));
+            echo json_encode([
+                'success' => 1,
+                'data'    => [$row]
+            ]);
         } else {
 
-            echo json_encode(array('success' => 0));
+            // ❌ No existe
+            echo json_encode([
+                'success' => 0,
+                'error'   => 'Cliente inexistente.'
+            ]);
         }
-    } else {
-
-        echo json_encode(array('success' => 0));
     }
 }
 
