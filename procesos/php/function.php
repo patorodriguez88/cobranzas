@@ -37,6 +37,7 @@ if (isset($_POST['Ingreso'])) {
 
             // 🟢 Caso 3: Cliente activo OK
             $_SESSION['ncliente_cobranza'] = $row['Ncliente'];
+            $_SESSION['user_cobranza'] = $row['id'];
 
             echo json_encode([
                 'success' => 1,
