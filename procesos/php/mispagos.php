@@ -4,10 +4,10 @@ include_once "../../conexion/conexioni.php";
 
 if (isset($_POST['Mis_pagos'])) {
 
-    $Ncliente = $_SESSION['Ncliente'];
-    $doc = $_POST['doc'];
+    $Ncliente = intval($_SESSION['Ncliente']);
 
-    if ($doc <> "") {
+
+    if ($Ncliente <> 0 && $Ncliente <> NULL) {
 
         $sql = $mysqli->query("SELECT * FROM Cobranza WHERE NumeroCliente='$Ncliente' ORDER BY id DESC");
 
