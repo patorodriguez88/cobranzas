@@ -4,7 +4,7 @@ session_start();
 
 if (isset($_POST['comprueba'])) {
 
-  if ($_SESSION['user'] == "") {
+  if ($_SESSION['user_cobranza'] == "") {
 
     echo json_encode(array('success' => 0));
   } else {

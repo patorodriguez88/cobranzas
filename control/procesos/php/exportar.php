@@ -4,114 +4,103 @@ include_once "../../../conexion/conexioni.php";
 date_default_timezone_set("America/Argentina/Cordoba");
 
 //EXPORTADO
-if($_POST['Exportado']==1){
-    
-    $User=$_SESSION['user'];
+if (isset($_POST['Exportado'])) {
 
-   if($mysqli->query("UPDATE Cobranza_exportados SET Descargas=Descargas+1,Estado='Descargado',Usuario='".$User."' WHERE id='".$_POST['id']."'")){
-    
-    echo json_encode(array('success'=>1));   
-   
-    }else{
+    $User = $_SESSION['user_cobranza'];
 
-    echo json_encode(array('success'=>0));   
+    if ($mysqli->query("UPDATE Cobranza_exportados SET Descargas=Descargas+1,Estado='Descargado',Usuario='" . $User . "' WHERE id='" . $_POST['id'] . "'")) {
 
-   }
+        echo json_encode(array('success' => 1));
+    } else {
 
+        echo json_encode(array('success' => 0));
+    }
 }
 
 //TABLA EXPORTADOS
-if($_POST['Tabla_exportados']==1){
+if (isset($_POST['Tabla_exportados'])) {
 
-    $sql=$mysqli->query("SELECT Cobranza_exportados.*,usuarios.Usuario as User FROM Cobranza_exportados LEFT JOIN usuarios ON usuarios.id=Cobranza_exportados.Usuario");
-    
-    $rows=array();
-    
-    while($row=$sql->fetch_array(MYSQLI_ASSOC)){
-        
-        $rows[]=$row;
+    $sql = $mysqli->query("SELECT Cobranza_exportados.*,usuarios.Usuario as User FROM Cobranza_exportados LEFT JOIN usuarios ON usuarios.id=Cobranza_exportados.Usuario");
+
+    $rows = array();
+
+    while ($row = $sql->fetch_array(MYSQLI_ASSOC)) {
+
+        $rows[] = $row;
     }
-    
-    echo json_encode(array('data'=>$rows));        
 
+    echo json_encode(array('data' => $rows));
 }
 
-if($_POST['Exportar_ver']==1){
+if (isset($_POST['Exportar_ver'])) {
 
-    $dato=join(',',$_POST['id_cobranza']);   
-    $sql=$mysqli->query("SELECT SUM(Importe)as total FROM Cobranza_conciliacion WHERE id_cobranza IN($dato)");
-    $row=$sql->fetch_array(MYSQLI_ASSOC);
+    $dato = join(',', $_POST['id_cobranza']);
+    $sql = $mysqli->query("SELECT SUM(Importe)as total FROM Cobranza_conciliacion WHERE id_cobranza IN($dato)");
+    $row = $sql->fetch_array(MYSQLI_ASSOC);
 
-    echo json_encode(array('success'=>1,'total'=>$row[total]));
-
+    echo json_encode(array('success' => 1, 'total' => $row['total']));
 }
 
 
-if($_POST['Exportar']==1){
+if (isset($_POST['Exportar'])) {
 
-$Fecha=date('Ymd');
-$Hora=date('H:i:s');
-$User=$_SESSION['user'];
+    $Fecha = date('Ymd');
+    $Hora = date('H:i:s');
+    $User = $_SESSION['user_cobranza'];
 
-// $name=date('dmY H:i:s');    
-// $fichero = 'exportaciones/'.$name.'.txt';
-// Abre el fichero para obtener el contenido existente
-// $actual = file_get_contents($fichero);
+    // $name=date('dmY H:i:s');    
+    // $fichero = 'exportaciones/'.$name.'.txt';
+    // Abre el fichero para obtener el contenido existente
+    // $actual = file_get_contents($fichero);
 
-//si se crea el archivo correctamente genero un nuevo registro en exportacion
+    //si se crea el archivo correctamente genero un nuevo registro en exportacion
 
-$dato=join(',',$_POST['id_cobranza']);   
+    $dato = join(',', $_POST['id_cobranza']);
 
-$sql=$mysqli->query("SELECT SUM(Importe)as total,COUNT(id)as registros FROM Cobranza_conciliacion WHERE id_cobranza IN($dato)");
-$row=$sql->fetch_array(MYSQLI_ASSOC);
-$Total=$row['total'];
-$Registros=$row['registros'];;
+    $sql = $mysqli->query("SELECT SUM(Importe)as total,COUNT(id)as registros FROM Cobranza_conciliacion WHERE id_cobranza IN($dato)");
+    $row = $sql->fetch_array(MYSQLI_ASSOC);
+    $Total = $row['total'];
+    $Registros = $row['registros'];;
 
-if($mysqli->query("INSERT INTO `Cobranza_exportados`(`Fecha`, `Hora`,`Total`,`Registros`,`Estado`,`Usuario`) VALUES ('{$Fecha}','{$Hora}','{$Total}','{$Registros}','Generado','{$User}')")!=null){
+    if ($mysqli->query("INSERT INTO `Cobranza_exportados`(`Fecha`, `Hora`,`Total`,`Registros`,`Estado`,`Usuario`) VALUES ('{$Fecha}','{$Hora}','{$Total}','{$Registros}','Generado','{$User}')") != null) {
 
-    $name=$mysqli->insert_id;        
-    
-    $filled_int = sprintf("%08d", $name);
+        $name = $mysqli->insert_id;
 
-    // console.log('exportar',$name);
+        $filled_int = sprintf("%08d", $name);
 
-    $fichero = 'exportaciones/'.$filled_int.'.csv';
-    
-    for($i=0;$i<count($_POST['id_cobranza']);$i++){
-    
-    $dato=$_POST['id_cobranza'][$i];   
+        // console.log('exportar',$name);
 
-    $sql=$mysqli->query("SELECT Fecha,NumeroCliente,Importe,Banco,Operacion FROM Cobranza_conciliacion WHERE id_cobranza='$dato'");
-    $row=$sql->fetch_array(MYSQLI_ASSOC);
+        $fichero = 'exportaciones/' . $filled_int . '.csv';
 
-    if($row['Banco']=='Banco Macro'){
-        $Banco='03';
-    }else{
-        $Banco='04';
-    }
+        for ($i = 0; $i < count($_POST['id_cobranza']); $i++) {
 
-    // Añade un nuevo dato al archivo
-    $actual .= $_POST['id_cobranza'][$i].",".$row['Fecha'].",".$row['NumeroCliente'].",".$Banco.",".$row['Operacion'].",".$row['Importe']."\n";
+            $dato = $_POST['id_cobranza'][$i];
 
-    }
+            $sql = $mysqli->query("SELECT Fecha,NumeroCliente,Importe,Banco,Operacion FROM Cobranza_conciliacion WHERE id_cobranza='$dato'");
+            $row = $sql->fetch_array(MYSQLI_ASSOC);
 
-    // Escribe el contenido al archivo
-    if(file_put_contents($fichero, $actual)){
-        
-        for($i=0;$i<count($_POST['id_cobranza']);$i++){    
-        
-            $mysqli->query("UPDATE Cobranza_conciliacion SET Exportado='$filled_int',Estado='Exportado' WHERE id_cobranza='".$_POST['id_cobranza'][$i]."'");
-        
+            if ($row['Banco'] == 'Banco Macro') {
+                $Banco = '03';
+            } else {
+                $Banco = '04';
+            }
+
+            // Añade un nuevo dato al archivo
+            $actual .= $_POST['id_cobranza'][$i] . "," . $row['Fecha'] . "," . $row['NumeroCliente'] . "," . $Banco . "," . $row['Operacion'] . "," . $row['Importe'] . "\n";
         }
 
-        echo json_encode(array('success'=>1,'name'=>$filled_int));
+        // Escribe el contenido al archivo
+        if (file_put_contents($fichero, $actual)) {
 
-    }else{
-    
-        echo json_encode(array('success'=>0));    
+            for ($i = 0; $i < count($_POST['id_cobranza']); $i++) {
+
+                $mysqli->query("UPDATE Cobranza_conciliacion SET Exportado='$filled_int',Estado='Exportado' WHERE id_cobranza='" . $_POST['id_cobranza'][$i] . "'");
+            }
+
+            echo json_encode(array('success' => 1, 'name' => $filled_int));
+        } else {
+
+            echo json_encode(array('success' => 0));
+        }
     }
 }
-
-
-}
-?>

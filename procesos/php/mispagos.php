@@ -4,7 +4,7 @@ include_once "../../conexion/conexioni.php";
 
 if (isset($_POST['Mis_pagos'])) {
 
-    $Ncliente = intval($_SESSION['Ncliente']);
+    $Ncliente = intval($_SESSION['ncliente_cobranza']);
 
 
     if ($Ncliente <> 0 && $Ncliente <> NULL) {
@@ -19,7 +19,6 @@ if (isset($_POST['Mis_pagos'])) {
 
             $rows[] = $row;
 
-            $_SESSION['user'] = $row['id'];
 
             echo json_encode(array('success' => 1, 'data' => $rows));
         } else {

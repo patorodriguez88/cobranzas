@@ -13,7 +13,7 @@ if (isset($_POST['Ingreso'])) {
 
     if ($doc <> "") {
 
-        $sql = $mysqli->query("SELECT id FROM Clientes WHERE Dni='$doc'");
+        $sql = $mysqli->query("SELECT id FROM Clientes WHERE Dni='$doc' AND Suspendido=0");
 
         $row = $sql->fetch_array(MYSQLI_ASSOC);
 
@@ -23,7 +23,7 @@ if (isset($_POST['Ingreso'])) {
 
             $rows[] = $row;
 
-            $_SESSION['user'] = $row['id'];
+            $_SESSION['user_cobranza'] = $row['id'];
 
             echo json_encode(array('success' => 1, 'data' => $rows));
         } else {
@@ -67,9 +67,9 @@ Banco='$_POST[banco]' AND Importe='$_POST[importe]'");
 
 if (isset($_POST['Datos'])) {
 
-    $id = $_SESSION['user'];
+    $id = $_SESSION['user_cobranza'];
 
-    $sql = $mysqli->query("SELECT * FROM Clientes WHERE id='$id'");
+    $sql = $mysqli->query("SELECT * FROM Clientes WHERE id='$id' AND Suspendido=0");
 
     if ($row = $sql->fetch_array(MYSQLI_ASSOC)) {
 
@@ -77,8 +77,12 @@ if (isset($_POST['Datos'])) {
 
         $rows[] = $row;
 
-        $_SESSION['user'] = $row['id'];
-        $_SESSION['Ncliente'] = $row['Ncliente'];
+        $_SESSION['ncliente_cobranza'] = $row['Ncliente'];
+
+        if ($row['Ncliente'] == 0 || $row['Ncliente'] == NULL) {
+
+            echo json_encode(array('success' => 0, 'error' => 'No se encuentra el número de cliente'));
+        }
 
         echo json_encode(array('success' => 1, 'data' => $rows));
     } else {
