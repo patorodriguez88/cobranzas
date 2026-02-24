@@ -164,3 +164,27 @@ table.dataTable thead .sorting_desc:before,
 table.dataTable thead .sorting_desc:after {
   opacity: 0.25;
 }
+/* bloque importe + estado */
+.mp-amount-block {
+  text-align: right;
+}
+
+.mp-amount {
+  font-weight: 900;
+  font-size: 1rem;
+}
+
+/* estado */
+.mp-status {
+  font-size: 0.75rem;
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+.mp-status-ok {
+  color: #198754; /* verde bootstrap */
+}
+
+.mp-status-pending {
+  color: #dc3545; /* rojo bootstrap */
+}

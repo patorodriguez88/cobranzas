@@ -102,13 +102,25 @@ $(document).ready(function () {
 
       // IMPORTE
       {
-        data: "Importe",
+        data: null,
         defaultContent: "",
-        render: function (data) {
+        render: function (data, type, row) {
           const formatted = $.fn.dataTable.render
             .number(",", ".", 2, "$ ")
-            .display(data || 0);
-          return `<div class="mp-amount">${formatted}</div>`;
+            .display(row.Importe || 0);
+
+          const confirmado = parseInt(row.Conciliado) === 1;
+
+          const estadoHtml = confirmado
+            ? `<div class="mp-status mp-status-ok">Confirmado</div>`
+            : `<div class="mp-status mp-status-pending">Pendiente</div>`;
+
+          return `
+      <div class="mp-amount-block">
+        <div class="mp-amount">${formatted}</div>
+        ${estadoHtml}
+      </div>
+    `;
         },
       },
     ],
