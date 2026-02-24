@@ -78,8 +78,10 @@ $(document).ready(function () {
       {
         data: "Banco",
         defaultContent: "",
-        render: function (data) {
-          return `<span class="badge bg-light text-dark border dt-banco">${data || ""}</span>`;
+        render: function (data, type, row) {
+          return `<span class="badge bg-light text-dark border dt-banco">${data || ""}</span><br>
+          <span class="badge bg-dark-lighten text-dark border dt-banco">${row["Operacion"] || ""}</span><br>
+          <span class="badge bg-warning-lighten text-dark border dt-banco">${row["TipoOperacion"] || ""}</span>`;
         },
       },
 
