@@ -115,11 +115,41 @@ $(document).ready(function () {
       {
         data: null,
         render: function (data, type, row) {
-          return (
-            `<td>${row.RazonSocial}</br>` +
-            `<small class="text-muted h8">${row.Direccion}</small></br>` +
-            `<small class="text-muted">${row.Ciudad}</small></td>`
-          );
+          const razon = row.RazonSocial || "";
+          const dir = row.Direccion || "";
+          const ciudad = row.Ciudad || "";
+
+          if (parseInt(row.Suspendido) === 1) {
+            return `
+        <div>
+          <a class="text-danger" style="cursor:pointer" onclick="alerta()">
+            <del>${escapeHtml(razon)}</del>
+          </a><br>
+          <small class="text-muted">
+            <a class="text-danger" style="cursor:pointer" onclick="alerta()">
+              <del>${escapeHtml(dir)}</del>
+            </a>
+          </small><br>
+          <small class="text-muted">${escapeHtml(ciudad)}</small>
+        </div>
+      `;
+          }
+
+          return `
+      <div>
+        <a style="cursor:pointer" onclick="editar_nombre(${row.id})">
+          <i class="mdi mdi-pencil-outline"></i> ${escapeHtml(razon)}
+        </a><br>
+
+        <small class="text-muted">
+          <a style="cursor:pointer" onclick="editar_direccion(${row.id})">
+            <i class="mdi mdi-map-marker-outline"></i> ${escapeHtml(dir)}
+          </a>
+        </small><br>
+
+        <small class="text-muted">${escapeHtml(ciudad)}</small>
+      </div>
+    `;
         },
       },
       {
@@ -152,9 +182,7 @@ $(document).ready(function () {
       {
         data: null,
         render: function (data, type, row) {
-          if (row.Suspendido == 1) {
-            return `<td><i onclick="modificar_cliente('${row.id}',0)" style="cursor:point" class="mdi mdi-18px mdi-face-man-shimmer text-primary"></i></td>`;
-          }
+          return `<td><i onclick="modificar_cliente('${row.id}',0)" style="cursor:point" class="mdi mdi-18px mdi-face-man-shimmer text-primary"></i></td>`;
         },
       },
     ],
@@ -190,3 +218,80 @@ function modificar_status(id, status) {
     },
   });
 }
+function editar_nombre(id) {
+  $("#id_nombre").val(id);
+
+  $.ajax({
+    type: "POST",
+    url: "control/procesos/php/clientes.php",
+    data: { Nombre_search: 1, id: id },
+    success: function (response) {
+      const jsonData = JSON.parse(response);
+      $("#nombre_text").val(jsonData.Dato || "");
+      $("#modal_nombre").modal("show");
+    },
+  });
+}
+
+$("#modal_nombre_btn_ok").click(function () {
+  const id = $("#id_nombre").val();
+  const nombre = $("#nombre_text").val();
+
+  $.ajax({
+    type: "POST",
+    url: "control/procesos/php/clientes.php",
+    data: { Nombre: 1, id: id, Nombre_text: nombre },
+    success: function (response) {
+      const dt = $("#clientes_tabla").DataTable();
+      dt.ajax.reload(null, false); // no reset page
+      $("#modal_nombre").modal("hide");
+
+      $.NotificationApp.send(
+        "Éxito!",
+        "Modificamos el nombre del cliente.",
+        "bottom-right",
+        "#FFFFFF",
+        "success",
+      );
+    },
+  });
+});
+
+function editar_direccion(id) {
+  $("#id_direccion").val(id);
+
+  $.ajax({
+    type: "POST",
+    url: "control/procesos/php/clientes.php",
+    data: { Direccion_search: 1, id: id },
+    success: function (response) {
+      const jsonData = JSON.parse(response);
+      $("#direccion_text").val(jsonData.Dato || "");
+      $("#modal_direccion").modal("show");
+    },
+  });
+}
+
+$("#modal_direccion_btn_ok").click(function () {
+  const id = $("#id_direccion").val();
+  const dir = $("#direccion_text").val();
+
+  $.ajax({
+    type: "POST",
+    url: "control/procesos/php/clientes.php",
+    data: { Direccion: 1, id: id, Direccion_text: dir },
+    success: function (response) {
+      const dt = $("#clientes_tabla").DataTable();
+      dt.ajax.reload(null, false);
+      $("#modal_direccion").modal("hide");
+
+      $.NotificationApp.send(
+        "Éxito!",
+        "Modificamos la dirección del cliente.",
+        "bottom-right",
+        "#FFFFFF",
+        "success",
+      );
+    },
+  });
+});

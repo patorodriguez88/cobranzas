@@ -60,3 +60,36 @@ if (isset($_POST['Status'])) {
         echo json_encode(array('success' => 0));
     }
 }
+// NOMBRE / RAZON SOCIAL
+if (isset($_POST['Nombre_search'])) {
+    $id = (int)$_POST['id'];
+    $sql = $mysqli->query("SELECT RazonSocial FROM Clientes WHERE id='$id'");
+    $row = $sql->fetch_array(MYSQLI_ASSOC);
+    echo json_encode(['success' => 1, 'Dato' => $row['RazonSocial'] ?? '']);
+    exit;
+}
+
+if (isset($_POST['Nombre'])) {
+    $id = (int)$_POST['id'];
+    $nombre = $mysqli->real_escape_string($_POST['Nombre_text']);
+    $mysqli->query("UPDATE Clientes SET RazonSocial='$nombre' WHERE id='$id'");
+    echo json_encode(['success' => 1]);
+    exit;
+}
+
+// DIRECCION
+if (isset($_POST['Direccion_search'])) {
+    $id = (int)$_POST['id'];
+    $sql = $mysqli->query("SELECT Direccion FROM Clientes WHERE id='$id'");
+    $row = $sql->fetch_array(MYSQLI_ASSOC);
+    echo json_encode(['success' => 1, 'Dato' => $row['Direccion'] ?? '']);
+    exit;
+}
+
+if (isset($_POST['Direccion'])) {
+    $id = (int)$_POST['id'];
+    $dir = $mysqli->real_escape_string($_POST['Direccion_text']);
+    $mysqli->query("UPDATE Clientes SET Direccion='$dir' WHERE id='$id'");
+    echo json_encode(['success' => 1]);
+    exit;
+}
