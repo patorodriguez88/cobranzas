@@ -170,6 +170,42 @@
       </div>
     </div>
   </div>
+
+  <!-- MODAL RECORRIDO -->
+  <div
+    class="modal fade"
+    id="modal_recorrido"
+    tabindex="-1"
+    role="dialog"
+    aria-hidden="true"
+  >
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">Modificar Recorrido</h4>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+          ></button>
+        </div>
+        <div class="modal-body">
+          <label class="form-label">Recorrido</label>
+          <input id="recorrido_text" type="text" class="form-control mb-3" />
+          <input type="hidden" id="id_recorrido" />
+          <div class="text-end">
+            <button class="btn btn-danger me-2" data-bs-dismiss="modal">
+              Cancelar
+            </button>
+            <button id="modal_recorrido_btn_ok" class="btn btn-success">
+              Guardar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div
     class="modal fade"
     id="centermodal"

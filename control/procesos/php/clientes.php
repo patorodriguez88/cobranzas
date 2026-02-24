@@ -93,3 +93,19 @@ if (isset($_POST['Direccion'])) {
     echo json_encode(['success' => 1]);
     exit;
 }
+// RECORRIDO
+if (isset($_POST['Recorrido_search'])) {
+    $id = (int)$_POST['id'];
+    $sql = $mysqli->query("SELECT Recorrido FROM Clientes WHERE id='$id'");
+    $row = $sql->fetch_array(MYSQLI_ASSOC);
+    echo json_encode(['success' => 1, 'Dato' => $row['Recorrido'] ?? '']);
+    exit;
+}
+
+if (isset($_POST['Recorrido'])) {
+    $id = (int)$_POST['id'];
+    $recorrido = $mysqli->real_escape_string($_POST['Recorrido_text']);
+    $mysqli->query("UPDATE Clientes SET Recorrido='$recorrido' WHERE id='$id'");
+    echo json_encode(['success' => 1]);
+    exit;
+}

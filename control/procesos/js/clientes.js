@@ -179,7 +179,22 @@ $(document).ready(function () {
     </a>`;
         },
       },
-      { data: "Recorrido" },
+      {
+        data: "Recorrido",
+        render: function (data, type, row) {
+          const recorrido = row.Recorrido || "";
+
+          if (parseInt(row.Suspendido) === 1) {
+            return `<a style="cursor:pointer" class="text-danger" onclick="alerta()">
+        <del>${escapeHtml(recorrido)}</del>
+      </a>`;
+          }
+
+          return `<a style="cursor:pointer" onclick="editar_recorrido(${row.id})">
+      <i class="mdi mdi-map-outline"></i> ${escapeHtml(recorrido)}
+    </a>`;
+        },
+      },
       {
         data: null,
         render: function (data, type, row) {
@@ -306,6 +321,48 @@ $("#modal_direccion_btn_ok").click(function () {
     },
   });
 });
+function editar_recorrido(id) {
+  $("#id_recorrido").val(id);
+
+  $.ajax({
+    type: "POST",
+    url: "control/procesos/php/clientes.php",
+    data: { Recorrido_search: 1, id: id },
+    success: function (response) {
+      const jsonData = JSON.parse(response);
+      $("#recorrido_text").val(jsonData.Dato || "");
+      $("#modal_recorrido").modal("show");
+    },
+  });
+}
+
+$("#modal_recorrido_btn_ok").click(function () {
+  const id = $("#id_recorrido").val();
+  const recorrido = $("#recorrido_text").val();
+
+  $.ajax({
+    type: "POST",
+    url: "control/procesos/php/clientes.php",
+    data: { Recorrido: 1, id: id, Recorrido_text: recorrido },
+    success: function (response) {
+      const dt = $("#clientes_tabla").DataTable();
+      dt.ajax.reload(null, false);
+
+      $("#modal_recorrido").modal("hide");
+
+      $.NotificationApp.send(
+        "Éxito!",
+        "Modificamos el recorrido del cliente.",
+        "bottom-right",
+        "#FFFFFF",
+        "success",
+      );
+    },
+  });
+});
+
+/*************  ✨ Windsurf Command ⭐  *************/
+/*******  59225d86-e811-4ed5-ba31-fcd379d1654c  *******/
 function escapeHtml(str) {
   return String(str ?? "").replace(/[&<>"'`=\/]/g, function (s) {
     return {
