@@ -147,54 +147,81 @@ function calcular_total_exportaciones(a) {
 
 $("#btn_exportar").click(function (e) {
   var oTable = $("#cobranzas_tabla").dataTable();
-
   var allPages = oTable.fnGetNodes();
 
-  //Creamos un array que almacenará los valores de los input "checked"
   var checked = [];
-
-  //Recorremos todos los input checkbox que se encuentren "checked"
   $("input.form-check-input:checked", allPages).each(function () {
-    //Mediante la función push agregamos al arreglo los values de los checkbox
-    if ($(this).attr("value") != null) {
-      checked.push($(this).attr("value"));
-    }
+    var v = $(this).attr("value");
+    if (v != null) checked.push(v);
   });
 
-  // Utilizamos console.log para ver comprobar que en realidad contiene algo el arreglo
-
-  if (checked != 0) {
+  if (checked.length > 0) {
     $.ajax({
       data: { Exportar: 1, id_cobranza: checked },
       url: "control/procesos/php/exportar.php",
       type: "post",
 
       success: function (response) {
-        console.log("RESPUESTA CRUDA:");
-        console.log(response);
+        // DEBUG recomendado (por si tu PHP imprime algo extra)
+        // console.log("RAW:", response);
+
+        var jsonData;
+        try {
+          jsonData = JSON.parse(response);
+        } catch (err) {
+          console.error("JSON inválido:", err);
+          console.log("Respuesta cruda:", response);
+          $.NotificationApp.send(
+            "Error !",
+            "El servidor devolvió una respuesta inválida (no JSON).",
+            "bottom-right",
+            "#FFFFFF",
+            "danger",
+          );
+          return;
+        }
+
+        if (jsonData.success == 1) {
+          $(".modal-footer").css("display", "none");
+
+          var datatable_seguimiento = $("#cobranzas_tabla").DataTable();
+          datatable_seguimiento.ajax.reload();
+
+          $("#selectAll").prop("checked", false);
+
+          $.NotificationApp.send(
+            "Exito !",
+            "Generaste el archivo " + jsonData.name + ".csv podés descargarlo desde la pestaña Exportados.",
+            "bottom-right",
+            "#FFFFFF",
+            "success",
+          );
+        } else {
+          $.NotificationApp.send(
+            "Error !",
+            "No se pudo generar el archivo. Intente nuevamente.",
+            "bottom-right",
+            "#FFFFFF",
+            "danger",
+          );
+        }
       },
-      // var jsonData = JSON.parse(response);
-      // if(jsonData.success==1){
 
-      //     $('.modal-footer').css('display','none');
-
-      //     var datatable_seguimiento= $('#cobranzas_tabla').DataTable();
-      //     datatable_seguimiento.ajax.reload();
-
-      //     $('#selectAll').prop('checked', false);
-
-      //     $.NotificationApp.send("Exito !", 'Generaste el archivo '+jsonData.name+'.csv podés descargarlo desde la pestaña Exportados.', "bottom-right", "#FFFFFF", "success");
-
-      // }else{
-      //     $.NotificationApp.send("Error !", 'No se pudo generar el archivo. Intente nuevamente.', "bottom-right", "#FFFFFF", "danger");
-      // }
-      //  }
+      error: function (xhr) {
+        console.error("AJAX error:", xhr.status, xhr.responseText);
+        $.NotificationApp.send(
+          "Error !",
+          "Falló la comunicación con el servidor.",
+          "bottom-right",
+          "#FFFFFF",
+          "danger",
+        );
+      },
     });
   } else {
     alert("Seleccione al menos una opcion");
   }
 });
-
 $(document).ready(function () {
   ver_tabla_conciliados(1);
 });
