@@ -16,9 +16,7 @@ $(document).ready(function () {
     lengthChange: !isMobile, // en móvil oculto el "Show entries"
     pageLength: isMobile ? 10 : 100,
     pagingType: "simple",
-
     autoWidth: false,
-
     responsive: {
       details: {
         // En móvil: detalle en MODAL (en vez del +)
