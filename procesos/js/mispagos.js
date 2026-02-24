@@ -11,9 +11,8 @@ $(document).ready(function () {
 
   $("#mis_pagos").DataTable({
     dom: "Bfrtip",
-    buttons: ["copy", "excel", "pdf"],
     paging: true,
-    searching: true,
+    searching: false,
     responsive: true,
     pageLength: 100,
     lengthMenu: [
