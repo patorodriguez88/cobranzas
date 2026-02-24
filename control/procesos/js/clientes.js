@@ -149,6 +149,14 @@ $(document).ready(function () {
           }
         },
       },
+      {
+        data: null,
+        render: function (data, type, row) {
+          if (row.Suspendido == 1) {
+            return `<td><i onclick="modificar_cliente('${row.id}',0)" style="cursor:point" class="mdi mdi-18px mdi-face-man-shimmer text-primary"></i></td>`;
+          }
+        },
+      },
     ],
   });
 });
