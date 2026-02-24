@@ -4,29 +4,23 @@ include_once "../../conexion/conexioni.php";
 
 if (isset($_POST['Mis_pagos'])) {
 
-    $Ncliente = intval($_SESSION['ncliente_cobranza']);
+    $Ncliente = (int)($_SESSION['ncliente_cobranza'] ?? 0);
 
-
-    if ($Ncliente <> 0 && $Ncliente <> NULL) {
+    if ($Ncliente > 0) {
 
         $sql = $mysqli->query("SELECT * FROM Cobranza WHERE NumeroCliente='$Ncliente' ORDER BY id DESC");
 
-        $row = $sql->fetch_array(MYSQLI_ASSOC);
+        $rows = [];
 
-        if ($row['id'] <> 0 && $row['id'] <> NULL) {
-
-            $rows = array();
-
+        while ($row = $sql->fetch_array(MYSQLI_ASSOC)) {
             $rows[] = $row;
-
-
-            echo json_encode(array('success' => 1, 'data' => $rows));
-        } else {
-
-            echo json_encode(array('success' => 0, 'Ncliente' => $Ncliente));
         }
-    } else {
 
-        echo json_encode(array('success' => 0, 'Ncliente 2' => $Ncliente));
+        echo json_encode([
+            'success' => count($rows) ? 1 : 0,
+            'data'    => $rows
+        ]);
+    } else {
+        echo json_encode(['success' => 0, 'error' => 'Ncliente inválido']);
     }
 }

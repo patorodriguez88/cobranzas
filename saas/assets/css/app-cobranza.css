@@ -64,3 +64,43 @@ body {
   color: #0d6efd; /* azul bootstrap */
   background: rgba(13, 110, 253, 0.12);
 }
+/* ===== Tabla Mis Pagos compacta ===== */
+
+#mis_pagos {
+  font-size: 0.85rem; /* antes ~1rem */
+}
+
+#mis_pagos th {
+  font-size: 0.8rem;
+  padding: 0.45rem 0.5rem;
+}
+
+#mis_pagos td {
+  padding: 0.45rem 0.5rem;
+}
+
+/* Fecha */
+.dt-fecha-main {
+  font-size: 0.85rem;
+}
+
+.dt-fecha-sub {
+  font-size: 0.72rem;
+}
+
+/* Badge banco más chico */
+.dt-banco {
+  font-size: 0.75rem;
+  padding: 0.35rem 0.5rem;
+}
+
+/* Importe más compacto */
+.dt-importe {
+  font-size: 0.85rem;
+}
+
+/* Paginación más chica */
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+  font-size: 0.8rem !important;
+  padding: 0.25rem 0.5rem !important;
+}
