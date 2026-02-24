@@ -10,7 +10,6 @@ $(document).ready(function () {
   // $.post('procesos/php/mispagos.php', {Mis_pagos:1}, function(r){ console.log(r); });
 
   $("#mis_pagos").DataTable({
-    dom: "Bfrtip",
     paging: true,
     searching: false,
     responsive: true,

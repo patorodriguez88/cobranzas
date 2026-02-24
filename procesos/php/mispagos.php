@@ -24,10 +24,10 @@ if (isset($_POST['Mis_pagos'])) {
             echo json_encode(array('success' => 1, 'data' => $rows));
         } else {
 
-            echo json_encode(array('success' => 0));
+            echo json_encode(array('success' => 0, 'Ncliente' => $Ncliente));
         }
     } else {
 
-        echo json_encode(array('success' => 0));
+        echo json_encode(array('success' => 0, 'Ncliente 2' => $Ncliente));
     }
 }
