@@ -13,7 +13,7 @@ if (isset($_POST['Ingreso'])) {
 
     if ($doc <> "") {
 
-        $sql = $mysqli->query("SELECT id FROM Clientes WHERE Dni='$doc'");
+        $sql = $mysqli->query("SELECT * FROM Clientes WHERE Dni='$doc'");
 
         if ($row = $sql->fetch_array(MYSQLI_ASSOC)) {
 
