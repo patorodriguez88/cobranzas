@@ -25,15 +25,12 @@ $(document).ready(function () {
               $("#user_name").html(jsonData.data[0].Nombre + " " + jsonData.data[0].Apellido);
               $("#user_perfil").html(jsonData.data[0].Distribuidora);
             } else {
-              // alert('error de ingreso');
-              console.log("vuelve");
-              //   window.location.href = "https://www.dintersa.com.ar/cobranza/inicio_control.html";
+              window.location.href = "https://www.dintersa.com.ar/cobranza/inicio_control.html";
             }
           },
         });
       } else {
-        console.log("vuelve 1");
-        // window.location.href = "https://www.dintersa.com.ar/cobranza/inicio_control.html";
+        window.location.href = "https://www.dintersa.com.ar/cobranza/inicio_control.html";
       }
     },
   });
