@@ -22,19 +22,16 @@ $(document).ready(function () {
               let avatar = name.charAt(0) + ape.charAt(0);
 
               $("#avatar").html(avatar);
-              $("#user_name").html(
-                jsonData.data[0].Nombre + " " + jsonData.data[0].Apellido,
-              );
+              $("#user_name").html(jsonData.data[0].Nombre + " " + jsonData.data[0].Apellido);
               $("#user_perfil").html(jsonData.data[0].Distribuidora);
             } else {
               // alert('error de ingreso');
-              // window.location.href = 'https://www.dintersa.com.ar/cobranza/inicio_control.html';
+              window.location.href = "https://www.dintersa.com.ar/cobranza/inicio_control.html";
             }
           },
         });
       } else {
-        // window.location.href =
-        //   "https://www.dintersa.com.ar/cobranza/inicio_control.html";
+        window.location.href = "https://www.dintersa.com.ar/cobranza/inicio_control.html";
       }
     },
   });
