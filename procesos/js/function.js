@@ -101,30 +101,52 @@ function enviarFormulario() {
 }
 
 $("#ingreso_btn").click(function () {
-  let doc = $("#documento").val();
+  let doc = $("#documento").val().trim();
 
-  if (doc == "") {
-    $("#error_text").html("Ingrese un D.N.I.");
-
-    $("#error_alert").css("display", "block");
-  } else {
-    $.ajax({
-      type: "POST",
-      url: "procesos/php/function.php",
-      data: { Ingreso: 1, doc: doc },
-
-      success: function (response) {
-        var jsonData = JSON.parse(response);
-
-        if (jsonData.success == 1) {
-          window.location.href =
-            "https://www.dintersa.com.ar/cobranza/cargarpagos.html";
-        } else {
-          $("#error_text").html(jsonData.error);
-
-          $("#error_alert").css("display", "block");
-        }
-      },
-    });
+  if (doc === "") {
+    mostrarError("Ingrese un D.N.I.");
+    return;
   }
+
+  $.ajax({
+    type: "POST",
+    url: "procesos/php/function.php",
+    data: { Ingreso: 1, doc: doc },
+    dataType: "json", // 👈 importante, evitás JSON.parse manual
+    success: function (jsonData) {
+      if (jsonData.success == 1) {
+        window.location.href =
+          "https://www.dintersa.com.ar/cobranza/cargarpagos.html";
+      } else {
+        // Si usás códigos estructurados
+        switch (jsonData.code) {
+          case "CLIENTE_SUSPENDIDO":
+            mostrarError(
+              "Su cuenta se encuentra suspendida. Comuníquese con administración.",
+            );
+            break;
+
+          case "CLIENTE_INEXISTENTE":
+            mostrarError("El cliente no existe.");
+            break;
+
+          case "SIN_NUMERO_CLIENTE":
+            mostrarError("No se encuentra el número de cliente.");
+            break;
+
+          default:
+            mostrarError(jsonData.error || "Ocurrió un error inesperado.");
+        }
+      }
+    },
+
+    error: function () {
+      mostrarError("Error de conexión con el servidor.");
+    },
+  });
 });
+
+function mostrarError(mensaje) {
+  $("#error_text").html(mensaje);
+  $("#error_alert").fadeIn();
+}
