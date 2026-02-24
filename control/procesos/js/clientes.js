@@ -361,8 +361,6 @@ $("#modal_recorrido_btn_ok").click(function () {
   });
 });
 
-/*************  ✨ Windsurf Command ⭐  *************/
-/*******  59225d86-e811-4ed5-ba31-fcd379d1654c  *******/
 function escapeHtml(str) {
   return String(str ?? "").replace(/[&<>"'`=\/]/g, function (s) {
     return {
