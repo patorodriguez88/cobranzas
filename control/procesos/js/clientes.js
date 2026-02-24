@@ -35,7 +35,7 @@ $("#modal_dni_btn_ok").click(function () {
     success: function (response) {
       var datatable = $("#clientes_tabla").DataTable();
 
-      datatable.ajax.reload();
+      datatable.ajax.reload(null, false);
 
       $("#modal_dni").modal("hide");
 
@@ -77,7 +77,7 @@ $("#modal_btn_ok").click(function () {
     success: function (response) {
       var datatable = $("#clientes_tabla").DataTable();
 
-      datatable.ajax.reload();
+      datatable.ajax.reload(null, false);
 
       $("#modal_obs").modal("hide");
 
@@ -155,28 +155,45 @@ $(document).ready(function () {
       {
         data: "Observaciones",
         render: function (data, type, row) {
-          return `<td><small class="text-muted"><a style='cursor:pointer' onclick='observaciones(${row.id})'><i class='mdi mdi-comment-text-outline'> </i> ${row.Observaciones}</a></small></td>`;
+          const txt = row.Observaciones || "";
+          return `<small class="text-muted">
+      <a style="cursor:pointer" onclick="observaciones(${row.id})">
+        <i class="mdi mdi-comment-text-outline"></i> ${escapeHtml(txt)}
+      </a>
+    </small>`;
         },
       },
       {
         data: "Dni",
         render: function (data, type, row) {
-          if (row.Suspendido == 1) {
-            return `<td><a style='cursor:pointer' class='text-danger' onclick='alerta()'><del> ${row.Dni}</del></a></td>`;
-          } else {
-            return `<td><a style='cursor:pointer' onclick='dni(${row.id})'><i class='mdi mdi-comment-text-outline'> </i> ${row.Dni}</a></td>`;
+          const dni = row.Dni || "";
+
+          if (parseInt(row.Suspendido) === 1) {
+            return `<a style="cursor:pointer" class="text-danger" onclick="alerta()">
+        <del>${escapeHtml(dni)}</del>
+      </a>`;
           }
+
+          return `<a style="cursor:pointer" onclick="dni(${row.id})">
+      <i class="mdi mdi-card-account-details-outline"></i> ${escapeHtml(dni)}
+    </a>`;
         },
       },
       { data: "Recorrido" },
       {
         data: null,
         render: function (data, type, row) {
-          if (row.Suspendido == 1) {
-            return `<td><i onclick="modificar_status('${row.id}',0)" style="cursor:point" class="mdi mdi-18px mdi-close-circle text-danger"></i></td>`;
-          } else {
-            return `<td><i onclick="modificar_status('${row.id}',1)" style="cursor:point" class="mdi mdi-18px mdi-check-circle text-success"></i></td>`;
+          const susp = parseInt(row.Suspendido) === 1;
+
+          if (susp) {
+            return `<i onclick="modificar_status('${row.id}',0)"
+                style="cursor:pointer"
+                class="mdi mdi-18px mdi-close-circle text-danger"></i>`;
           }
+
+          return `<i onclick="modificar_status('${row.id}',1)"
+              style="cursor:pointer"
+              class="mdi mdi-18px mdi-check-circle text-success"></i>`;
         },
       },
     ],
@@ -199,7 +216,7 @@ function modificar_status(id, status) {
           "success",
         );
         var datatable_clientes = $("#clientes_tabla").DataTable();
-        datatable_clientes.ajax.reload();
+        datatable_clientes.ajax.reload(null, false);
       } else {
         $.NotificationApp.send(
           "Error !",
@@ -289,3 +306,17 @@ $("#modal_direccion_btn_ok").click(function () {
     },
   });
 });
+function escapeHtml(str) {
+  return String(str ?? "").replace(/[&<>"'`=\/]/g, function (s) {
+    return {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;",
+      "/": "&#x2F;",
+      "`": "&#x60;",
+      "=": "&#x3D;",
+    }[s];
+  });
+}
