@@ -126,7 +126,7 @@ $(document).ready(function () {
       // Prioridades responsive (por si no estás en móvil pero igual se achica)
       { responsivePriority: 1, targets: 1 }, // Fecha
       { responsivePriority: 2, targets: 2 }, // Banco
-      { responsivePriority: 3, targets: 4 }, // Importe
+      { responsivePriority: 3, targets: 3 }, // Importe
       // { responsivePriority: 4, targets: 3 }, // Operación
       // { responsivePriority: 5, targets: 0 }, // id
     ],
