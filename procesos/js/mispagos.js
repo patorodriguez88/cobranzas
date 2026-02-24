@@ -58,8 +58,6 @@ $(document).ready(function () {
 
     columns: [
       { data: "id", defaultContent: "" },
-
-      // FECHA
       {
         data: null,
         defaultContent: "",
@@ -120,17 +118,17 @@ $(document).ready(function () {
       { targets: 0, visible: false },
 
       // Operación: en móvil oculto para que no se “corte”
-      { targets: 3, visible: !isMobile },
+      // { targets: 3, visible: !isMobile },
 
       // Importe a la derecha y sin salto
-      { targets: 4, className: "text-end text-nowrap fw-bold" },
+      { targets: 3, className: "text-end text-nowrap fw-bold" },
 
       // Prioridades responsive (por si no estás en móvil pero igual se achica)
       { responsivePriority: 1, targets: 1 }, // Fecha
       { responsivePriority: 2, targets: 2 }, // Banco
       { responsivePriority: 3, targets: 4 }, // Importe
-      { responsivePriority: 4, targets: 3 }, // Operación
-      { responsivePriority: 5, targets: 0 }, // id
+      // { responsivePriority: 4, targets: 3 }, // Operación
+      // { responsivePriority: 5, targets: 0 }, // id
     ],
   });
 });
