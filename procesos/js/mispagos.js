@@ -9,6 +9,7 @@ $(document).ready(function () {
   $("#mis_pagos").DataTable({
     paging: true,
     searching: false,
+    ordering: false,
 
     // UI más limpia
     info: false,
