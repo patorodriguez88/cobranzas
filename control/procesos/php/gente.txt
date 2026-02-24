@@ -1,6 +1,0 @@
-John Smith
-John Smith
-Array;8;9;8;9;7;8;9;;9;22hola
-hola
-hola
-02

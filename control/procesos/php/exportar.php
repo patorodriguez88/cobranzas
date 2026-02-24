@@ -6,7 +6,7 @@ date_default_timezone_set("America/Argentina/Cordoba");
 //EXPORTADO
 if (isset($_POST['Exportado'])) {
 
-    $User = $_SESSION['user_cobranza'];
+    $User = $_SESSION['user_control'];
 
     if ($mysqli->query("UPDATE Cobranza_exportados SET Descargas=Descargas+1,Estado='Descargado',Usuario='" . $User . "' WHERE id='" . $_POST['id'] . "'")) {
 
@@ -46,7 +46,7 @@ if (isset($_POST['Exportar'])) {
 
     $Fecha = date('Ymd');
     $Hora = date('H:i:s');
-    $User = $_SESSION['user_cobranza'];
+    $User = $_SESSION['user_control'];
 
     // $name=date('dmY H:i:s');    
     // $fichero = 'exportaciones/'.$name.'.txt';

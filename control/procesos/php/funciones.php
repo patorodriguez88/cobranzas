@@ -20,7 +20,7 @@ if ($_POST['Ingreso'] == 1) {
 
             $rows[] = $row;
 
-            $_SESSION['user'] = $row['id'];
+            $_SESSION['user_control'] = $row['id'];
             $_SESSION['user_name'] = $row['Usuario'];
             $_SESSION['name'] = $row['Nombre'] . ' ' . $row['Apellido'];
             $_SESSION['perfil'] = $row['Distribuidora'];
@@ -62,7 +62,7 @@ if (isset($_POST['Totales'])) {
 
 if (isset($_POST['Datos'])) {
 
-    $id = $_SESSION['user'];
+    $id = $_SESSION['user_control'];
 
     $sql = $mysqli->query("SELECT * FROM usuarios WHERE id='$id'");
 

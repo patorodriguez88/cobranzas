@@ -61,7 +61,7 @@ if (isset($_POST['Tabla_no_conciliados'])) {
 if (isset($_POST['Conciliar'])) {
 
     $sql = "INSERT INTO `Cobranza_conciliacion`(`id_cobranza`, `NombreCliente`, `NumeroCliente`, `Fecha`, `Hora`, `Banco`, `Operacion`, `Importe`, `Usuario`, `Observaciones`,`Estado`) VALUES 
-    ('{$_POST['id_cobranza']}','{$_POST['Nombre']}','{$_POST['Numero']}','{$_POST['Fecha']}','{$_POST['Hora']}','{$_POST['Banco']}','{$_POST['Operacion']}','{$_POST['Importe']}','{$_SESSION['user_cobranza']}','{$_POST['Observaciones']}','Aceptado')";
+    ('{$_POST['id_cobranza']}','{$_POST['Nombre']}','{$_POST['Numero']}','{$_POST['Fecha']}','{$_POST['Hora']}','{$_POST['Banco']}','{$_POST['Operacion']}','{$_POST['Importe']}','{$_SESSION['user_control']}','{$_POST['Observaciones']}','Aceptado')";
 
     if ($mysqli->query($sql)) {
 
@@ -92,7 +92,7 @@ if (isset($_POST['Vuelve'])) {
 if (isset($_POST['Rechazar'])) {
 
     $sql = "INSERT INTO `Cobranza_conciliacion`(`id_cobranza`, `NombreCliente`, `NumeroCliente`, `Fecha`, `Hora`, `Banco`, `Operacion`, `Importe`, `Usuario`, `Observaciones`,`Estado`) VALUES 
-    ('{$_POST['id_cobranza']}','{$_POST['Nombre']}','{$_POST['Numero']}','{$_POST['Fecha']}','{$_POST['Hora']}','{$_POST['Banco']}','{$_POST['Operacion']}','{$_POST['Importe']}','{$_SESSION['user_cobranza']}','{$_POST['Observaciones']}','Rechazado')";
+    ('{$_POST['id_cobranza']}','{$_POST['Nombre']}','{$_POST['Numero']}','{$_POST['Fecha']}','{$_POST['Hora']}','{$_POST['Banco']}','{$_POST['Operacion']}','{$_POST['Importe']}','{$_SESSION['user_control']}','{$_POST['Observaciones']}','Rechazado')";
 
     if ($mysqli->query($sql)) {
 
@@ -113,7 +113,7 @@ if (isset($_POST['Conciliar_quik'])) {
     $row = $sql->fetch_array(MYSQLI_ASSOC);
 
     $sql = "INSERT INTO `Cobranza_conciliacion`(`id_cobranza`, `NombreCliente`, `NumeroCliente`, `Fecha`, `Hora`, `Banco`, `Operacion`, `Importe`, `Usuario`, `Observaciones`) VALUES 
-    ('{$_POST['id_cobranza']}','{$row['NombreCliente']}','{$row['NumeroCliente']}','{$row['Fecha']}','{$row['Hora']}','{$row['Banco']}','{$row['Operacion']}','{$row['Importe']}','{$_SESSION['user_cobranza']}','{$row['Observaciones']}')";
+    ('{$_POST['id_cobranza']}','{$row['NombreCliente']}','{$row['NumeroCliente']}','{$row['Fecha']}','{$row['Hora']}','{$row['Banco']}','{$row['Operacion']}','{$row['Importe']}','{$_SESSION['user_control']}','{$row['Observaciones']}')";
 
     if ($mysqli->query($sql)) {
 

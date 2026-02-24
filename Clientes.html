@@ -4,63 +4,26 @@
     <meta charset="utf-8" />
     <title>Cobranzas | Clientes</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      content="A fully featured admin theme which can be used to build CRM, CMS, etc."
-      name="description"
-    />
+    <meta content="A fully featured admin theme which can be used to build CRM, CMS, etc." name="description" />
     <meta content="Coderthemes" name="author" />
     <!-- App favicon -->
     <link rel="shortcut icon" href="img/favicon.png" />
 
     <!-- Datatables css -->
-    <link
-      href="saas/assets/css/vendor/dataTables.bootstrap5.css"
-      rel="stylesheet"
-      type="text/css"
-    />
-    <link
-      href="saas/assets/css/vendor/responsive.bootstrap5.css"
-      rel="stylesheet"
-      type="text/css"
-    />
-    <link
-      href="saas/assets/css/vendor/select.bootstrap5.css"
-      rel="stylesheet"
-      type="text/css"
-    />
+    <link href="saas/assets/css/vendor/dataTables.bootstrap5.css" rel="stylesheet" type="text/css" />
+    <link href="saas/assets/css/vendor/responsive.bootstrap5.css" rel="stylesheet" type="text/css" />
+    <link href="saas/assets/css/vendor/select.bootstrap5.css" rel="stylesheet" type="text/css" />
     <!-- App css -->
-    <link
-      href="saas/assets/css/icons.min.css"
-      rel="stylesheet"
-      type="text/css"
-    />
-    <link
-      href="saas/assets/css/app.min.css"
-      rel="stylesheet"
-      type="text/css"
-      id="app-style"
-    />
+    <link href="saas/assets/css/icons.min.css" rel="stylesheet" type="text/css" />
+    <link href="saas/assets/css/app.min.css" rel="stylesheet" type="text/css" id="app-style" />
   </head>
   <!-- MODAL DNI -->
-  <div
-    class="modal fade"
-    id="modal_dni"
-    tabindex="-1"
-    role="dialog"
-    aria-hidden="true"
-  >
+  <div class="modal fade" id="modal_dni" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
-          <h4 class="modal-title" id="myCenterModalLabel">
-            D.N.I. | Clave de Accesso
-          </h4>
-          <button
-            type="button"
-            class="btn-close"
-            data-bs-dismiss="modal"
-            aria-hidden="true"
-          ></button>
+          <h4 class="modal-title" id="myCenterModalLabel">D.N.I. | Clave de Accesso</h4>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true"></button>
         </div>
         <div class="modal-body">
           <label class="form-label">D.N.I.</label>
@@ -78,32 +41,17 @@
   <!-- /.modal -->
 
   <!-- MODAL OBSERVACIONES -->
-  <div
-    class="modal fade"
-    id="modal_obs"
-    tabindex="-1"
-    role="dialog"
-    aria-hidden="true"
-  >
+  <div class="modal fade" id="modal_obs" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
           <h4 class="modal-title" id="myCenterModalLabel">Observaciones</h4>
-          <button
-            type="button"
-            class="btn-close"
-            data-bs-dismiss="modal"
-            aria-hidden="true"
-          ></button>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true"></button>
         </div>
         <div class="modal-body">
           <label class="form-label">Observaciones</label>
 
-          <input
-            id="observaciones_text"
-            type="text"
-            class="form-control mb-3"
-          />
+          <input id="observaciones_text" type="text" class="form-control mb-3" />
           <input type="hidden" id="id_obs" />
 
           <a id="modal_btn_ok" class="btn btn-success">Aceptar</a>
@@ -115,23 +63,12 @@
   </div>
   <!-- /.modal -->
   <!-- MODAL NOMBRE DEPOSITO -->
-  <div
-    class="modal fade"
-    id="modal_nombre"
-    tabindex="-1"
-    role="dialog"
-    aria-hidden="true"
-  >
+  <div class="modal fade" id="modal_nombre" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
           <h4 class="modal-title">Nombre / Razón Social</h4>
-          <button
-            type="button"
-            class="btn-close"
-            data-bs-dismiss="modal"
-            aria-hidden="true"
-          ></button>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true"></button>
         </div>
         <div class="modal-body">
           <label class="form-label">Razón Social</label>
@@ -143,23 +80,12 @@
     </div>
   </div>
   <!-- MODAL DIRECCION DEPOSITO -->
-  <div
-    class="modal fade"
-    id="modal_direccion"
-    tabindex="-1"
-    role="dialog"
-    aria-hidden="true"
-  >
+  <div class="modal fade" id="modal_direccion" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
           <h4 class="modal-title">Dirección</h4>
-          <button
-            type="button"
-            class="btn-close"
-            data-bs-dismiss="modal"
-            aria-hidden="true"
-          ></button>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true"></button>
         </div>
         <div class="modal-body">
           <label class="form-label">Dirección</label>
@@ -172,57 +98,32 @@
   </div>
 
   <!-- MODAL RECORRIDO -->
-  <div
-    class="modal fade"
-    id="modal_recorrido"
-    tabindex="-1"
-    role="dialog"
-    aria-hidden="true"
-  >
+  <div class="modal fade" id="modal_recorrido" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
           <h4 class="modal-title">Modificar Recorrido</h4>
-          <button
-            type="button"
-            class="btn-close"
-            data-bs-dismiss="modal"
-          ></button>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
           <label class="form-label">Recorrido</label>
           <input id="recorrido_text" type="text" class="form-control mb-3" />
           <input type="hidden" id="id_recorrido" />
           <div class="text-end">
-            <button class="btn btn-danger me-2" data-bs-dismiss="modal">
-              Cancelar
-            </button>
-            <button id="modal_recorrido_btn_ok" class="btn btn-success">
-              Guardar
-            </button>
+            <button class="btn btn-danger me-2" data-bs-dismiss="modal">Cancelar</button>
+            <button id="modal_recorrido_btn_ok" class="btn btn-success">Guardar</button>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <div
-    class="modal fade"
-    id="centermodal"
-    tabindex="-1"
-    role="dialog"
-    aria-hidden="true"
-  >
+  <div class="modal fade" id="centermodal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-full-width">
       <div class="modal-content">
         <div class="modal-header">
           <h4 class="modal-title" id="centermodal_title"></h4>
-          <button
-            type="button"
-            class="btn-close"
-            data-bs-dismiss="modal"
-            aria-hidden="true"
-          ></button>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true"></button>
         </div>
 
         <div class="modal-body">
@@ -233,82 +134,44 @@
                   <div class="row">
                     <div class="col-lg-5">
                       <!-- Product image -->
-                      <a
-                        href="javascript: void(0);"
-                        class="text-center d-block mb-4"
-                      >
+                      <a href="javascript: void(0);" class="text-center d-block mb-4">
                         <!-- <div id="img_deposito"></div> -->
 
-                        <img
-                          id="img_deposito"
-                          src=""
-                          class="img-fluid"
-                          style="max-width: 350px"
-                          alt=""
-                        />
+                        <img id="img_deposito" src="" class="img-fluid" style="max-width: 350px" alt="" />
                       </a>
                     </div>
                     <!-- end col -->
                     <div class="col-lg-7">
                       <div class="tab-content">
-                        <div
-                          class="tab-pane show active"
-                          id="datepicker-preview"
-                        >
+                        <div class="tab-pane show active" id="datepicker-preview">
                           <div class="row">
                             <div class="col-lg-2">
                               <div class="mb-3 position-relative">
                                 <label class="form-label">Id</label>
-                                <input
-                                  type="text"
-                                  class="form-control"
-                                  id="id_cobranza"
-                                  readonly
-                                />
+                                <input type="text" class="form-control" id="id_cobranza" readonly />
                                 <span class="font-13 text-muted">Id</span>
                               </div>
                             </div>
                             <div class="col-lg-4">
                               <div class="mb-3 position-relative">
-                                <label class="form-label"
-                                  >Número de Cliente</label
-                                >
-                                <input
-                                  type="text"
-                                  class="form-control"
-                                  id="numero_cobranza"
-                                  readonly
-                                />
-                                <span class="font-13 text-muted"
-                                  >E.j.:"Sergio Carballo"</span
-                                >
+                                <label class="form-label">Número de Cliente</label>
+                                <input type="text" class="form-control" id="numero_cobranza" readonly />
+                                <span class="font-13 text-muted">E.j.:"Sergio Carballo"</span>
                               </div>
                             </div>
 
                             <div class="col-lg-6">
                               <div class="mb-3 position-relative">
                                 <label class="form-label">Nombre Cliente</label>
-                                <input
-                                  type="text"
-                                  class="form-control"
-                                  id="nombre_cobranza"
-                                  readonly
-                                />
-                                <span class="font-13 text-muted"
-                                  >E.j.:"Sergio Carballo"</span
-                                >
+                                <input type="text" class="form-control" id="nombre_cobranza" readonly />
+                                <span class="font-13 text-muted">E.j.:"Sergio Carballo"</span>
                               </div>
                             </div>
                           </div>
                           <div class="row">
                             <div class="col-lg-6">
-                              <div
-                                class="mb-3 position-relative"
-                                id="datepicker1"
-                              >
-                                <label class="form-label"
-                                  >Fecha del Depósito</label
-                                >
+                              <div class="mb-3 position-relative" id="datepicker1">
+                                <label class="form-label">Fecha del Depósito</label>
                                 <input
                                   id="fecha_cobranza"
                                   type="text"
@@ -316,20 +179,13 @@
                                   data-provide="datepicker"
                                   data-date-container="#datepicker1"
                                 />
-                                <span class="font-13 text-muted"
-                                  >E.j.: "22-12-2022"</span
-                                >
+                                <span class="font-13 text-muted">E.j.: "22-12-2022"</span>
                               </div>
                             </div>
 
                             <div class="col-lg-6">
-                              <div
-                                class="mb-3 position-relative"
-                                id="datepicker2"
-                              >
-                                <label class="form-label"
-                                  >Hora del Depósito</label
-                                >
+                              <div class="mb-3 position-relative" id="datepicker2">
+                                <label class="form-label">Hora del Depósito</label>
                                 <input
                                   id="hora_cobranza"
                                   type="text"
@@ -337,9 +193,7 @@
                                   data-toggle="input-mask"
                                   data-mask-format="00:00:00"
                                 />
-                                <span class="font-13 text-muted"
-                                  >E.j.: "HH:MM:SS"</span
-                                >
+                                <span class="font-13 text-muted">E.j.: "HH:MM:SS"</span>
                               </div>
                             </div>
                           </div>
@@ -349,25 +203,15 @@
                           <div class="col-lg-6">
                             <div class="mb-3 position-relative">
                               <label class="form-label">Banco</label>
-                              <input
-                                id="banco_cobranza"
-                                type="text"
-                                class="form-control"
-                              />
+                              <input id="banco_cobranza" type="text" class="form-control" />
                             </div>
                           </div>
 
                           <div class="col-lg-6">
                             <div class="mb-3 position-relative">
                               <label class="form-label">Operacion</label>
-                              <input
-                                id="operacion_cobranza"
-                                type="text"
-                                class="form-control"
-                              />
-                              <span class="font-13 text-muted"
-                                >E.j.: "728649"</span
-                              >
+                              <input id="operacion_cobranza" type="text" class="form-control" />
+                              <span class="font-13 text-muted">E.j.: "728649"</span>
                             </div>
                           </div>
                         </div>
@@ -390,38 +234,23 @@
                           </div>
                           <div class="col-lg-6">
                             <div class="mb-3 position-relative">
-                              <label class="form-label"
-                                >Importe Conciliado</label
-                              >
-                              <input
-                                id="importe_cobranza"
-                                type="number"
-                                class="form-control"
-                              />
+                              <label class="form-label">Importe Conciliado</label>
+                              <input id="importe_cobranza" type="number" class="form-control" />
                             </div>
                           </div>
                         </div>
                         <div class="row">
                           <div class="col-lg-12">
                             <div class="mb-3 position-relative">
-                              <label
-                                id="observaciones_cliente"
-                                class="form-label"
-                              ></label>
+                              <label id="observaciones_cliente" class="form-label"></label>
                             </div>
                           </div>
                         </div>
                         <div class="row">
                           <div class="col-lg-12">
                             <div class="mb-3 position-relative">
-                              <label class="form-label"
-                                >Observaciones Usuario</label
-                              >
-                              <input
-                                id="obs_cobranza"
-                                type="text"
-                                class="form-control"
-                              />
+                              <label class="form-label">Observaciones Usuario</label>
+                              <input id="obs_cobranza" type="text" class="form-control" />
                               <span class="font-13 text-muted"></span>
                             </div>
                           </div>
@@ -429,15 +258,9 @@
 
                         <div class="col-12">
                           <div class="text-end mt-xl-0 mt-2">
-                            <a class="btn btn-danger" data-bs-dismiss="modal"
-                              >Cancelar</a
-                            >
-                            <a id="btn_rechazar" class="btn btn-warning"
-                              >Rechazar</a
-                            >
-                            <a id="btn_conciliar" class="btn btn-success"
-                              >Aceptar</a
-                            >
+                            <a class="btn btn-danger" data-bs-dismiss="modal">Cancelar</a>
+                            <a id="btn_rechazar" class="btn btn-warning">Rechazar</a>
+                            <a id="btn_conciliar" class="btn btn-success">Aceptar</a>
                           </div>
                         </div>
                         <!-- </div> end preview -->
@@ -496,50 +319,29 @@
                 class="side-nav-link"
               >
                 <i class="mdi mdi-archive-cancel-outline"></i>
-                <span
-                  id="total_no_conciliados"
-                  class="badge bg-danger float-end"
-                ></span>
+                <span id="total_no_conciliados" class="badge bg-danger float-end"></span>
                 <span> Pendientes </span>
               </a>
             </li>
 
             <li class="side-nav-item">
-              <a
-                href="https://www.dintersa.com.ar/cobranza/conciliados.html"
-                class="side-nav-link"
-              >
+              <a href="https://www.dintersa.com.ar/cobranza/conciliados.html" class="side-nav-link">
                 <i class="mdi mdi-archive-check-outline"></i>
-                <span
-                  id="total_conciliados"
-                  class="badge bg-success float-end"
-                ></span>
+                <span id="total_conciliados" class="badge bg-success float-end"></span>
                 <span> Conciliados </span>
               </a>
             </li>
             <li class="side-nav-item">
-              <a
-                href="https://www.dintersa.com.ar/cobranza/exportados.html"
-                class="side-nav-link"
-              >
+              <a href="https://www.dintersa.com.ar/cobranza/exportados.html" class="side-nav-link">
                 <i class="mdi mdi-cloud-download-outline"></i>
-                <span
-                  id="total_exportados"
-                  class="badge bg-warning float-end"
-                ></span>
+                <span id="total_exportados" class="badge bg-warning float-end"></span>
                 <span> Exportados </span>
               </a>
             </li>
             <li class="side-nav-item">
-              <a
-                href="https://www.dintersa.com.ar/cobranza/Clientes.html"
-                class="side-nav-link"
-              >
+              <a href="https://www.dintersa.com.ar/cobranza/Clientes.html" class="side-nav-link">
                 <i class="mdi mdi-account text-dark"></i>
-                <span
-                  id="total_exportados"
-                  class="badge bg-warning float-end"
-                ></span>
+                <span id="total_exportados" class="badge bg-warning float-end"></span>
                 <span class="text-dark"> Clientes </span>
               </a>
             </li>
@@ -573,9 +375,7 @@
                 >
                   <i class="dripicons-search noti-icon"></i>
                 </a>
-                <div
-                  class="dropdown-menu dropdown-menu-animated dropdown-lg p-0"
-                >
+                <div class="dropdown-menu dropdown-menu-animated dropdown-lg p-0">
                   <form class="p-3">
                     <input
                       type="text"
@@ -598,11 +398,7 @@
                 >
                   <span class="account-user-avatar">
                     <div class="avatar-xs">
-                      <span
-                        id="avatar"
-                        class="avatar-title bg-warning rounded-circle"
-                      >
-                      </span>
+                      <span id="avatar" class="avatar-title bg-warning rounded-circle"> </span>
                     </div>
                   </span>
                   <span>
@@ -619,10 +415,7 @@
                   </div>
 
                   <!-- item-->
-                  <a
-                    href="https://www.dintersa.com.ar/cobranza/inicio_control.html"
-                    class="dropdown-item notify-item"
-                  >
+                  <a href="https://www.dintersa.com.ar/cobranza/inicio_control.html" class="dropdown-item notify-item">
                     <i class="mdi mdi-logout me-1"></i>
                     <span>Logout</span>
                   </a>
@@ -661,10 +454,7 @@
                 <div class="card">
                   <div class="card-body">
                     <div class="tab-pane show active" id="multi-item-preview">
-                      <table
-                        id="clientes_tabla"
-                        class="table dt-responsive nowrap w-100"
-                      >
+                      <table id="clientes_tabla" class="table dt-responsive nowrap w-100">
                         <thead>
                           <tr>
                             <th>NCliente</th>
