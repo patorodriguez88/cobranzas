@@ -37,6 +37,16 @@
     <link rel="apple-touch-startup-image" href="./dinterDark.png" />
     <link rel="manifest" href="manifest.json" />
     <link rel="stylesheet" href="saas/assets/css/app-cobranza.css" />
+    <link
+      href="saas/assets/css/vendor/dataTables.bootstrap5.css"
+      rel="stylesheet"
+      type="text/css"
+    />
+    <link
+      href="saas/assets/css/vendor/responsive.bootstrap5.css"
+      rel="stylesheet"
+      type="text/css"
+    />
   </head>
 
   <body
@@ -55,21 +65,23 @@
               <div class="page-title-box">
                 <h4 class="page-title">Mis Pagos</h4>
                 <div class="table-responsive mt-2">
-                  <table
-                    class="table table-bordered table-centered mb-0"
-                    id="mis_pagos"
-                  >
-                    <thead class="table-light">
-                      <tr>
-                        <th>id</th>
-                        <th>Fecha</th>
-                        <th>Banco</th>
-                        <th>Operacion</th>
-                        <th>Importe</th>
-                      </tr>
-                    </thead>
-                    <tbody></tbody>
-                  </table>
+                  <div class="dt-wrapper mt-2">
+                    <table
+                      class="table table-bordered table-centered mb-0"
+                      id="mis_pagos"
+                    >
+                      <thead class="table-light">
+                        <tr>
+                          <th>id</th>
+                          <th>Fecha</th>
+                          <th>Banco</th>
+                          <th>Operacion</th>
+                          <th>Importe</th>
+                        </tr>
+                      </thead>
+                      <tbody></tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             </div>
