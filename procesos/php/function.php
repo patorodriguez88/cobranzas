@@ -5,6 +5,8 @@ include_once "../../conexion/conexioni.php";
 if (isset($_POST['NComprobante'])) {
 
     $_SESSION['NComprobante'] = $_POST['n'];
+    echo json_encode(['success' => 1]);
+    exit;
 }
 
 if (isset($_POST['Ingreso'])) {

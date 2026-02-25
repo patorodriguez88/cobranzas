@@ -108,32 +108,24 @@ function enviarFormulario() {
             url: "procesos/php/function.php",
             dataType: "json",
             data: { NComprobante: 1, n: jsonData.idIngreso },
-            success: function (resp2, status, xhr) {
-              console.log("NComprobante OK HTTP:", xhr.status, resp2);
-            },
-            // success: function (resp2) {
-            //   // Mostrás el modal "standard" YA
-            //   $("#standard-modal").modal("show");
+            success: function (resp2) {
+              // Mostrás el modal "standard" YA
+              $("#standard-modal").modal("show");
 
-            //   // IMPORTANTÍSIMO: usá .one para que no se acumulen eventos
-            //   $("#standard-modal")
-            //     .off("hidden.bs.modal") // por si quedó algo viejo
-            //     .one("hidden.bs.modal", function () {
-            //       // Mostrás éxito inmediatamente al cerrar standard
-            //       $("#texto_exito").html(
-            //         "Cargamos tu Pago en nuestro sistema, el número de registro es: <b>" + jsonData.idIngreso + "</b>",
-            //       );
+              // IMPORTANTÍSIMO: usá .one para que no se acumulen eventos
+              $("#standard-modal")
+                .off("hidden.bs.modal") // por si quedó algo viejo
+                .one("hidden.bs.modal", function () {
+                  // Mostrás éxito inmediatamente al cerrar standard
+                  $("#texto_exito").html(
+                    "Cargamos tu Pago en nuestro sistema, el número de registro es: <b>" + jsonData.idIngreso + "</b>",
+                  );
 
-            //       $("#success-alert-modal").modal("show");
+                  $("#success-alert-modal").modal("show");
 
-            //       // Si querés reset adicional, ok (pero no debería ser necesario)
-            //       $("#form_cobranza")[0].reset();
-            //     });
-            // },
-            error: function (xhr, status, err) {
-              console.log("NComprobante FAIL status:", status, "err:", err);
-              console.log("HTTP:", xhr.status);
-              console.log("Response:", xhr.responseText);
+                  // Si querés reset adicional, ok (pero no debería ser necesario)
+                  $("#form_cobranza")[0].reset();
+                });
             },
           });
         },
