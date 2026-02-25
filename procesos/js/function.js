@@ -97,7 +97,9 @@ function enviarFormulario() {
   // });
   $("#alert_confirmation_btn_ok").click(function () {
     // Cerrá modal y reseteá YA
-    $("#staticBackdrop").modal("hide");
+    const el = document.getElementById("staticBackdrop");
+    const modal = bootstrap.Modal.getOrCreateInstance(el);
+    modal.hide();
     $("#form_cobranza")[0].reset(); // más directo que trigger
 
     let name = $("#name").val();
