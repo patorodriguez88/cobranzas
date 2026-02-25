@@ -95,7 +95,7 @@ $("#modal_btn_ok").click(function () {
   $.ajax({
     type: "POST",
     url: "control/procesos/php/panel.php",
-    data: { Observaciones: 1, id: id, Observaciones_text: obs },
+    data: { Observaciones_Usuario: 1, id: id, Observaciones_text: obs },
     success: function (response) {
       var datatable_seguimiento = $("#cobranzas_tabla").DataTable();
 

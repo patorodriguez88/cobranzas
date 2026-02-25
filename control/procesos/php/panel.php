@@ -10,7 +10,7 @@ if (isset($_POST['Observaciones_search'])) {
     echo json_encode(array('success' => 1, 'Dato' => $row['Usuario_obs']));
 }
 
-if (isset($_POST['Observaciones'])) {
+if (isset($_POST['Observaciones_Usuario'])) {
 
     $mysqli->query("UPDATE Cobranza SET Usuario='$_SESSION[user_name]',Usuario_obs='$_POST[Observaciones_text]' WHERE id='$_POST[id]'");
 
