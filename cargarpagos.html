@@ -207,146 +207,146 @@
     <!-- /.modal -->
 
     <!-- Begin page -->
-    <!-- <div class="wrapper"> -->
-    <div class="content-page">
-      <div class="content">
-        <!-- Topbar Start -->
-        <div class="container-fluid">
-          <div class="row">
-            <div class="col-12">
-              <div class="page-title-box">
-                <h4 class="page-title">Ingresos de Pagos Dinter S.A.</h4>
+    <div id="screen-form">
+      <div class="content-page">
+        <div class="content">
+          <!-- Topbar Start -->
+          <div class="container-fluid">
+            <div class="row">
+              <div class="col-12">
+                <div class="page-title-box">
+                  <h4 class="page-title">Ingresos de Pagos Dinter S.A.</h4>
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- LOGO -->
-          <div class="col-12">
-            <form id="form_cobranza" action="javascript:enviarFormulario()" class="needs-validation" novalidate>
-              <div class="tab-content">
-                <div class="row">
-                  <div class="col-sm-2">
-                    <div class="form-group mb-3 position-relative">
-                      <label for="validationCustom02">Numero de Cliente</label>
-                      <input
-                        id="ncliente"
-                        type="text"
-                        class="form-control"
-                        max="4"
-                        id="validationCustom02"
-                        placeholder="Número de Cliente Dinter"
-                        value=""
-                        required
-                        readonly
-                      />
+            <!-- LOGO -->
+            <div class="col-12">
+              <form id="form_cobranza" class="needs-validation" novalidate>
+                <div class="tab-content">
+                  <div class="row">
+                    <div class="col-sm-2">
+                      <div class="form-group mb-3 position-relative">
+                        <label for="validationCustom02">Numero de Cliente</label>
+                        <input
+                          id="ncliente"
+                          type="text"
+                          class="form-control"
+                          max="4"
+                          id="validationCustom02"
+                          placeholder="Número de Cliente Dinter"
+                          value=""
+                          required
+                          readonly
+                        />
+                      </div>
                     </div>
-                  </div>
-                  <div class="col-sm-10">
-                    <div class="form-group mb-3 position-relative">
-                      <label for="validationCustom01">Nombre Cliente</label>
-                      <input
-                        id="name"
-                        type="text"
-                        class="form-control"
-                        id="validationCustom01"
-                        placeholder="Nombre Cliente"
-                        value=""
-                        required
-                        readonly
-                      />
+                    <div class="col-sm-10">
+                      <div class="form-group mb-3 position-relative">
+                        <label for="validationCustom01">Nombre Cliente</label>
+                        <input
+                          id="name"
+                          type="text"
+                          class="form-control"
+                          id="validationCustom01"
+                          placeholder="Nombre Cliente"
+                          value=""
+                          required
+                          readonly
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-              <div class="form-group mb-3">
-                <label for="validationDate">Fecha en la que se realizó el Depósito</label>
-                <input
-                  id="fecha"
-                  type="date"
-                  class="form-control"
-                  max="4"
-                  id="validationDate"
-                  placeholder="Fecha de Depósito"
-                  value=""
-                  required
-                />
-                <div class="invalid-feedback">Por favor ingrese una Fecha.</div>
-                <div class="valid-feedback">Fecha seleccionada correctamente</div>
-              </div>
-              <div class="form-group mb-3">
-                <label for="validationTypeOperation">Tipo de Operación</label>
-                <select
-                  id="tipo_operacion"
-                  class="form-control"
-                  placeholder="Seleccione un Tipo de Operación"
-                  aria-describedby="inputGroupPrepend"
-                  required
-                >
-                  <option></option>
-                  <option value="deposito">Deposito Bancario</option>
-                  <option value="transferencia">Transferencia</option>
-                </select>
-
-                <div class="invalid-feedback">Por favor seleccione tipo de operación.</div>
-              </div>
-
-              <div class="form-group mb-3">
-                <label for="validationCustomUsername">Banco Destino</label>
-                <select
-                  id="banco"
-                  class="form-control"
-                  placeholder="Seleccione un Banco Destino"
-                  aria-describedby="inputGroupPrepend"
-                  required
-                >
-                  <option></option>
-                  <option>Banco Macro</option>
-                  <option>Banco Córdoba</option>
-                </select>
-
-                <div class="invalid-feedback">Por favor seleccione un Banco.</div>
-              </div>
-              <div class="form-group mb-3">
-                <label for="validationCustom03">Numero de Operacion</label>
-                <input
-                  id="noperacion"
-                  type="text"
-                  class="form-control"
-                  id="validationCustom03"
-                  placeholder="Número de Operación"
-                  required
-                />
-                <div class="invalid-feedback">Ingrese el Número de Operación.</div>
-              </div>
-              <div class="form-group mb-3">
-                <label for="validationCustom04">Importe</label>
-                <input
-                  id="importe"
-                  type="tel"
-                  class="form-control"
-                  id="validationCustom04"
-                  data-toggle="input-mask"
-                  data-mask-format="000,000,000.00"
-                  data-reverse="true"
-                  placeholder="Importe"
-                  required
-                />
-
-                <div class="invalid-feedback">Por favor ingrese un importe válido.</div>
-              </div>
-
-              <div class="col-12">
-                <div class="text-end mt-xl-0 mt-2">
-                  <button id="cnl" type="button" class="btn btn-block btn-danger mb-2">Cancelar</button>
-                  <button id="send" type="submit" class="btn btn-success mb-2 me-2">Aceptar</button>
+                <div class="form-group mb-3">
+                  <label for="validationDate">Fecha en la que se realizó el Depósito</label>
+                  <input
+                    id="fecha"
+                    type="date"
+                    class="form-control"
+                    max="4"
+                    id="validationDate"
+                    placeholder="Fecha de Depósito"
+                    value=""
+                    required
+                  />
+                  <div class="invalid-feedback">Por favor ingrese una Fecha.</div>
+                  <div class="valid-feedback">Fecha seleccionada correctamente</div>
                 </div>
-              </div>
-            </form>
+                <div class="form-group mb-3">
+                  <label for="validationTypeOperation">Tipo de Operación</label>
+                  <select
+                    id="tipo_operacion"
+                    class="form-control"
+                    placeholder="Seleccione un Tipo de Operación"
+                    aria-describedby="inputGroupPrepend"
+                    required
+                  >
+                    <option></option>
+                    <option value="deposito">Deposito Bancario</option>
+                    <option value="transferencia">Transferencia</option>
+                  </select>
+
+                  <div class="invalid-feedback">Por favor seleccione tipo de operación.</div>
+                </div>
+
+                <div class="form-group mb-3">
+                  <label for="validationCustomUsername">Banco Destino</label>
+                  <select
+                    id="banco"
+                    class="form-control"
+                    placeholder="Seleccione un Banco Destino"
+                    aria-describedby="inputGroupPrepend"
+                    required
+                  >
+                    <option></option>
+                    <option>Banco Macro</option>
+                    <option>Banco Córdoba</option>
+                  </select>
+
+                  <div class="invalid-feedback">Por favor seleccione un Banco.</div>
+                </div>
+                <div class="form-group mb-3">
+                  <label for="validationCustom03">Numero de Operacion</label>
+                  <input
+                    id="noperacion"
+                    type="text"
+                    class="form-control"
+                    id="validationCustom03"
+                    placeholder="Número de Operación"
+                    required
+                  />
+                  <div class="invalid-feedback">Ingrese el Número de Operación.</div>
+                </div>
+                <div class="form-group mb-3">
+                  <label for="validationCustom04">Importe</label>
+                  <input
+                    id="importe"
+                    type="tel"
+                    class="form-control"
+                    id="validationCustom04"
+                    data-toggle="input-mask"
+                    data-mask-format="000,000,000.00"
+                    data-reverse="true"
+                    placeholder="Importe"
+                    required
+                  />
+
+                  <div class="invalid-feedback">Por favor ingrese un importe válido.</div>
+                </div>
+
+                <div class="col-12">
+                  <div class="text-end mt-xl-0 mt-2">
+                    <button id="cnl" type="button" class="btn btn-block btn-danger mb-2">Cancelar</button>
+                    <button id="send" type="submit" class="btn btn-success mb-2 me-2">Aceptar</button>
+                  </div>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       </div>
     </div>
-    <!-- </div> -->
     <footer class="bottomnav">
       <a href="cargarpagos.html" class="bottomnav-item active" aria-current="page">
         <i class="mdi mdi-24px mdi-cash-plus"></i>
