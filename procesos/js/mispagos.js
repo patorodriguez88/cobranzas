@@ -62,9 +62,7 @@ $(document).ready(function () {
         data: null,
         defaultContent: "",
         render: function (data, type, row) {
-          const fecha = row.Fecha
-            ? row.Fecha.split("-").reverse().join("/")
-            : "";
+          const fecha = row.Fecha ? row.Fecha.split("-").reverse().join("/") : "";
           const hora = row.Hora || "";
           return `
         <div class="mp-fecha">
@@ -105,15 +103,20 @@ $(document).ready(function () {
         data: null,
         defaultContent: "",
         render: function (data, type, row) {
-          const formatted = $.fn.dataTable.render
-            .number(",", ".", 2, "$ ")
-            .display(row.Importe || 0);
+          const formatted = $.fn.dataTable.render.number(",", ".", 2, "$ ").display(row.Importe || 0);
 
-          const confirmado = parseInt(row.Conciliado) === 1;
+          const estadoRaw = (row.Estado || "").toString().trim();
+          const estadoLower = estadoRaw.toLowerCase();
 
-          const estadoHtml = confirmado
-            ? `<div class="mp-status mp-status-ok">Confirmado</div>`
-            : `<div class="mp-status mp-status-pending">Pendiente</div>`;
+          let estadoHtml = "";
+
+          if (!estadoRaw) {
+            estadoHtml = `<div class="mp-status mp-status-pending">Pendiente</div>`;
+          } else if (estadoLower === "conciliado") {
+            estadoHtml = `<div class="mp-status mp-status-ok">Conciliado</div>`;
+          } else {
+            estadoHtml = `<div class="mp-status mp-status-pending">${escapeHtml(estadoRaw)}</div>`;
+          }
 
           return `
       <div class="mp-amount-block">
