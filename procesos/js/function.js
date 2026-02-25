@@ -13,8 +13,7 @@ function CompruebaConexion() {
       if (jsonData.success == 1) {
         // $('#name').val(jsonData.data[0].RazonSocial);
       } else {
-        window.location.href =
-          "https://www.dintersa.com.ar/cobranza/inicio.html";
+        window.location.href = "https://www.dintersa.com.ar/cobranza/inicio.html";
       }
     },
   });
@@ -27,16 +26,14 @@ function enviarFormulario() {
   let importe = $("#importe").val();
 
   $("#alert_confirmation_body").html(
-    "Confirmo el deposito de $ " +
-      importe +
-      " en la cuenta de Dinter del Banco " +
-      banco,
+    "Confirmo el deposito de $ " + importe + " en la cuenta de Dinter del Banco " + banco,
   );
 
   $("#staticBackdrop").modal("show");
 
   $("#alert_confirmation_btn_ok").click(function () {
     $("#staticBackdrop").modal("hide");
+    $("#form_cobranza").trigger("reset");
     let name = $("#name").val();
     let ncliente = $("#ncliente").val();
     let fecha = $("#fecha").val();
@@ -115,15 +112,12 @@ $("#ingreso_btn").click(function () {
     dataType: "json", // 👈 importante, evitás JSON.parse manual
     success: function (jsonData) {
       if (jsonData.success == 1) {
-        window.location.href =
-          "https://www.dintersa.com.ar/cobranza/cargarpagos.html";
+        window.location.href = "https://www.dintersa.com.ar/cobranza/cargarpagos.html";
       } else {
         // Si usás códigos estructurados
         switch (jsonData.code) {
           case "CLIENTE_SUSPENDIDO":
-            mostrarError(
-              "Su cuenta se encuentra suspendida. Comuníquese con administración.",
-            );
+            mostrarError("Su cuenta se encuentra suspendida. Comuníquese con administración.");
             break;
 
           case "CLIENTE_INEXISTENTE":
