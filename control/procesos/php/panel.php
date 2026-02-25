@@ -68,7 +68,7 @@ if (isset($_POST['Conciliar'])) {
 
         $mysqli->query("UPDATE Cobranza SET Conciliado=1 WHERE id='$_POST[id_cobranza]'");
 
-        echo json_encode(array('success' => 1));
+        echo json_encode(array('success' => 1, 'bloque' => 'Conciliar'));
     } else {
 
         echo json_encode(array('success' => 0));
@@ -83,7 +83,7 @@ if (isset($_POST['Vuelve'])) {
 
         $mysqli->query("DELETE FROM `Cobranza_conciliacion` WHERE id_cobranza='$_POST[id_cobranza]'");
 
-        echo json_encode(array('success' => 1));
+        echo json_encode(array('success' => 1, 'bloque' => 'Vuelve'));
     } else {
 
         echo json_encode(array('success' => 0));
@@ -99,7 +99,7 @@ if (isset($_POST['Rechazar'])) {
 
         $mysqli->query("UPDATE Cobranza SET Conciliado=1 WHERE id='$_POST[id_cobranza]'");
 
-        echo json_encode(array('success' => 1));
+        echo json_encode(array('success' => 1, 'bloque' => 'Rechazar'));
     } else {
 
         echo json_encode(array('success' => 0));
@@ -120,7 +120,7 @@ if (isset($_POST['Conciliar_quik'])) {
 
         $mysqli->query("UPDATE Cobranza SET Conciliado=1 WHERE id='$_POST[id_cobranza]'");
 
-        echo json_encode(array('success' => 1));
+        echo json_encode(array('success' => 1, 'bloque' => 'Conciliar_quik'));
     } else {
 
         echo json_encode(array('success' => 0));
@@ -131,7 +131,7 @@ if (isset($_POST['Conciliar_quik_cancel'])) {
 
     $mysqli->query("UPDATE Cobranza SET Conciliado=0 WHERE id='$_POST[id_cobranza]'");
     $mysqli->query("DELETE FROM Cobranza_conciliacion WHERE id_cobranza='$_POST[id_cobranza]'");
-    echo json_encode(array('success' => 1));
+    echo json_encode(array('success' => 1, 'bloque' => 'Conciliar_quik_cancel'));
 }
 
 //BUSCO DATOS
