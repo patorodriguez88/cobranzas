@@ -176,7 +176,7 @@ $("#ingreso_btn").click(function () {
     dataType: "json", // 👈 importante, evitás JSON.parse manual
     success: function (jsonData) {
       if (jsonData.success == 1) {
-        window.location.href = "https://www.dintersa.com.ar/cobranza/cargarpagos.html";
+        // window.location.href = "https://www.dintersa.com.ar/cobranza/cargarpagos.html";
       } else {
         // Si usás códigos estructurados
         switch (jsonData.code) {
@@ -208,9 +208,7 @@ function mostrarError(mensaje) {
   $("#error_text").html(mensaje);
   $("#error_alert").fadeIn();
 }
-$("#cnl").click(function () {
-  window.location.href = "https://www.dintersa.com.ar/cobranza/inicio.html";
-});
+
 function resetValidationUI() {
   const form = document.getElementById("form_cobranza");
   form.classList.remove("was-validated");
@@ -233,7 +231,7 @@ function CompruebaConexion() {
       if (jsonData.success == 1) {
         // $('#name').val(jsonData.data[0].RazonSocial);
       } else {
-        window.location.href = "https://www.dintersa.com.ar/cobranza/inicio.html";
+        // window.location.href = "https://www.dintersa.com.ar/cobranza/inicio.html";
       }
     },
   });
