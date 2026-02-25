@@ -31,9 +31,75 @@ function enviarFormulario() {
 
   $("#staticBackdrop").modal("show");
 
+  // $("#alert_confirmation_btn_ok").click(function () {
+  //   $("#staticBackdrop").modal("hide");
+  //   $("#form_cobranza").trigger("reset");
+  //   let name = $("#name").val();
+  //   let ncliente = $("#ncliente").val();
+  //   let fecha = $("#fecha").val();
+  //   let banco = $("#banco").val();
+  //   let noperacion = $("#noperacion").val();
+  //   let importe = $("#importe").val().replace(/,/g, "");
+  //   let tipooperacion = $("#tipo_operacion").val();
+  //   if (
+  //     name != "" &&
+  //     ncliente != "" &&
+  //     fecha != "" &&
+  //     banco != "" &&
+  //     noperacion != "" &&
+  //     importe != "" &&
+  //     tipooperacion != ""
+  //   ) {
+  //     $.ajax({
+  //       type: "POST",
+  //       url: "procesos/php/function.php",
+  //       data: {
+  //         IngresarPago: 1,
+  //         name: name,
+  //         ncliente: ncliente,
+  //         fecha: fecha,
+  //         banco: banco,
+  //         noperacion: noperacion,
+  //         importe: importe,
+  //         tipooperacion: tipooperacion,
+  //       },
+  //       success: function (response) {
+  //         var jsonData = JSON.parse(response);
+  //         $("#loading").modal("hide");
+  //         if (jsonData.success == 1) {
+  //           $.ajax({
+  //             type: "POST",
+  //             url: "procesos/php/function.php",
+  //             data: { NComprobante: 1, n: jsonData.idIngreso },
+  //             success: function (response) {
+  //               $("#standard-modal").modal("show");
+
+  //               $("#standard-modal").on("hidden.bs.modal", function () {
+  //                 $("#success-alert-modal").modal("show");
+
+  //                 $("#form_cobranza").trigger("reset");
+
+  //                 console.log("dato", jsonData);
+
+  //                 $("#texto_exito").html(
+  //                   "Cargamos tu Pago en nuestro sistema, el numero de registro es el Numero: </b> " +
+  //                     jsonData.idIngreso,
+  //                 );
+  //               });
+  //             },
+  //           });
+  //         } else {
+  //           $("#danger-alert-modal").modal("show");
+  //         }
+  //       },
+  //     });
+  //   }
+  // });
   $("#alert_confirmation_btn_ok").click(function () {
+    // Cerrá modal y reseteá YA
     $("#staticBackdrop").modal("hide");
-    $("#form_cobranza").trigger("reset");
+    $("#form_cobranza")[0].reset(); // más directo que trigger
+
     let name = $("#name").val();
     let ncliente = $("#ncliente").val();
     let fecha = $("#fecha").val();
@@ -41,59 +107,82 @@ function enviarFormulario() {
     let noperacion = $("#noperacion").val();
     let importe = $("#importe").val().replace(/,/g, "");
     let tipooperacion = $("#tipo_operacion").val();
-    if (
-      name != "" &&
-      ncliente != "" &&
-      fecha != "" &&
-      banco != "" &&
-      noperacion != "" &&
-      importe != "" &&
-      tipooperacion != ""
-    ) {
-      $.ajax({
-        type: "POST",
-        url: "procesos/php/function.php",
-        data: {
-          IngresarPago: 1,
-          name: name,
-          ncliente: ncliente,
-          fecha: fecha,
-          banco: banco,
-          noperacion: noperacion,
-          importe: importe,
-          tipooperacion: tipooperacion,
-        },
-        success: function (response) {
-          var jsonData = JSON.parse(response);
-          $("#loading").modal("hide");
-          if (jsonData.success == 1) {
-            $.ajax({
-              type: "POST",
-              url: "procesos/php/function.php",
-              data: { NComprobante: 1, n: jsonData.idIngreso },
-              success: function (response) {
-                $("#standard-modal").modal("show");
 
-                $("#standard-modal").on("hidden.bs.modal", function () {
-                  $("#success-alert-modal").modal("show");
-
-                  $("#form_cobranza").trigger("reset");
-
-                  console.log("dato", jsonData);
-
-                  $("#texto_exito").html(
-                    "Cargamos tu Pago en nuestro sistema, el numero de registro es el Numero: </b> " +
-                      jsonData.idIngreso,
-                  );
-                });
-              },
-            });
-          } else {
-            $("#danger-alert-modal").modal("show");
-          }
-        },
-      });
+    if (!name || !ncliente || !fecha || !banco || !noperacion || !importe || !tipooperacion) {
+      return;
     }
+
+    // (opcional) mostrás loading acá si querés
+    // $("#loading").modal("show");
+
+    $.ajax({
+      type: "POST",
+      url: "procesos/php/function.php",
+      data: {
+        IngresarPago: 1,
+        name,
+        ncliente,
+        fecha,
+        banco,
+        noperacion,
+        importe,
+        tipooperacion,
+      },
+      success: function (response) {
+        let jsonData;
+        try {
+          jsonData = typeof response === "string" ? JSON.parse(response) : response;
+        } catch (e) {
+          console.log("Respuesta inválida:", response);
+          $("#loading").modal("hide");
+          $("#danger-alert-modal").modal("show");
+          return;
+        }
+
+        $("#loading").modal("hide");
+
+        if (jsonData.success != 1) {
+          $("#danger-alert-modal").modal("show");
+          return;
+        }
+
+        // Pedís NComprobante
+        $.ajax({
+          type: "POST",
+          url: "procesos/php/function.php",
+          dataType: "json",
+          data: { NComprobante: 1, n: jsonData.idIngreso },
+          success: function (resp2) {
+            // Mostrás el modal "standard" YA
+            $("#standard-modal").modal("show");
+
+            // IMPORTANTÍSIMO: usá .one para que no se acumulen eventos
+            $("#standard-modal")
+              .off("hidden.bs.modal") // por si quedó algo viejo
+              .one("hidden.bs.modal", function () {
+                // Mostrás éxito inmediatamente al cerrar standard
+                $("#texto_exito").html(
+                  "Cargamos tu Pago en nuestro sistema, el número de registro es: <b>" + jsonData.idIngreso + "</b>",
+                );
+
+                $("#success-alert-modal").modal("show");
+
+                // Si querés reset adicional, ok (pero no debería ser necesario)
+                $("#form_cobranza")[0].reset();
+              });
+          },
+          error: function (xhr) {
+            console.log("Error NComprobante:", xhr.responseText);
+            $("#danger-alert-modal").modal("show");
+          },
+        });
+      },
+      error: function (xhr) {
+        console.log("Error IngresarPago:", xhr.responseText);
+        $("#loading").modal("hide");
+        $("#danger-alert-modal").modal("show");
+      },
+    });
   });
 }
 
