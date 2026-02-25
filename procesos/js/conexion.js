@@ -1,6 +1,4 @@
 $(document).ready(function () {
-  checkAppVersion();
-
   $("#success-alert-modal").on("hidden.bs.modal", function () {
     location.reload();
   });
