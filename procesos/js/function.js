@@ -42,7 +42,7 @@ function enviarFormulario() {
   let importeTexto = $("#importe").val();
 
   $("#alert_confirmation_body").html(
-    "Confirmo el deposito de $ " + importeTexto + " en la cuenta de Dinter del Banco " + banco
+    "Confirmo el deposito de $ " + importeTexto + " en la cuenta de Dinter del Banco " + banco,
   );
 
   showStaticBackdrop();
@@ -50,7 +50,6 @@ function enviarFormulario() {
   $("#alert_confirmation_btn_ok")
     .off("click")
     .one("click", function () {
-
       // 1) Tomar valores ANTES de reset
       let name = $("#name").val();
       let ncliente = $("#ncliente").val();
@@ -85,7 +84,60 @@ function enviarFormulario() {
           importe,
           tipooperacion,
         },
-        ...
+        success: function (response) {
+          let jsonData;
+          try {
+            jsonData = typeof response === "string" ? JSON.parse(response) : response;
+          } catch (e) {
+            console.log("Respuesta inválida:", response);
+            $("#loading").modal("hide");
+            $("#danger-alert-modal").modal("show");
+            return;
+          }
+
+          $("#loading").modal("hide");
+
+          if (jsonData.success != 1) {
+            $("#danger-alert-modal").modal("show");
+            return;
+          }
+
+          // Pedís NComprobante
+          $.ajax({
+            type: "POST",
+            url: "procesos/php/function.php",
+            dataType: "json",
+            data: { NComprobante: 1, n: jsonData.idIngreso },
+            success: function (resp2) {
+              // Mostrás el modal "standard" YA
+              $("#standard-modal").modal("show");
+
+              // IMPORTANTÍSIMO: usá .one para que no se acumulen eventos
+              $("#standard-modal")
+                .off("hidden.bs.modal") // por si quedó algo viejo
+                .one("hidden.bs.modal", function () {
+                  // Mostrás éxito inmediatamente al cerrar standard
+                  $("#texto_exito").html(
+                    "Cargamos tu Pago en nuestro sistema, el número de registro es: <b>" + jsonData.idIngreso + "</b>",
+                  );
+
+                  $("#success-alert-modal").modal("show");
+
+                  // Si querés reset adicional, ok (pero no debería ser necesario)
+                  $("#form_cobranza")[0].reset();
+                });
+            },
+            error: function (xhr) {
+              console.log("Error NComprobante:", xhr.responseText);
+              $("#danger-alert-modal").modal("show");
+            },
+          });
+        },
+        error: function (xhr) {
+          console.log("Error IngresarPago:", xhr.responseText);
+          $("#loading").modal("hide");
+          $("#danger-alert-modal").modal("show");
+        },
       });
     });
 }
