@@ -7,71 +7,69 @@ body {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: 0;
+  bottom: 12px;
 
-  height: 72px;
+  height: 76px;
   padding-bottom: env(safe-area-inset-bottom);
-  padding-left: 24px; /* 👈 más margen lateral */
-  padding-right: 24px;
-
-  display: flex;
-  gap: 10px; /* 👈 separación entre botones */
-  align-items: center;
-  justify-content: center; /* 👈 centrados */
-
-  background: #ffffff;
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.06);
-
-  z-index: 1050;
-}
-
-.bottomnav-item {
-  flex: 0 0 auto; /* 👈 ya no ocupan todo el ancho */
-  width: 150px; /* 👈 ancho fijo más compacto */
-  height: 52px;
 
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
 
-  border-radius: 14px;
-  text-decoration: none;
-
-  color: #6c757d;
-  background: rgba(0, 0, 0, 0.03);
-
-  transition:
-    transform 0.08s ease,
-    background 0.15s ease,
-    color 0.15s ease;
+  background: #ffffff;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.05);
+  z-index: 1050;
 }
 
-.bottomnav-item:active {
-  transform: scale(0.98);
+.bottomnav-inner {
+  width: min(500px, calc(100% - 24px));
+  display: flex;
+  justify-content: space-between;
+}
+
+.bottomnav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column; /* 👈 ÍCONO ARRIBA */
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+
+  text-decoration: none;
+  border-radius: 14px;
+  padding: 8px 0;
+
+  color: #6c757d;
+  transition: all 0.15s ease;
 }
 
 .bottomnav-item i {
-  line-height: 1;
+  font-size: 22px;
 }
 
 .bottomnav-item span {
+  font-size: 12px;
   font-weight: 600;
-  font-size: 13px;
-  letter-spacing: 0.2px;
+}
+
+.bottomnav-item:active {
+  transform: scale(0.95);
 }
 
 .bottomnav-item.active {
-  color: #0d6efd; /* azul bootstrap */
-  background: rgba(13, 110, 253, 0.12);
+  color: #0d6efd;
+}
+
+.bottomnav-item.active i {
+  transform: scale(1.1);
 }
 /* ===== Tabla Mis Pagos compacta ===== */
 
 /* ===== Mis Pagos: look limpio tipo app ===== */
 #mis_pagos {
   border-collapse: separate !important;
-  border-spacing: 0 10px; /* separa filas como tarjetas */
+  border-spacing: 0 8px; /* separa filas como tarjetas */
 }
 
 #mis_pagos thead th {
