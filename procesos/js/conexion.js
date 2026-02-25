@@ -6,7 +6,7 @@ $(document).ready(function () {
   $.ajax({
     type: "POST",
     url: "conexion/comprueba.php",
-    data: { comprueba: 1 },
+    data: { comprueba_cobranza: 1 },
     success: function (response) {
       var jsonData = JSON.parse(response);
 
@@ -28,7 +28,7 @@ $(document).ready(function () {
           },
         });
       } else {
-        // window.location.href = "https://www.dintersa.com.ar/cobranza/inicio.html";
+        window.location.href = "https://www.dintersa.com.ar/cobranza/inicio.html";
       }
     },
   });
