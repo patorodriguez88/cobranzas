@@ -24,182 +24,188 @@
     <link rel="manifest" href="manifest.json" />
     <link rel="stylesheet" href="saas/assets/css/app-cobranza.css" />
   </head>
-  <!-- Modal -->
-  <div
-    class="modal fade"
-    id="loading"
-    data-bs-backdrop="static"
-    data-bs-keyboard="false"
-    tabindex="-1"
-    aria-labelledby="staticBackdropLabel"
-    aria-hidden="true"
-  >
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="staticBackdropLabel">Modal title</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true"></button>
+
+  <body class="loading" data-layout="topnav" data-layout-config='{"darkMode":false}'>
+    <!-- Modal -->
+    <div
+      class="modal fade"
+      id="loading"
+      data-bs-backdrop="static"
+      data-bs-keyboard="false"
+      tabindex="-1"
+      aria-labelledby="staticBackdropLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="staticBackdropLabel">Modal title</h5>
+            <!-- <button type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true"></button> -->
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+          <!-- end modal header -->
+          <div class="modal-body">
+            <h4>
+              Procesando...
+              <div class="spinner-grow text-secondary" role="status"></div>
+            </h4>
+          </div>
         </div>
-        <!-- end modal header -->
-        <div class="modal-body">
-          <h4>
-            Procesando...
-            <div class="spinner-grow text-secondary" role="status"></div>
-          </h4>
-        </div>
+        <!-- end modal content-->
       </div>
-      <!-- end modal content-->
+      <!-- end modal dialog-->
     </div>
-    <!-- end modal dialog-->
-  </div>
-  <!-- end modal-->
+    <!-- end modal-->
 
-  <!-- Standard modal -->
+    <!-- Standard modal -->
 
-  <div
-    id="standard-modal"
-    class="modal fade"
-    tabindex="-1"
-    role="dialog"
-    data-bs-backdrop="static"
-    data-bs-keyboard="false"
-    tabindex="-1"
-    aria-labelledby="standard-modalLabel"
-    aria-hidden="true"
-  >
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h4 class="modal-title" id="standard-modalLabel">Ingresar Foto del Comprobante</h4>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true"></button>
-        </div>
-        <div class="modal-body">
-          <!-- File Upload -->
-          <form
-            action="procesos/php/upload.php"
-            method="post"
-            class="dropzone"
-            id="myAwesomeDropzone"
-            data-plugin="dropzone"
-            data-previews-container="#file-previews"
-            data-upload-preview-template="#uploadPreviewTemplate"
-          >
-            <div class="fallback">
-              <input name="file" type="file" multiple />
-            </div>
+    <div
+      id="standard-modal"
+      class="modal fade"
+      tabindex="-1"
+      role="dialog"
+      data-bs-backdrop="static"
+      data-bs-keyboard="false"
+      tabindex="-1"
+      aria-labelledby="standard-modalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title" id="standard-modalLabel">Ingresar Foto del Comprobante</h4>
+            <!-- <button type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true"></button> -->
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+          <div class="modal-body">
+            <!-- File Upload -->
+            <form
+              action="procesos/php/upload.php"
+              method="post"
+              class="dropzone"
+              id="myAwesomeDropzone"
+              data-plugin="dropzone"
+              data-previews-container="#file-previews"
+              data-upload-preview-template="#uploadPreviewTemplate"
+            >
+              <div class="fallback">
+                <input name="file" type="file" multiple />
+              </div>
 
-            <div class="dz-message needsclick">
-              <i class="h1 text-muted dripicons-cloud-upload"></i>
-              <h3>Presione aquí para subir una foto del comprobante del depósito.</h3>
-              <span class="text-muted font-13">(Intente que la <strong>imagen</strong> este nitida y visible.)</span>
-            </div>
-          </form>
-          <!-- Preview -->
-          <div class="dropzone-previews mt-3" id="file-previews">
-            <!-- file preview template -->
-            <div class="d-none" id="uploadPreviewTemplate">
-              <div class="card mt-1 mb-0 shadow-none border">
-                <div class="p-2">
-                  <div class="row align-items-center">
-                    <div class="col-auto">
-                      <img data-dz-thumbnail src="#" class="avatar-sm rounded bg-light" alt="" />
-                    </div>
-                    <div class="col ps-0">
-                      <a href="javascript:void(0);" class="text-muted fw-bold" data-dz-name></a>
-                      <p class="mb-0" data-dz-size></p>
-                    </div>
-                    <div class="col-auto">
-                      <!-- Button -->
-                      <a href="" class="btn btn-link btn-lg text-muted erase" data-dz-remove>
-                        <i class="dripicons-cross"></i>
-                      </a>
+              <div class="dz-message needsclick">
+                <i class="h1 text-muted dripicons-cloud-upload"></i>
+                <h3>Presione aquí para subir una foto del comprobante del depósito.</h3>
+                <span class="text-muted font-13">(Intente que la <strong>imagen</strong> este nitida y visible.)</span>
+              </div>
+            </form>
+            <!-- Preview -->
+            <div class="dropzone-previews mt-3" id="file-previews">
+              <!-- file preview template -->
+              <div class="d-none" id="uploadPreviewTemplate">
+                <div class="card mt-1 mb-0 shadow-none border">
+                  <div class="p-2">
+                    <div class="row align-items-center">
+                      <div class="col-auto">
+                        <img data-dz-thumbnail src="#" class="avatar-sm rounded bg-light" alt="" />
+                      </div>
+                      <div class="col ps-0">
+                        <a href="javascript:void(0);" class="text-muted fw-bold" data-dz-name></a>
+                        <p class="mb-0" data-dz-size></p>
+                      </div>
+                      <div class="col-auto">
+                        <!-- Button -->
+                        <a href="" class="btn btn-link btn-lg text-muted erase" data-dz-remove>
+                          <i class="dripicons-cross"></i>
+                        </a>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-        <div class="col-12">
-          <div class="text-end mt-xl-0 mt-2">
-            <button type="button" class="btn btn-light mb-2 me-2" data-bs-dismiss="modal">No tengo comprobante</button>
-            <button type="button" class="btn btn-success mb-2 me-2" data-bs-dismiss="modal">Aceptar</button>
+          <div class="col-12">
+            <div class="text-end mt-xl-0 mt-2">
+              <button type="button" class="btn btn-light mb-2 me-2" data-bs-dismiss="modal">
+                No tengo comprobante
+              </button>
+              <button type="button" class="btn btn-success mb-2 me-2" data-bs-dismiss="modal">Aceptar</button>
+            </div>
           </div>
         </div>
+        <!-- /.modal-content -->
       </div>
-      <!-- /.modal-content -->
+      <!-- /.modal-dialog -->
     </div>
-    <!-- /.modal-dialog -->
-  </div>
-  <!-- /.modal -->
+    <!-- /.modal -->
 
-  <div
-    style="display: none"
-    class="modal fade"
-    id="staticBackdrop"
-    data-bs-backdrop="static"
-    data-bs-keyboard="false"
-    tabindex="-1"
-    aria-labelledby="staticBackdropLabel"
-    aria-hidden="true"
-  >
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="staticBackdropLabel">Confirmar Deposito</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true"></button>
+    <div
+      style="display: none"
+      class="modal fade"
+      id="staticBackdrop"
+      data-bs-backdrop="static"
+      data-bs-keyboard="false"
+      tabindex="-1"
+      aria-labelledby="staticBackdropLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="staticBackdropLabel">Confirmar Deposito</h5>
+            <!-- <button type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true"></button> -->
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+          <!-- end modal header -->
+          <div id="alert_confirmation_body" class="modal-body"></div>
+          <div class="modal-footer">
+            <a type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</a>
+            <a id="alert_confirmation_btn_ok" type="button" class="btn btn-success">Confirmar</a>
+          </div>
+          <!-- end modal footer -->
         </div>
-        <!-- end modal header -->
-        <div id="alert_confirmation_body" class="modal-body"></div>
-        <div class="modal-footer">
-          <a type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</a>
-          <a id="alert_confirmation_btn_ok" type="button" class="btn btn-success">Confirmar</a>
-        </div>
-        <!-- end modal footer -->
+        <!-- end modal content-->
       </div>
-      <!-- end modal content-->
+      <!-- end modal dialog-->
     </div>
-    <!-- end modal dialog-->
-  </div>
-  <!-- end modal-->
+    <!-- end modal-->
 
-  <div id="success-alert-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-sm modal-dialog-centered">
-      <div class="modal-content modal-filled bg-success">
-        <div class="modal-body p-4">
-          <div class="text-center">
-            <i class="dripicons-checkmark h1"></i>
-            <h4 class="mt-2">Pago Cargado!</h4>
-            <p id="texto_exito" class="mt-3"></p>
-            <button type="button" class="btn btn-light my-2" data-bs-dismiss="modal">Aceptar</button>
+    <div id="success-alert-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+      <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content modal-filled bg-success">
+          <div class="modal-body p-4">
+            <div class="text-center">
+              <i class="dripicons-checkmark h1"></i>
+              <h4 class="mt-2">Pago Cargado!</h4>
+              <p id="texto_exito" class="mt-3"></p>
+              <button type="button" class="btn btn-light my-2" data-bs-dismiss="modal">Aceptar</button>
+            </div>
           </div>
         </div>
+        <!-- /.modal-content -->
       </div>
-      <!-- /.modal-content -->
+      <!-- /.modal-dialog -->
     </div>
-    <!-- /.modal-dialog -->
-  </div>
-  <!-- /.modal -->
+    <!-- /.modal -->
 
-  <div id="danger-alert-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-sm">
-      <div class="modal-content modal-filled bg-danger">
-        <div class="modal-body p-4">
-          <div class="text-center">
-            <i class="dripicons-wrong h1"></i>
-            <h4 class="mt-2">Ups!</h4>
-            <p class="mt-3">Ocurrio algún error al intentar cargar tu pago, por favor volve a intentarlo.</p>
-            <button type="button" class="btn btn-light my-2" data-bs-dismiss="modal">Continuar</button>
+    <div id="danger-alert-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+      <div class="modal-dialog modal-sm">
+        <div class="modal-content modal-filled bg-danger">
+          <div class="modal-body p-4">
+            <div class="text-center">
+              <i class="dripicons-wrong h1"></i>
+              <h4 class="mt-2">Ups!</h4>
+              <p class="mt-3">Ocurrio algún error al intentar cargar tu pago, por favor volve a intentarlo.</p>
+              <button type="button" class="btn btn-light my-2" data-bs-dismiss="modal">Continuar</button>
+            </div>
           </div>
         </div>
+        <!-- /.modal-content -->
       </div>
-      <!-- /.modal-content -->
+      <!-- /.modal-dialog -->
     </div>
-    <!-- /.modal-dialog -->
-  </div>
-  <!-- /.modal -->
+    <!-- /.modal -->
 
-  <body class="loading" data-layout="topnav" data-layout-config='{"darkMode":false}'>
     <!-- Begin page -->
     <!-- <div class="wrapper"> -->
     <div class="content-page">
