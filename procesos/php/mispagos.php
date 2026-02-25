@@ -9,16 +9,18 @@ if (isset($_POST['Mis_pagos'])) {
     if ($Ncliente > 0) {
 
         // $sql = $mysqli->query("SELECT * FROM Cobranza_ WHERE NumeroCliente='$Ncliente' ORDER BY id DESC");
-        $sql = $mysqli->query("SELECT c.*, cc.Estado
-                                FROM Cobranza c
-                                INNER JOIN Cobranza_conciliacion cc 
-                                    ON c.id = cc.id_cobranza
-                                WHERE c.NumeroCliente = $Ncliente
-                                AND cc.id = (
-                                    SELECT MAX(cc2.id)
-                                    FROM Cobranza_conciliacion cc2
-                                    WHERE cc2.id_cobranza = c.id
-                                );");
+        $sql = $mysqli->query("SELECT 
+                c.*,
+                COALESCE(cc.Estado, 'Pendiente') AS Estado
+                FROM Cobranza c
+                LEFT JOIN Cobranza_conciliacion cc
+                ON cc.id = (
+                    SELECT MAX(cc2.id)
+                    FROM Cobranza_conciliacion cc2
+                    WHERE cc2.id_cobranza = c.id
+                )
+                WHERE c.NumeroCliente = $Ncliente;");
+
         $rows = [];
 
         while ($row = $sql->fetch_array(MYSQLI_ASSOC)) {
