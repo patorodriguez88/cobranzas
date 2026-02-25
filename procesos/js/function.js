@@ -243,7 +243,40 @@ function enviarFormulario() {
       });
     });
 }
+function limitarFechaUltimos30Dias() {
+  const el = document.getElementById("fecha");
+  if (!el) return;
 
+  const hoy = new Date();
+  const desde = new Date();
+  desde.setDate(hoy.getDate() - 30);
+
+  const fmt = (d) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  };
+
+  const max = fmt(hoy);
+  const min = fmt(desde);
+
+  el.max = max;
+  el.min = min;
+
+  // Si ya había un valor fuera de rango, lo ajustamos
+  if (el.value && (el.value < min || el.value > max)) el.value = max;
+}
+$("#fecha").on("change blur", function () {
+  const min = this.min;
+  const max = this.max;
+  const v = (this.value || "").trim();
+  if (!v) return;
+
+  if (v < min) this.value = min;
+  if (v > max) this.value = max;
+});
+document.addEventListener("DOMContentLoaded", limitarFechaUltimos30Dias);
 // ==============================
 // Eventos del modal standard (si existe)
 // ==============================
