@@ -11,6 +11,7 @@
     <!-- App css -->
     <link href="saas/assets/css/icons.min.css" rel="stylesheet" type="text/css" />
     <link href="saas/assets/css/app.min.css" rel="stylesheet" type="text/css" id="app-style" />
+
     <!-- pwa -->
     <meta name="theme-color" content="#273746" />
     <meta name="MobileOptimized" content="width" />
@@ -21,38 +22,44 @@
     <link rel="apple-touch-icon" href="./dinterDark.png" />
     <link rel="apple-touch-startup-image" href="./dinterDark.png" />
     <link rel="manifest" href="manifest.json" />
+
     <link rel="stylesheet" href="saas/assets/css/app-cobranza.css" />
     <link href="saas/assets/css/vendor/dataTables.bootstrap5.css" rel="stylesheet" type="text/css" />
     <link href="saas/assets/css/vendor/responsive.bootstrap5.css" rel="stylesheet" type="text/css" />
   </head>
 
   <body class="loading" data-layout="topnav" data-layout-config='{"darkMode":false}'>
-    <!-- Begin page -->
-    <!-- <div class="wrapper"> -->
     <div class="content-page">
       <div class="content">
-        <!-- Topbar Start -->
         <div class="container-fluid">
           <div class="row">
             <div class="col-12">
               <div class="page-title-box">
                 <h4 class="page-title">Mis Pagos</h4>
-                <!-- <div class="table-responsive mt-2"> -->
-                <div class="dt-wrapper mt-2">
-                  <table class="table table-bordered table-centered mb-0" id="mis_pagos">
-                    <thead class="table-light">
-                      <tr>
-                        <th>id</th>
-                        <th>Fecha</th>
-                        <th>Datos</th>
-                        <!-- <th>Operacion</th> -->
-                        <th>Importe</th>
-                      </tr>
-                    </thead>
-                    <tbody></tbody>
-                  </table>
-                  <!-- </div> -->
+
+                <!-- ✅ Indicador refresh -->
+                <div id="ptrIndicator">
+                  <div class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></div>
+                  <span>Actualizando…</span>
                 </div>
+
+                <!-- ✅ Contenedor scrolleable -->
+                <div id="misPagosScroll" class="mt-2">
+                  <div class="dt-wrapper">
+                    <table class="table table-bordered table-centered mb-0" id="mis_pagos">
+                      <thead class="table-light">
+                        <tr>
+                          <th>id</th>
+                          <th>Fecha</th>
+                          <th>Datos</th>
+                          <th>Importe</th>
+                        </tr>
+                      </thead>
+                      <tbody></tbody>
+                    </table>
+                  </div>
+                </div>
+                <!-- /#misPagosScroll -->
               </div>
             </div>
           </div>
@@ -74,6 +81,7 @@
         <span>Salir</span>
       </a>
     </footer>
+
     <script src="saas/assets/js/vendor.min.js"></script>
     <script src="saas/assets/js/app.min.js"></script>
 
@@ -93,10 +101,5 @@
 
     <script src="procesos/js/conexion.js"></script>
     <script src="procesos/js/mispagos.js"></script>
-    <!-- plugin js -->
-    <!-- <script src="saas/assets/js/vendor/dropzone.min.js"></script> -->
-    <!-- init js -->
-    <!-- <script src="saas/assets/js/ui/component.fileupload.js"></script> -->
-    <!-- <script src="./script.js"></script> -->
   </body>
 </html>

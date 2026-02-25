@@ -1,4 +1,69 @@
 $(document).ready(function () {
+  (function () {
+    const el = document.getElementById("misPagosScroll");
+    const indicator = document.getElementById("ptrIndicator");
+
+    let startY = 0;
+    let pulling = false;
+    let isRefreshing = false;
+
+    const PULL_THRESHOLD = 70;
+
+    function showIndicator() {
+      indicator.style.display = "flex";
+    }
+    function hideIndicator() {
+      indicator.style.display = "none";
+    }
+
+    function refreshMisPagos() {
+      if (isRefreshing) return;
+      isRefreshing = true;
+      showIndicator();
+
+      try {
+        const dt = $("#mis_pagos").DataTable();
+        dt.ajax.reload(() => {
+          hideIndicator();
+          isRefreshing = false;
+        }, false);
+      } catch (e) {
+        console.error("PTR refresh error:", e);
+        hideIndicator();
+        isRefreshing = false;
+      }
+    }
+
+    // Solo activa si existe el contenedor
+    if (!el) return;
+
+    el.addEventListener(
+      "touchstart",
+      (e) => {
+        if (el.scrollTop !== 0) return;
+        startY = e.touches[0].clientY;
+        pulling = true;
+      },
+      { passive: true },
+    );
+
+    el.addEventListener(
+      "touchend",
+      (e) => {
+        if (!pulling || isRefreshing) return;
+        pulling = false;
+
+        const endY = (e.changedTouches && e.changedTouches[0]?.clientY) || startY;
+        const dy = endY - startY;
+
+        if (dy >= PULL_THRESHOLD && el.scrollTop === 0) {
+          refreshMisPagos();
+        }
+      },
+      { passive: true },
+    );
+  })();
+
   if (!$("#mis_pagos").length) {
     console.error("No existe #mis_pagos en el DOM");
     return;

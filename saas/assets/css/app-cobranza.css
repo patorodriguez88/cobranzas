@@ -190,3 +190,25 @@ table.dataTable thead .sorting_desc:after {
 .mp-status-error {
   color: #dc3545; /* rojo bootstrap */
 }
+/* Contenedor scrolleable para capturar el gesto */
+#misPagosScroll {
+  height: calc(100vh - 170px); /* Ajusta según tu header + bottomnav */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Indicador flotante */
+#ptrIndicator {
+  position: fixed;
+  top: 70px; /* si tu topbar ocupa más/menos, ajustá */
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fff;
+  border-radius: 999px;
+  padding: 8px 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+  z-index: 1050;
+  display: none;
+  align-items: center;
+  gap: 8px;
+}
