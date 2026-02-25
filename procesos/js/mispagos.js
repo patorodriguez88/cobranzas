@@ -8,6 +8,7 @@ $(document).ready(function () {
     let isRefreshing = false;
 
     const PULL_THRESHOLD = 70;
+    const SAFETY_TIMEOUT_MS = 10000; // 10s, ajustable
 
     function showIndicator() {
       indicator.style.display = "flex";
@@ -21,20 +22,44 @@ $(document).ready(function () {
       isRefreshing = true;
       showIndicator();
 
+      // ✅ Seguridad: si por cualquier razón no llega xhr/error, lo cerramos igual
+      const t = setTimeout(() => {
+        hideIndicator();
+        isRefreshing = false;
+      }, SAFETY_TIMEOUT_MS);
+
       try {
-        const dt = $("#mis_pagos").DataTable();
-        dt.ajax.reload(() => {
+        if (!$.fn.dataTable || !$.fn.dataTable.isDataTable("#mis_pagos")) {
+          clearTimeout(t);
           hideIndicator();
           isRefreshing = false;
-        }, false);
+          return;
+        }
+
+        const dt = $("#mis_pagos").DataTable();
+
+        // ✅ Cerramos SIEMPRE, tanto en OK como en ERROR
+        $("#mis_pagos")
+          .one("xhr.dt", function () {
+            clearTimeout(t);
+            hideIndicator();
+            isRefreshing = false;
+          })
+          .one("error.dt", function () {
+            clearTimeout(t);
+            hideIndicator();
+            isRefreshing = false;
+          });
+
+        dt.ajax.reload(null, false);
       } catch (e) {
+        clearTimeout(t);
         console.error("PTR refresh error:", e);
         hideIndicator();
         isRefreshing = false;
       }
     }
 
-    // Solo activa si existe el contenedor
     if (!el) return;
 
     el.addEventListener(
@@ -62,6 +87,14 @@ $(document).ready(function () {
       },
       { passive: true },
     );
+
+    // ✅ Si el usuario cambia de pestaña o vuelve, no dejamos el indicador colgado
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        hideIndicator();
+        isRefreshing = false;
+      }
+    });
   })();
 
   if (!$("#mis_pagos").length) {
