@@ -19,10 +19,7 @@ function ver_duplicados(i) {
       {
         data: null,
         render: function (data, type, row) {
-          return (
-            `<td>${row.Fecha}</br>` +
-            `<small class="text-muted" style="font-size:10px"> ${row.Hora}</small></td>`
-          );
+          return `<td>${row.Fecha}</br>` + `<small class="text-muted" style="font-size:10px"> ${row.Hora}</small></td>`;
         },
       },
 
@@ -132,9 +129,7 @@ function conciliar(id) {
       $("#importe_cobranza").val(jsonData.data[0].Importe);
       $("#importe_original_cobranza").val(jsonData.data[0].Importe);
       $("#numero_cobranza").val(jsonData.data[0].NumeroCliente);
-      $("#observaciones_cliente").html(
-        "Obs. Cliente: " + jsonData.data[0].Observaciones,
-      );
+      $("#observaciones_cliente").html("Obs. Cliente: " + jsonData.data[0].Observaciones);
       $("#centermodal_title").html("Conciliar el Movimiento N " + id);
       $("#id_cobranza").val(id);
 
@@ -198,6 +193,7 @@ $("#btn_rechazar").click(function () {
   $.ajax({
     type: "POST",
     url: "control/procesos/php/panel.php",
+    dataType: "json", // ✅ clave
     data: {
       Rechazar: 1,
       id_cobranza: id,
@@ -210,8 +206,8 @@ $("#btn_rechazar").click(function () {
       Observaciones: Observaciones,
       Importe: Importe,
     },
-    success: function (response) {
-      var jsonData = JSON.parse(response);
+    success: function (jsonData) {
+      // var jsonData = JSON.parse(response);
 
       if (jsonData.success == 1) {
         $.NotificationApp.send(
@@ -228,6 +224,11 @@ $("#btn_rechazar").click(function () {
 
         $("#centermodal").modal("hide");
       }
+    },
+    error: function (xhr) {
+      console.log("Error en la solicitud AJAX:", xhr.responseText);
+      console.log("STATUS:", xhr.status);
+      console.log("RESPONSE TEXT:", xhr.responseText);
     },
   });
 });
@@ -251,10 +252,7 @@ $(document).ready(function () {
       {
         data: null,
         render: function (data, type, row) {
-          return (
-            `<td>${row.Fecha}</br>` +
-            `<small class="text-muted"> ${row.Hora}</small></td>`
-          );
+          return `<td>${row.Fecha}</br>` + `<small class="text-muted"> ${row.Hora}</small></td>`;
         },
       },
 
@@ -263,8 +261,7 @@ $(document).ready(function () {
 
         render: function (data, type, row) {
           return (
-            `<td>${row.NombreCliente}</br>` +
-            `<small class="text-muted"> N Cliente: ${row.NumeroCliente}</small></td>`
+            `<td>${row.NombreCliente}</br>` + `<small class="text-muted"> N Cliente: ${row.NumeroCliente}</small></td>`
           );
         },
       },
@@ -278,10 +275,7 @@ $(document).ready(function () {
       {
         data: null,
         render: function (data, type, row) {
-          return (
-            `<td>${row.Banco}</br>` +
-            `<small class="text-muted"> Op.: ${row.Operacion}</small></td>`
-          );
+          return `<td>${row.Banco}</br>` + `<small class="text-muted"> Op.: ${row.Operacion}</small></td>`;
         },
       },
       {

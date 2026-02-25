@@ -16,6 +16,7 @@ if (isset($_POST['Observaciones'])) {
 
     echo json_encode(array('success' => 1));
 }
+
 //TABLA CONCILIADOS
 if (isset($_POST['Tabla_conciliados'])) {
 
@@ -185,7 +186,7 @@ if (isset($_POST['Duplicados_tabla'])) {
     $rows = array();
 
     $sql_1 = $mysqli->query("SELECT * FROM Cobranza WHERE Fecha='$row[Fecha]' AND Operacion='$row[Operacion]' AND
-    Banco='$row[Banco]' AND Importe='$row[Importe]' AND id<>'$_POST[id_cobranza]'");
+    Banco='$row[Banco]' AND Importe='$row[Importe]' AND id<>'{$_POST['id_cobranza']}'");
 
     while ($row_1 = $sql_1->fetch_array(MYSQLI_ASSOC)) {
 
