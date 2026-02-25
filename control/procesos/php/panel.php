@@ -14,7 +14,7 @@ if (isset($_POST['Observaciones'])) {
 
     $mysqli->query("UPDATE Cobranza SET Usuario='$_SESSION[user_name]',Usuario_obs='$_POST[Observaciones_text]' WHERE id='$_POST[id]'");
 
-    echo json_encode(array('success' => 1));
+    echo json_encode(array('success' => 1, 'bloque' => 'Observaciones'));
 }
 
 //TABLA CONCILIADOS
