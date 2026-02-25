@@ -112,8 +112,10 @@ $(document).ready(function () {
 
           if (!estadoRaw) {
             estadoHtml = `<div class="mp-status mp-status-pending">Pendiente</div>`;
-          } else if (estadoLower === "conciliado") {
-            estadoHtml = `<div class="mp-status mp-status-ok">Conciliado</div>`;
+          } else if (estadoLower === "Aceptado") {
+            estadoHtml = `<div class="mp-status mp-status-ok">Aceptado</div>`;
+          } else if (estadoLower === "rechazado") {
+            estadoHtml = `<div class="mp-status mp-status-error">Rechazado</div>`;
           } else {
             estadoHtml = `<div class="mp-status mp-status-pending">${escapeHtml(estadoRaw)}</div>`;
           }
