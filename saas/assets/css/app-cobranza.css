@@ -118,9 +118,7 @@ body {
   font-size: 0.95rem;
 }
 .mp-bank-op {
-  font-family:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
-    "Courier New", monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   font-size: 0.78rem;
   opacity: 0.75;
   margin-top: 6px;
@@ -186,5 +184,9 @@ table.dataTable thead .sorting_desc:after {
 }
 
 .mp-status-pending {
+  color: #ffc107; /* amarillo bootstrap */
+}
+
+.mp-status-error {
   color: #dc3545; /* rojo bootstrap */
 }
