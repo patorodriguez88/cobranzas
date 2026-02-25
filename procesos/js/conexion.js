@@ -28,7 +28,7 @@ $(document).ready(function () {
           },
         });
       } else {
-        window.location.href = "https://www.dintersa.com.ar/cobranza/inicio.html";
+        // window.location.href = "https://www.dintersa.com.ar/cobranza/inicio.html";
       }
     },
   });
