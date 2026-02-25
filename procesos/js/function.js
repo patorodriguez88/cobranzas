@@ -23,7 +23,7 @@ function CompruebaConexion() {
       if (jsonData.success == 1) {
         // $('#name').val(jsonData.data[0].RazonSocial);
       } else {
-        window.location.href = "https://www.dintersa.com.ar/cobranza/inicio.html";
+        // window.location.href = "https://www.dintersa.com.ar/cobranza/inicio.html";
       }
     },
   });
