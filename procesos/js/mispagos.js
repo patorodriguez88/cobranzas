@@ -214,6 +214,8 @@ $(document).ready(function () {
             estadoHtml = `<div class="mp-status mp-status-ok">Aceptado</div>`;
           } else if (estadoLower === "rechazado") {
             estadoHtml = `<div class="mp-status mp-status-error">Rechazado</div>`;
+          } else if (estadoLower === "exportado") {
+            estadoHtml = `<div class="mp-status mp-status-ok">Imputado</div>`;
           } else {
             estadoHtml = `<div class="mp-status mp-status-pending">${escapeHtml(estadoRaw)}</div>`;
           }
