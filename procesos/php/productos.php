@@ -1,5 +1,5 @@
 <?php
-include_once "../../../Conexion/Conexioni.php";
+include_once "../../conexion/conexioni.php";
 
 header('Content-Type: application/json');
 
