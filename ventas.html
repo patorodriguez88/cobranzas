@@ -306,50 +306,18 @@
         </a>
 
         <div class="h-100 bg-light" id="leftside-menu-container" data-simplebar>
+          <!--- Sidemenu -->
           <ul class="side-nav">
-            <li class="side-nav-title side-nav-item">Datos</li>
+            <li class="side-nav-title side-nav-item">Menu</li>
 
             <li class="side-nav-item">
-              <a href="https://www.dintersa.com.ar/cobranza/Clientes.html" class="side-nav-link">
-                <i class="mdi mdi-account"></i>
-                <span> Clientes </span>
-              </a>
-            </li>
-
-            <li class="side-nav-item">
-              <a href="https://www.dintersa.com.ar/cobranza/productos_ventas.html#productos" class="side-nav-link">
-                <i class="mdi mdi-package-variant"></i>
-                <span> Productos </span>
-              </a>
-            </li>
-
-            <li class="side-nav-title side-nav-item">Ventas</li>
-
-            <li class="side-nav-item">
-              <a href="https://www.dintersa.com.ar/cobranza/productos_ventas.html#dashboard" class="side-nav-link">
-                <i class="mdi mdi-view-dashboard-outline"></i>
-                <span> Dashboard </span>
-              </a>
-            </li>
-
-            <li class="side-nav-item">
-              <a href="https://www.dintersa.com.ar/cobranza/productos_ventas.html#ventas" class="side-nav-link">
-                <i class="mdi mdi-cart-plus"></i>
-                <span> Nueva Venta </span>
-              </a>
-            </li>
-
-            <li class="side-nav-item">
-              <a href="https://www.dintersa.com.ar/cobranza/productos_ventas.html#listado_ventas" class="side-nav-link">
-                <i class="mdi mdi-format-list-bulleted"></i>
-                <span> Ventas Cargadas </span>
-              </a>
-            </li>
-
-            <li class="side-nav-title side-nav-item">Admin</li>
-
-            <li class="side-nav-item">
-              <a href="https://www.dintersa.com.ar/cobranza/pendientes.html" class="side-nav-link">
+              <a
+                data-bs-toggle="collapse1"
+                href="https://www.dintersa.com.ar/cobranza/pendientes.html"
+                aria-expanded="false"
+                aria-controls="sidebarMultiLevel"
+                class="side-nav-link"
+              >
                 <i class="mdi mdi-archive-cancel-outline"></i>
                 <span id="total_no_conciliados" class="badge bg-danger float-end"></span>
                 <span> Pendientes </span>
@@ -363,7 +331,6 @@
                 <span> Conciliados </span>
               </a>
             </li>
-
             <li class="side-nav-item">
               <a href="https://www.dintersa.com.ar/cobranza/exportados.html" class="side-nav-link">
                 <i class="mdi mdi-cloud-download-outline"></i>
@@ -371,7 +338,16 @@
                 <span> Exportados </span>
               </a>
             </li>
+            <li class="side-nav-item">
+              <a href="https://www.dintersa.com.ar/cobranza/Clientes.html" class="side-nav-link">
+                <i class="mdi mdi-account text-dark"></i>
+                <span id="total_exportados" class="badge bg-warning float-end"></span>
+                <span class="text-dark"> Clientes </span>
+              </a>
+            </li>
           </ul>
+
+          <!-- End Sidebar -->
 
           <div class="clearfix"></div>
         </div>
