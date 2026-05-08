@@ -14,7 +14,8 @@
     <!-- App -->
     <link href="saas/assets/css/icons.min.css" rel="stylesheet" />
     <link href="saas/assets/css/app.min.css" rel="stylesheet" id="app-style" />
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="saas/assets/css/vendor/select2.min.css" rel="stylesheet" type="text/css" />
+    
   </head>
 
   <body class="loading" data-layout-color="light" data-leftbar-theme="dark">
@@ -125,7 +126,7 @@
             <div class="row">
             <div class="col-md-6 mb-2">
               <label class="form-label">Cliente</label>
-              <select id="venta_cliente" class="form-control"></select>
+              <select id="venta_cliente" class="form-control select2"></select>
             </div>
 
             <div class="col-md-6 mb-2">
@@ -228,8 +229,8 @@
     <script src="saas/assets/js/vendor/dataTables.bootstrap5.js"></script>
     <script src="saas/assets/js/vendor/dataTables.responsive.min.js"></script>
 
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
+    
+    <script src="saas/assets/js/vendor/select2.min.js"></script>
     <script src="control/procesos/js/ventas.js"></script>
   </body>
 </html>

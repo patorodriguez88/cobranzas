@@ -12,6 +12,49 @@ $accion = isset($_POST['accion']) ? $_POST['accion'] : '';
 
 switch ($accion) {
 
+    case 'buscar_clientes':
+
+        $term = isset($_POST['term']) ? trim($_POST['term']) : '';
+
+        $sql = "
+        SELECT
+            id,
+            RazonSocial,
+            Cuit,
+            Direccion,
+            Ciudad,
+            Telefono
+        FROM Clientes
+        WHERE
+            RazonSocial LIKE ?
+            OR Cuit LIKE ?
+            OR Telefono LIKE ?
+        ORDER BY RazonSocial ASC
+        LIMIT 20
+    ";
+
+        $buscar = "%{$term}%";
+
+        $stmt = $mysqli->prepare($sql);
+        $stmt->bind_param("sss", $buscar, $buscar, $buscar);
+        $stmt->execute();
+
+        $res = $stmt->get_result();
+
+        $data = [];
+
+        while ($row = $res->fetch_assoc()) {
+
+            $data[] = [
+                "id" => $row['id'],
+                "text" => $row['RazonSocial'] . " - " . $row['Cuit'],
+                "cliente" => $row
+            ];
+        }
+
+        echo json_encode($data);
+        break;
+
     case 'productos':
 
         $sql = "
