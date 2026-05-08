@@ -18,6 +18,37 @@ $(document).ready(function () {
   $("#btn_cancelar_venta").click(function () {
     limpiarVenta();
   });
+  $("#venta_cliente").select2({
+    placeholder: "Buscar cliente...",
+    width: "100%",
+    minimumInputLength: 2,
+    ajax: {
+      url: "control/procesos/php/ventas.php",
+      type: "POST",
+      dataType: "json",
+      delay: 300,
+      data: function (params) {
+        return {
+          accion: "buscar_clientes",
+          term: params.term,
+        };
+      },
+      processResults: function (data) {
+        return {
+          results: data,
+        };
+      },
+    },
+  });
+
+  $("#venta_cliente").on("select2:select", function (e) {
+    let cliente = e.params.data.cliente;
+
+    $("#cliente_cuit").val(cliente.Cuit || "");
+    $("#cliente_direccion").val(cliente.Direccion || "");
+    $("#cliente_ciudad").val(cliente.Ciudad || "");
+    $("#cliente_telefono").val(cliente.Telefono || "");
+  });
 });
 
 function cargarProductosVenta() {
