@@ -88,7 +88,7 @@ function cargarVentas() {
         },
       },
       { data: "Cliente" },
-      { data: "CantidadProductos" },
+      { data: "Productos" },
       {
         data: "Total",
         render: $.fn.dataTable.render.number(",", ".", 2, "$ "),
