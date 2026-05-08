@@ -16,7 +16,7 @@ function cargarProductos() {
   tablaProductos = $("#tabla_productos").DataTable({
     destroy: true,
     ajax: {
-      url: "../php/productos.php",
+      url: "control/procesos/php/productos.php",
       type: "POST",
       data: { accion: "listar" },
       dataSrc: "",
