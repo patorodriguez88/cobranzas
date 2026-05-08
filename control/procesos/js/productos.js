@@ -19,6 +19,9 @@ function cargarProductos() {
       url: "control/procesos/php/productos.php",
       type: "POST",
       data: { accion: "listar" },
+      error: function (xhr) {
+        console.log("ERROR listar:", xhr.responseText);
+      },
       dataSrc: "",
     },
     columns: [
@@ -58,7 +61,7 @@ function cargarProductos() {
 function guardarProducto() {
   let datos = {
     accion: "guardar",
-    id: $("#producto_id").val(),
+    id: $("#producto_id").val() || 0,
     Codigo: $("#producto_codigo").val(),
     Nombre: $("#producto_nombre").val(),
     Categoria: $("#producto_categoria").val(),
@@ -68,42 +71,66 @@ function guardarProducto() {
     Descripcion: $("#producto_descripcion").val(),
   };
 
-  $.post("control/procesos/php/productos.php", datos, function (resp) {
-    let r = JSON.parse(resp);
+  $.ajax({
+    url: "control/procesos/php/productos.php",
+    type: "POST",
+    data: datos,
+    dataType: "json",
+    success: function (r) {
+      console.log("Respuesta guardar:", r);
 
-    if (r.success) {
-      tablaProductos.ajax.reload();
-      limpiarFormulario();
-    } else {
-      alert("Error al guardar");
-    }
+      if (r.success == 1) {
+        limpiarFormulario();
+        tablaProductos.ajax.reload(null, false);
+      } else {
+        alert("Error al guardar");
+      }
+    },
+    error: function (xhr) {
+      console.log("ERROR PHP:", xhr.responseText);
+      alert("Error en productos.php");
+    },
   });
 }
 
 function editarProducto(id) {
-  $.post("control/procesos/php/productos.php", { accion: "obtener", id: id }, function (resp) {
-    let r = JSON.parse(resp);
-
-    $("#producto_id").val(r.id);
-    $("#producto_codigo").val(r.Codigo);
-    $("#producto_nombre").val(r.Nombre);
-    $("#producto_categoria").val(r.Categoria);
-    $("#producto_costo").val(r.PrecioCosto);
-    $("#producto_venta").val(r.PrecioVenta);
-    $("#producto_stock").val(r.Stock);
-    $("#producto_descripcion").val(r.Descripcion);
+  $.ajax({
+    url: "control/procesos/php/productos.php",
+    type: "POST",
+    data: { accion: "obtener", id: id },
+    dataType: "json",
+    success: function (r) {
+      $("#producto_id").val(r.id);
+      $("#producto_codigo").val(r.Codigo);
+      $("#producto_nombre").val(r.Nombre);
+      $("#producto_categoria").val(r.Categoria);
+      $("#producto_costo").val(r.PrecioCosto);
+      $("#producto_venta").val(r.PrecioVenta);
+      $("#producto_stock").val(r.Stock);
+      $("#producto_descripcion").val(r.Descripcion);
+    },
+    error: function (xhr) {
+      console.log("ERROR obtener:", xhr.responseText);
+    },
   });
 }
 
 function eliminarProducto(id) {
   if (!confirm("¿Eliminar producto?")) return;
 
-  $.post("control/procesos/php/productos.php", { accion: "eliminar", id: id }, function (resp) {
-    let r = JSON.parse(resp);
-
-    if (r.success) {
-      tablaProductos.ajax.reload();
-    }
+  $.ajax({
+    url: "control/procesos/php/productos.php",
+    type: "POST",
+    data: { accion: "eliminar", id: id },
+    dataType: "json",
+    success: function (r) {
+      if (r.success == 1) {
+        tablaProductos.ajax.reload(null, false);
+      }
+    },
+    error: function (xhr) {
+      console.log("ERROR eliminar:", xhr.responseText);
+    },
   });
 }
 
