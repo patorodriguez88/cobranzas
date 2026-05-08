@@ -36,7 +36,22 @@ function cargarProductos() {
         data: "PrecioVenta",
         render: $.fn.dataTable.render.number(",", ".", 2, "$ "),
       },
-      { data: "Stock" },
+      {
+        data: "Stock",
+        render: function (data, type, row) {
+          let clase = "success";
+
+          if (parseInt(row.Stock) <= parseInt(row.StockMinimo)) {
+            clase = "danger";
+          }
+
+          return `
+            <span class="badge bg-${clase}">
+                ${row.Stock}
+            </span>
+        `;
+        },
+      },
       {
         data: "Activo",
         render: function (data) {

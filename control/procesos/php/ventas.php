@@ -65,6 +65,7 @@ switch ($accion) {
             FROM Productos
             WHERE Eliminado = 0
               AND Activo = 1
+              AND Stock > 0
             ORDER BY Nombre ASC
         ";
 
@@ -73,6 +74,8 @@ switch ($accion) {
         $data = array();
 
         while ($row = $res->fetch_assoc()) {
+            $row['label'] = "[" . $row['id'] . "] " . $row['Nombre'] . " | Stock: " . $row['Stock'];
+
             $data[] = $row;
         }
 
@@ -82,29 +85,51 @@ switch ($accion) {
 
     case 'listar':
 
-        $sql = "
-            SELECT 
-                V.id,
-                V.Fecha,
-                V.Cliente,
-                V.Observaciones,
-                V.Total,
-                COUNT(VD.id) AS CantidadProductos
-            FROM Ventas V
-            LEFT JOIN VentasDetalle VD 
-                ON VD.idVenta = V.id 
-                AND VD.Eliminado = 0
-            WHERE V.Eliminado = 0
-            GROUP BY V.id
-            ORDER BY V.id DESC
-        ";
+        $sql = "SELECT 
+        V.id,
+        V.Fecha,
+        V.idCliente,
+        C.RazonSocial,
+        V.Total,
+
+        V.Observaciones,
+
+        COUNT(VD.id) AS Productos
+
+    FROM Ventas V
+
+    LEFT JOIN Clientes C ON C.id = V.idCliente
+
+    LEFT JOIN VentasDetalle VD ON VD.idVenta = V.id
+
+    WHERE V.Eliminado = 0
+
+    GROUP BY V.id
+
+    ORDER BY V.id DESC
+
+";
 
         $res = $mysqli->query($sql);
 
         $data = array();
 
         while ($row = $res->fetch_assoc()) {
-            $data[] = $row;
+            $data[] = [
+
+                "id" => $row["id"],
+
+                "Fecha" => $row["Fecha"],
+
+                "Cliente" => "[" . $row["idCliente"] . "] " . $row["RazonSocial"],
+
+                "Productos" => $row["Productos"],
+
+                "Total" => $row["Total"],
+
+                "Observaciones" => $row["Observaciones"]
+
+            ];
         }
 
         echo json_encode($data);
