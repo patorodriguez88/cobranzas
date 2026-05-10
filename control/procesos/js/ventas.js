@@ -408,3 +408,48 @@ function verVenta(id) {
     },
   });
 }
+function cargarListadoVentas() {
+  $("#tabla_listado_ventas").DataTable({
+    destroy: true,
+    ajax: {
+      url: URL_VENTAS,
+      type: "POST",
+      data: { accion: "listar_ventas" },
+      dataSrc: "data",
+    },
+    pageLength: 25,
+    order: [[0, "desc"]],
+    columns: [
+      {
+        data: "NumeroVenta",
+        render: function (data) {
+          return `<span class="badge bg-primary">#${data}</span>`;
+        },
+      },
+      {
+        data: "Fecha",
+        render: function (data) {
+          if (!data) return "";
+          return `<span style="display:none;">${data}</span>${data.split(" ")[0].split("-").reverse().join("/")}`;
+        },
+      },
+      { data: "Cliente" },
+      { data: "Productos" },
+      {
+        data: "Total",
+        render: $.fn.dataTable.render.number(",", ".", 2, "$ "),
+      },
+      { data: "Observaciones" },
+      {
+        data: null,
+        orderable: false,
+        render: function (data) {
+          return `
+            <i class="mdi mdi-eye mdi-18px text-info ms-2" style="cursor:pointer" onclick="verVenta(${data.id})"></i>
+            <i class="mdi mdi-delete mdi-18px text-danger ms-2" style="cursor:pointer" onclick="eliminarVenta(${data.id})"></i>
+          `;
+        },
+      },
+    ],
+  });
+}

@@ -418,6 +418,55 @@ switch ($accion) {
 
         echo json_encode(array("data" => $data));
         break;
+    case 'listar_ventas':
+
+        $sql = "
+        SELECT 
+            V.id,
+            V.NumeroVenta,
+            V.Fecha,
+            V.idCliente,
+            C.RazonSocial,
+            V.Total,
+            V.Observaciones,
+            COUNT(VD.id) AS Productos
+        FROM Ventas V
+        LEFT JOIN Clientes C ON C.id = V.idCliente
+        LEFT JOIN VentasDetalle VD 
+            ON VD.idVenta = V.id 
+            AND VD.Eliminado = 0
+        WHERE V.Eliminado = 0
+        GROUP BY V.id
+        ORDER BY V.id DESC
+    ";
+
+        $res = $mysqli->query($sql);
+
+        if (!$res) {
+            echo json_encode(array("data" => array(), "error" => $mysqli->error));
+            exit;
+        }
+
+        $data = array();
+
+        while ($row = $res->fetch_assoc()) {
+            $cliente = !empty($row["RazonSocial"])
+                ? "[" . $row["idCliente"] . "] " . $row["RazonSocial"]
+                : "";
+
+            $data[] = array(
+                "id" => $row["id"],
+                "NumeroVenta" => $row["NumeroVenta"],
+                "Fecha" => $row["Fecha"],
+                "Cliente" => $cliente,
+                "Productos" => $row["Productos"],
+                "Total" => $row["Total"],
+                "Observaciones" => $row["Observaciones"]
+            );
+        }
+
+        echo json_encode(array("data" => $data));
+        break;
     default:
 
         echo json_encode(array(
