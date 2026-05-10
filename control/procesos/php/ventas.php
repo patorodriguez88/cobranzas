@@ -186,6 +186,15 @@ switch ($accion) {
                 }
 
                 $idVenta = $mysqli->insert_id;
+
+                $sqlNumero = "
+                    UPDATE Ventas
+                    SET NumeroVenta = '$idVenta'
+                    WHERE id = '$idVenta'
+                    LIMIT 1
+                ";
+
+                $mysqli->query($sqlNumero);
             } else {
 
                 $sqlVenta = "
@@ -331,12 +340,13 @@ switch ($accion) {
         $sql = "
         SELECT 
             V.id,
+            V.NumeroVenta
             V.Fecha,
             V.idCliente,
             C.RazonSocial,
             V.Total,
             V.Observaciones,
-            COUNT(VD.id) AS Productos
+            COUNT(VD.id) AS Productos            
         FROM Ventas V
         LEFT JOIN Clientes C ON C.id = V.idCliente
         LEFT JOIN VentasDetalle VD 
@@ -358,7 +368,11 @@ switch ($accion) {
         $data = array();
 
         while ($row = $res->fetch_assoc()) {
-            $cliente = $row["RazonSocial"] ? "[" . $row["idCliente"] . "] " . $row["RazonSocial"] : "Sin cliente";
+            $cliente = "";
+
+            if (!empty($row["RazonSocial"])) {
+                $cliente = "[" . $row["idCliente"] . "] " . $row["RazonSocial"];
+            }
 
             $data[] = array(
                 "id" => $row["id"],
@@ -366,7 +380,8 @@ switch ($accion) {
                 "Cliente" => $cliente,
                 "Productos" => $row["Productos"],
                 "Total" => $row["Total"],
-                "Observaciones" => $row["Observaciones"]
+                "Observaciones" => $row["Observaciones"],
+                "NumeroVenta" => $row["NumeroVenta"]
             );
         }
 

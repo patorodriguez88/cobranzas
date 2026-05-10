@@ -89,12 +89,23 @@ function cargarVentas() {
     lengthChange: false,
     columns: [
       {
+        data: "NumeroVenta",
+        render: function (data) {
+          return `
+      <span class="badge bg-primary">
+        #${data}
+      </span>
+    `;
+        },
+      },
+      {
         data: "Fecha",
         render: function (data) {
           if (!data) return "";
           return `<span style="display:none;">${data}</span>${data.split(" ")[0].split("-").reverse().join("/")}`;
         },
       },
+
       { data: "Cliente" },
       { data: "Productos" },
       {
