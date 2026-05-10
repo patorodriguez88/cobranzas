@@ -74,7 +74,7 @@ function cargarVentas() {
       url: URL_VENTAS,
       type: "POST",
       data: { accion: "listar" },
-      dataSrc: "",
+      dataSrc: "data",
       error: function (xhr) {
         console.log("ERROR listar ventas:", xhr.responseText);
       },
@@ -216,7 +216,7 @@ function guardarVenta() {
   let datos = {
     accion: "guardar",
     id: $("#venta_id").val() || 0,
-    Cliente: $("#venta_cliente").val(),
+    idCliente: $("#venta_cliente").val(),
     Observaciones: $("#venta_observaciones").val(),
     detalle: JSON.stringify(detalle),
   };
@@ -245,7 +245,7 @@ function guardarVenta() {
 
 function limpiarVenta() {
   $("#venta_id").val(0);
-  $("#venta_cliente").val("");
+  $("#venta_cliente").val(null).trigger("change");
   $("#venta_observaciones").val("");
   $("#tabla_detalle_venta tbody").empty();
   $("#venta_total").text("$ 0,00");
