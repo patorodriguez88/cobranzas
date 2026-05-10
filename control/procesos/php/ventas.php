@@ -146,9 +146,23 @@ switch ($accion) {
     case 'guardar':
 
         $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
-        $Cliente = isset($_POST['Cliente']) ? $mysqli->real_escape_string($_POST['Cliente']) : '';
         $Observaciones = isset($_POST['Observaciones']) ? $mysqli->real_escape_string($_POST['Observaciones']) : '';
         $detalleJson = isset($_POST['detalle']) ? $_POST['detalle'] : '[]';
+        $idCliente = isset($_POST['idCliente']) ? (int)$_POST['idCliente'] : 0;
+
+        if ($idCliente <= 0) {
+
+            echo json_encode(array(
+
+                "success" => 0,
+
+                "error" => "Debe seleccionar un cliente."
+
+            ));
+
+            exit;
+        }
+
 
         $detalle = json_decode($detalleJson, true);
 
@@ -178,7 +192,7 @@ switch ($accion) {
                     INSERT INTO Ventas
                     (Fecha, Cliente, Observaciones, Total, Eliminado)
                     VALUES
-                    (NOW(), '$Cliente', '$Observaciones', '$total', 0)
+                    (NOW(), '$idCliente', '$Observaciones', '$total', 0)
                 ";
 
                 if (!$mysqli->query($sqlVenta)) {
@@ -199,7 +213,7 @@ switch ($accion) {
 
                 $sqlVenta = "
                     UPDATE Ventas SET
-                        Cliente = '$Cliente',
+                        idCliente = '$idCliente',
                         Observaciones = '$Observaciones',
                         Total = '$total'
                     WHERE id = '$id'
