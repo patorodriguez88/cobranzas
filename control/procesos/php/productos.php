@@ -36,7 +36,7 @@ switch ($accion) {
         $PrecioVenta = $_POST['PrecioVenta'];
         $Stock = $_POST['Stock'];
         $Descripcion = $mysqli->real_escape_string($_POST['Descripcion']);
-
+        $MostrarEnVentaRapida = isset($_POST['MostrarEnVentaRapida']) ? (int)$_POST['MostrarEnVentaRapida'] : 0;
         if ($id == 0) {
 
             $sql = "INSERT INTO Productos 

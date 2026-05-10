@@ -364,7 +364,35 @@ function eliminarVenta(id) {
     });
   });
 }
+function cargarProductosVentaRapida() {
+  $.ajax({
+    url: URL_VENTAS,
+    type: "POST",
+    data: { accion: "productos_venta_rapida" },
+    dataType: "json",
+    success: function (productos) {
+      let html = "";
 
+      productos.forEach(function (p) {
+        html += `
+          <div class="col-md-2 col-sm-4 mb-2">
+            <div class="card border shadow-sm producto-rapido" 
+                 style="cursor:pointer"
+                 data-id="${p.id}">
+              <div class="card-body p-2 text-center">
+                <div class="fw-bold small">${p.Nombre}</div>
+                <div class="text-muted small">Stock: ${p.Stock}</div>
+                <div class="badge bg-success">$ ${parseFloat(p.PrecioVenta || 0).toFixed(2)}</div>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+
+      $("#productos_venta_rapida").html(html);
+    },
+  });
+}
 function verVenta(id) {
   $.ajax({
     url: URL_VENTAS,

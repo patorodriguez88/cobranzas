@@ -401,4 +401,29 @@ switch ($accion) {
 
         echo json_encode(array("data" => $data));
         break;
+    case 'productos_venta_rapida':
+
+        $sql = "
+        SELECT 
+            id,
+            Nombre,
+            Stock,
+            PrecioVenta
+        FROM Productos
+        WHERE Eliminado = 0
+          AND Activo = 1
+          AND MostrarEnVentaRapida = 1
+        ORDER BY Nombre ASC
+    ";
+
+        $res = $mysqli->query($sql);
+
+        $data = array();
+
+        while ($row = $res->fetch_assoc()) {
+            $data[] = $row;
+        }
+
+        echo json_encode($data);
+        break;
 }
