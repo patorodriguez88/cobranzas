@@ -266,7 +266,11 @@ function guardarVenta() {
   });
 
   if (detalle.length === 0) {
-    alert("Agregá al menos un producto.");
+    Swal.fire({
+      icon: "warning",
+      title: "Venta incompleta",
+      text: "Agregá al menos un producto.",
+    });
     return;
   }
 
@@ -290,12 +294,20 @@ function guardarVenta() {
         limpiarVenta();
         tablaVentas.ajax.reload(null, false);
       } else {
-        alert(r.error || "Error al guardar venta");
+        Swal.fire({
+          icon: "error",
+          title: "No se pudo guardar",
+          text: r.error || "Error al guardar venta",
+        });
       }
     },
     error: function (xhr) {
       console.log("ERROR guardar venta:", xhr.responseText);
-      alert("Error en ventas.php");
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Error en ventas.php",
+      });
     },
   });
 }
@@ -311,21 +323,45 @@ function limpiarVenta() {
 }
 
 function eliminarVenta(id) {
-  if (!confirm("¿Eliminar venta?")) return;
+  Swal.fire({
+    title: "¿Eliminar venta?",
+    text: "Esta acción marcará la venta como eliminada.",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Sí, eliminar",
+    cancelButtonText: "Cancelar",
+    confirmButtonColor: "#fa5c7c",
+    cancelButtonColor: "#6c757d",
+  }).then((result) => {
+    if (!result.isConfirmed) return;
 
-  $.ajax({
-    url: URL_VENTAS,
-    type: "POST",
-    data: { accion: "eliminar", id: id },
-    dataType: "json",
-    success: function (r) {
-      if (r.success == 1) {
-        tablaVentas.ajax.reload(null, false);
-      }
-    },
-    error: function (xhr) {
-      console.log("ERROR eliminar venta:", xhr.responseText);
-    },
+    $.ajax({
+      url: URL_VENTAS,
+      type: "POST",
+      data: { accion: "eliminar", id: id },
+      dataType: "json",
+      success: function (r) {
+        if (r.success == 1) {
+          Swal.fire({
+            icon: "success",
+            title: "Venta eliminada",
+            timer: 1200,
+            showConfirmButton: false,
+          });
+
+          tablaVentas.ajax.reload(null, false);
+        }
+      },
+      error: function (xhr) {
+        console.log("ERROR eliminar venta:", xhr.responseText);
+
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "No se pudo eliminar la venta.",
+        });
+      },
+    });
   });
 }
 
