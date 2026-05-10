@@ -190,7 +190,7 @@ switch ($accion) {
 
                 $sqlVenta = "
                     INSERT INTO Ventas
-                    (Fecha, Cliente, Observaciones, Total, Eliminado)
+                    (Fecha, idCliente, Observaciones, Total, Eliminado)
                     VALUES
                     (NOW(), '$idCliente', '$Observaciones', '$total', 0)
                 ";
@@ -340,7 +340,31 @@ switch ($accion) {
 
         break;
 
+    case 'productos_venta_rapida':
 
+        $sql = "
+        SELECT 
+            id,
+            Nombre,
+            Stock,
+            PrecioVenta
+        FROM Productos
+        WHERE Eliminado = 0
+          AND Activo = 1
+          AND MostrarEnVentaRapida = 1
+        ORDER BY Nombre ASC
+    ";
+
+        $res = $mysqli->query($sql);
+
+        $data = array();
+
+        while ($row = $res->fetch_assoc()) {
+            $data[] = $row;
+        }
+
+        echo json_encode($data);
+        break;
     default:
 
         echo json_encode(array(
@@ -400,30 +424,5 @@ switch ($accion) {
         }
 
         echo json_encode(array("data" => $data));
-        break;
-    case 'productos_venta_rapida':
-
-        $sql = "
-        SELECT 
-            id,
-            Nombre,
-            Stock,
-            PrecioVenta
-        FROM Productos
-        WHERE Eliminado = 0
-          AND Activo = 1
-          AND MostrarEnVentaRapida = 1
-        ORDER BY Nombre ASC
-    ";
-
-        $res = $mysqli->query($sql);
-
-        $data = array();
-
-        while ($row = $res->fetch_assoc()) {
-            $data[] = $row;
-        }
-
-        echo json_encode($data);
         break;
 }
