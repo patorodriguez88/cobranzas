@@ -7,6 +7,8 @@ $(document).ready(function () {
   cargarProductosVenta();
   cargarVentas();
   cargarProductosVentaRapida();
+  mostrarPantallaVentas();
+
   $("#btn_agregar_producto_venta").click(function () {
     agregarFilaProductoVenta();
   });
@@ -453,3 +455,22 @@ function cargarListadoVentas() {
     ],
   });
 }
+function mostrarPantallaVentas() {
+  let hash = window.location.hash || "#ventas";
+
+  if (hash === "#listado_ventas") {
+    $("#card_nueva_venta").hide();
+    $("#card_ultimas_ventas").hide();
+    $("#card_listado_ventas").show();
+
+    cargarListadoVentas();
+  } else {
+    $("#card_nueva_venta").show();
+    $("#card_ultimas_ventas").show();
+    $("#card_listado_ventas").hide();
+  }
+}
+
+$(window).on("hashchange", function () {
+  mostrarPantallaVentas();
+});
