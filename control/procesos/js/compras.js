@@ -6,6 +6,10 @@ $(document).ready(function () {
   cargarProductosCompra();
 
   $("#btn_agregar_producto_compra").click(function () {
+    console.log("CLICK AGREGAR PRODUCTO COMPRA");
+
+    console.log("productosCompra:", productosCompra);
+
     agregarFilaProductoCompra();
   });
 
@@ -25,7 +29,12 @@ function cargarProductosCompra() {
     data: { accion: "productos" },
     dataType: "json",
     success: function (resp) {
+      console.log("PRODUCTOS COMPRA:", resp);
+
       productosCompra = Array.isArray(resp) ? resp : [];
+
+      $("#tabla_detalle_compra tbody").empty();
+
       agregarFilaProductoCompra();
     },
     error: function (xhr) {
@@ -157,4 +166,5 @@ function guardarCompra() {
 function limpiarCompra() {
   $("#compra_observaciones").val("");
   $("#tabla_detalle_compra tbody").empty();
+  agregarFilaProductoCompra();
 }
