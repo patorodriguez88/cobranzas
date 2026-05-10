@@ -78,12 +78,15 @@ function cargarVentas() {
     ajax: {
       url: URL_VENTAS,
       type: "POST",
-      data: { accion: "listar" },
+      data: { accion: "ultimas_ventas" },
       dataSrc: "data",
       error: function (xhr) {
-        console.log("ERROR listar ventas:", xhr.responseText);
+        console.log("ERROR ultimas ventas:", xhr.responseText);
       },
     },
+    pageLength: 10,
+    searching: false,
+    lengthChange: false,
     columns: [
       {
         data: "Fecha",
@@ -101,6 +104,7 @@ function cargarVentas() {
       { data: "Observaciones" },
       {
         data: null,
+        orderable: false,
         render: function (data) {
           return `
             <i class="mdi mdi-eye mdi-18px text-info ms-2" style="cursor:pointer" onclick="verVenta(${data.id})"></i>
@@ -116,23 +120,29 @@ function agregarFilaProductoVenta() {
   let opciones = `<option value="">Seleccionar producto</option>`;
 
   productosVenta.forEach(function (p) {
+    let stock = parseInt(p.Stock || 0);
+    let disabled = stock <= 0 ? "disabled" : "";
+
     opciones += `
-      <option 
-        value="${p.id}" 
-        data-nombre="${p.Nombre}" 
-        data-precio="${p.PrecioVenta}">
-        ${p.Nombre} - $ ${parseFloat(p.PrecioVenta || 0).toFixed(2)}
-      </option>
-    `;
+    <option 
+      value="${p.id}" 
+      data-nombre="${p.Nombre}" 
+      data-precio="${p.PrecioVenta}"
+      data-stock="${p.Stock}"
+      ${disabled}>
+      [${p.id}] ${p.Nombre} | Stock: ${p.Stock} | $ ${parseFloat(p.PrecioVenta || 0).toFixed(2)}
+    </option>
+  `;
   });
 
   let fila = `
     <tr>
       <td>
-        <select class="form-select form-select-sm producto_venta">
-          ${opciones}
-        </select>
-      </td>
+    <select class="form-select form-select-sm producto_venta">
+      ${opciones}
+    </select>
+    <small class="stock_disponible text-muted d-block mt-1"></small>
+     </td>
       <td>
         <input type="number" class="form-control form-control-sm cantidad_venta" value="1" min="1">
       </td>
@@ -153,14 +163,45 @@ function agregarFilaProductoVenta() {
 
 $(document).on("change", ".producto_venta", function () {
   let precio = $(this).find(":selected").data("precio") || 0;
+  let stock = parseInt($(this).find(":selected").data("stock") || 0);
   let fila = $(this).closest("tr");
 
   fila.find(".precio_venta").val(precio);
+  fila.find(".cantidad_venta").attr("max", stock);
+
+  if (stock > 0) {
+    fila
+      .find(".stock_disponible")
+      .removeClass("text-danger text-warning")
+      .addClass("text-muted")
+      .text("Stock disponible: " + stock);
+  } else {
+    fila
+      .find(".stock_disponible")
+      .removeClass("text-muted text-warning")
+      .addClass("text-danger")
+      .text("Sin stock disponible");
+  }
+
   calcularFilaVenta(fila);
 });
 
 $(document).on("keyup change", ".cantidad_venta, .precio_venta", function () {
   let fila = $(this).closest("tr");
+
+  let cantidad = parseInt(fila.find(".cantidad_venta").val() || 0);
+  let stock = parseInt(fila.find(".producto_venta option:selected").data("stock") || 0);
+
+  if (stock > 0 && cantidad > stock) {
+    fila.find(".cantidad_venta").val(stock);
+
+    fila
+      .find(".stock_disponible")
+      .removeClass("text-muted text-warning")
+      .addClass("text-danger")
+      .text("No podés vender más de " + stock + " unidades.");
+  }
+
   calcularFilaVenta(fila);
 });
 
