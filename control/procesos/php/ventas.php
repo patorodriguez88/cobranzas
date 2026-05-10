@@ -365,14 +365,7 @@ switch ($accion) {
 
         echo json_encode($data);
         break;
-    default:
 
-        echo json_encode(array(
-            "success" => 0,
-            "error" => "Acción inválida."
-        ));
-
-        break;
     case 'ultimas_ventas':
 
         $sql = "
@@ -424,5 +417,13 @@ switch ($accion) {
         }
 
         echo json_encode(array("data" => $data));
+        break;
+    default:
+
+        echo json_encode(array(
+            "success" => 0,
+            "error" => "Acción inválida."
+        ));
+
         break;
 }

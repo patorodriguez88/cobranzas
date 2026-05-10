@@ -6,7 +6,7 @@ const URL_VENTAS = "control/procesos/php/ventas.php";
 $(document).ready(function () {
   cargarProductosVenta();
   cargarVentas();
-
+  cargarProductosVentaRapida();
   $("#btn_agregar_producto_venta").click(function () {
     agregarFilaProductoVenta();
   });
