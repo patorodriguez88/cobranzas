@@ -340,7 +340,7 @@ switch ($accion) {
         $sql = "
         SELECT 
             V.id,
-            V.NumeroVenta
+            V.NumeroVenta,
             V.Fecha,
             V.idCliente,
             C.RazonSocial,
