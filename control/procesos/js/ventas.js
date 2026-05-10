@@ -58,11 +58,16 @@ function cargarProductosVenta() {
     data: { accion: "productos" },
     dataType: "json",
     success: function (resp) {
-      productosVenta = resp;
+      console.log("PRODUCTOS RECIBIDOS:", resp);
+
+      productosVenta = Array.isArray(resp) ? resp : [];
+
+      $("#tabla_detalle_venta tbody").empty();
       agregarFilaProductoVenta();
     },
     error: function (xhr) {
       console.log("ERROR productos:", xhr.responseText);
+      alert("Error cargando productos");
     },
   });
 }

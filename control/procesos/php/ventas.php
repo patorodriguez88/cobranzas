@@ -58,24 +58,33 @@ switch ($accion) {
     case 'productos':
 
         $sql = "
-            SELECT 
-                id,
-                Nombre,
-                PrecioVenta
-            FROM Productos
-            WHERE Eliminado = 0
-              AND Activo = 1
-              AND Stock > 0
-            ORDER BY Nombre ASC
-        ";
+        SELECT 
+            id,
+            Nombre,
+            PrecioVenta,
+            Stock,
+            StockMinimo
+        FROM Productos
+        WHERE Eliminado = 0
+          AND Activo = 1
+          AND Stock > 0
+        ORDER BY Nombre ASC
+    ";
 
         $res = $mysqli->query($sql);
+
+        if (!$res) {
+            echo json_encode(array(
+                "success" => 0,
+                "error" => $mysqli->error
+            ));
+            exit;
+        }
 
         $data = array();
 
         while ($row = $res->fetch_assoc()) {
             $row['label'] = "[" . $row['id'] . "] " . $row['Nombre'] . " | Stock: " . $row['Stock'];
-
             $data[] = $row;
         }
 
