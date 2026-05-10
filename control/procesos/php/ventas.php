@@ -259,6 +259,13 @@ switch ($accion) {
                 if (!$mysqli->query($sqlDetalle)) {
                     throw new Exception($mysqli->error);
                 }
+                $sqlStock = "UPDATE Productos SET Stock = Stock - '$Cantidad'
+                WHERE id = '$idProducto' LIMIT 1";
+
+                if (!$mysqli->query($sqlStock)) {
+
+                    throw new Exception($mysqli->error);
+                }
             }
 
             $mysqli->commit();

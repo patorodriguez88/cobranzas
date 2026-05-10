@@ -104,7 +104,16 @@ function cargarVentas() {
         data: "Fecha",
         render: function (data) {
           if (!data) return "";
-          return `<span style="display:none;">${data}</span>${data.split(" ")[0].split("-").reverse().join("/")}`;
+
+          let partes = data.split(" ");
+          let fecha = partes[0].split("-").reverse().join("/");
+          let hora = partes[1] ? partes[1].substring(0, 5) : "";
+
+          return `
+      <span style="display:none;">${data}</span>
+      <div>${fecha}</div>
+      <small class="text-muted">${hora} hs</small>
+    `;
         },
       },
 
@@ -293,8 +302,29 @@ function guardarVenta() {
       console.log("Respuesta venta:", r);
 
       if (r.success == 1) {
+        Swal.fire({
+          icon: "success",
+
+          title: "Venta guardada",
+
+          text: "La venta se cargó correctamente.",
+
+          timer: 1500,
+
+          showConfirmButton: false,
+        });
+
         limpiarVenta();
+
+        cargarProductosVenta();
+
+        cargarProductosVentaRapida();
+
         tablaVentas.ajax.reload(null, false);
+
+        if ($.fn.DataTable.isDataTable("#tabla_listado_ventas")) {
+          $("#tabla_listado_ventas").DataTable().ajax.reload(null, false);
+        }
       } else {
         Swal.fire({
           icon: "error",
