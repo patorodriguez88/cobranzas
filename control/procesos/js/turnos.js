@@ -99,7 +99,7 @@ function cargarTablaTurnos() {
         },
       },
       {
-        data: "Celular",
+        data: "Telefono",
         render: function (data) {
           if (!data) return `<span class="text-muted">Sin celular</span>`;
 
