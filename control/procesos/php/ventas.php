@@ -676,57 +676,55 @@ VALUES
 
         V.EstadoPago,
         V.TotalPagado,
-        V.Saldo,
+        V.Saldo,        
+            (
+            SELECT CONCAT(
+                DATE_FORMAT(TR.FechaTurno, '%d/%m/%Y'),
+                ' ',
+                LEFT(TR.HoraTurno, 5)
+            )
+            FROM TurnosRetiro TR
+            WHERE TR.idVenta = V.id
+            AND TR.Eliminado = 0
+            ORDER BY TR.FechaTurno DESC, TR.HoraTurno DESC
+            LIMIT 1
+        ) AS TurnoRetiro,
 
         (
-            (
-    SELECT CONCAT(
-        DATE_FORMAT(TR.FechaTurno, '%d/%m/%Y'),
-        ' ',
-        LEFT(TR.HoraTurno, 5)
-    )
-    FROM TurnosRetiro TR
-    WHERE TR.idVenta = V.id
-      AND TR.Eliminado = 0
-    ORDER BY TR.FechaTurno DESC, TR.HoraTurno DESC
-    LIMIT 1
-) AS TurnoRetiro,
+            SELECT IFNULL(P.Stock,0)
+            FROM Productos P
+            WHERE P.Eliminado = 0
+            AND P.Activo = 1
+            AND UPPER(P.Nombre) LIKE '%FIGURITA%'
+            ORDER BY P.id ASC
+            LIMIT 1
+        ) AS StockFiguritas,
 
-(
-    SELECT IFNULL(P.Stock,0)
-    FROM Productos P
-    WHERE P.Eliminado = 0
-      AND P.Activo = 1
-      AND UPPER(P.Nombre) LIKE '%FIGURITA%'
-    ORDER BY P.id ASC
-    LIMIT 1
-) AS StockFiguritas,
+        (
+            SELECT IFNULL(P.Stock,0)
+            FROM Productos P
+            WHERE P.Eliminado = 0
+            AND P.Activo = 1
+            AND UPPER(P.Nombre) LIKE '%ALBUM%'
+            ORDER BY P.id ASC
+            LIMIT 1
+        ) AS StockAlbum
 
-(
-    SELECT IFNULL(P.Stock,0)
-    FROM Productos P
-    WHERE P.Eliminado = 0
-      AND P.Activo = 1
-      AND UPPER(P.Nombre) LIKE '%ALBUM%'
-    ORDER BY P.id ASC
-    LIMIT 1
-) AS StockAlbum
+            FROM Ventas V
 
-    FROM Ventas V
+            LEFT JOIN Clientes C 
+                ON C.id = V.idCliente
 
-    LEFT JOIN Clientes C 
-        ON C.id = V.idCliente
+            LEFT JOIN VentasDetalle VD 
+                ON VD.idVenta = V.id 
+                AND VD.Eliminado = 0
 
-    LEFT JOIN VentasDetalle VD 
-        ON VD.idVenta = V.id 
-        AND VD.Eliminado = 0
+            WHERE V.Eliminado = 0
 
-    WHERE V.Eliminado = 0
+            GROUP BY V.id
 
-    GROUP BY V.id
-
-    ORDER BY V.NumeroVenta DESC
-    ";
+            ORDER BY V.NumeroVenta DESC
+            ";
 
         $res = $mysqli->query($sql);
 
