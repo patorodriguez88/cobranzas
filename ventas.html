@@ -407,6 +407,40 @@
             </div>
           </div>
 
+          <div class="modal fade" id="modal_turno_retiro" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-centered">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h4 class="modal-title">Asignar turno de retiro</h4>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                  <input type="hidden" id="turno_id_venta" />
+
+                  <div class="alert alert-light border">
+                    <strong id="turno_cliente"></strong><br />
+                    <small id="turno_info_venta" class="text-muted"></small>
+                  </div>
+
+                  <h5>Días disponibles</h5>
+                  <div class="row mb-3" id="turno_dias"></div>
+
+                  <h5>Franjas horarias</h5>
+                  <div class="row" id="turno_horas"></div>
+
+                  <hr />
+
+                  <div class="text-end">
+                    <button class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
+                    <button class="btn btn-success" id="btn_guardar_turno_retiro" disabled>
+                      <i class="mdi mdi-content-save"></i> Confirmar turno
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
           <!-- container-fluid -->
         </div>
 

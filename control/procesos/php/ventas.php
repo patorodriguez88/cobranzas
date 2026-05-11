@@ -808,6 +808,196 @@ switch ($accion) {
 
         echo json_encode($data);
         break;
+
+    case 'turnos_por_fecha':
+
+        $FechaTurno = isset($_POST['FechaTurno']) ? $mysqli->real_escape_string($_POST['FechaTurno']) : '';
+
+        $sql = "
+        SELECT 
+            HoraTurno AS Hora,
+            COUNT(*) AS Total
+        FROM TurnosRetiro
+        WHERE FechaTurno = '$FechaTurno'
+          AND Eliminado = 0
+        GROUP BY HoraTurno
+        ORDER BY HoraTurno ASC
+    ";
+
+        $res = $mysqli->query($sql);
+
+        if (!$res) {
+            echo json_encode(array(
+                "success" => 0,
+                "error" => $mysqli->error,
+                "data" => array()
+            ));
+            exit;
+        }
+
+        $data = array();
+
+        while ($row = $res->fetch_assoc()) {
+            $data[] = $row;
+        }
+
+        echo json_encode(array(
+            "success" => 1,
+            "data" => $data
+        ));
+
+        break;
+    case 'guardar_turno_retiro':
+
+        $idVenta = isset($_POST['idVenta']) ? (int)$_POST['idVenta'] : 0;
+        $FechaTurno = isset($_POST['FechaTurno']) ? $mysqli->real_escape_string($_POST['FechaTurno']) : '';
+        $HoraTurno = isset($_POST['HoraTurno']) ? $mysqli->real_escape_string($_POST['HoraTurno']) : '';
+        $usuario = isset($_SESSION['Usuario']) ? $mysqli->real_escape_string($_SESSION['Usuario']) : 'Sistema';
+
+        if ($idVenta <= 0 || $FechaTurno == '' || $HoraTurno == '') {
+            echo json_encode(array(
+                "success" => 0,
+                "error" => "Datos incompletos para generar el turno."
+            ));
+            exit;
+        }
+
+        $sqlVenta = "
+        SELECT 
+            V.id,
+            V.NumeroVenta,
+            V.NumeroOrdenVenta,
+            V.idCliente,
+            C.RazonSocial,
+            C.Telefono
+        FROM Ventas V
+        LEFT JOIN Clientes C ON C.id = V.idCliente
+        WHERE V.id = '$idVenta'
+        LIMIT 1
+    ";
+
+        $resVenta = $mysqli->query($sqlVenta);
+
+        if (!$resVenta) {
+            echo json_encode(array(
+                "success" => 0,
+                "error" => $mysqli->error
+            ));
+            exit;
+        }
+
+        $venta = $resVenta->fetch_assoc();
+
+        if (!$venta) {
+            echo json_encode(array(
+                "success" => 0,
+                "error" => "Venta inexistente."
+            ));
+            exit;
+        }
+
+        $cliente = $mysqli->real_escape_string($venta['RazonSocial']);
+        $telefono = $mysqli->real_escape_string($venta['Telefono']);
+        $numeroVenta = (int)$venta['NumeroVenta'];
+        $numeroOrdenVenta = $mysqli->real_escape_string($venta['NumeroOrdenVenta']);
+
+        $sqlExiste = "
+        SELECT id
+        FROM TurnosRetiro
+        WHERE idVenta = '$idVenta'
+          AND Eliminado = 0
+        LIMIT 1
+    ";
+
+        $resExiste = $mysqli->query($sqlExiste);
+
+        if ($resExiste && $resExiste->num_rows > 0) {
+            $rowExiste = $resExiste->fetch_assoc();
+            $idTurno = (int)$rowExiste['id'];
+
+            $sqlTurno = "
+            UPDATE TurnosRetiro
+            SET 
+                FechaTurno = '$FechaTurno',
+                HoraTurno = '$HoraTurno',
+                Usuario = '$usuario',
+                FechaCarga = NOW()
+            WHERE id = '$idTurno'
+            LIMIT 1
+        ";
+        } else {
+            $sqlTurno = "
+            INSERT INTO TurnosRetiro
+            (
+                idVenta,
+                NumeroVenta,
+                NumeroOrdenVenta,
+                idCliente,
+                Cliente,
+                Telefono,
+                FechaTurno,
+                HoraTurno,
+                Usuario,
+                Eliminado,
+                FechaCarga
+            )
+            VALUES
+            (
+                '$idVenta',
+                '$numeroVenta',
+                '$numeroOrdenVenta',
+                '{$venta['idCliente']}',
+                '$cliente',
+                '$telefono',
+                '$FechaTurno',
+                '$HoraTurno',
+                '$usuario',
+                0,
+                NOW()
+            )
+        ";
+        }
+
+        if (!$mysqli->query($sqlTurno)) {
+            echo json_encode(array(
+                "success" => 0,
+                "error" => $mysqli->error
+            ));
+            exit;
+        }
+
+        $telefonoWp = preg_replace('/\D/', '', $telefono);
+
+        if (strlen($telefonoWp) > 0 && substr($telefonoWp, 0, 2) != '54') {
+            $telefonoWp = '54' . $telefonoWp;
+        }
+
+        $fechaMostrar = date('d/m/Y', strtotime($FechaTurno));
+        $horaMostrar = substr($HoraTurno, 0, 5);
+
+        $mensaje = "Hola! Te informamos que tu pedido ya tiene turno de retiro asignado.%0A%0A";
+        $mensaje .= "Venta: #" . $numeroVenta . "%0A";
+
+        if ($numeroOrdenVenta != '') {
+            $mensaje .= "Orden de Venta: #" . $numeroOrdenVenta . "%0A";
+        }
+
+        $mensaje .= "Fecha: " . $fechaMostrar . "%0A";
+        $mensaje .= "Hora: " . $horaMostrar . " hs%0A%0A";
+        $mensaje .= "Por favor acercate en el horario indicado. Gracias.";
+
+        $whatsappUrl = "";
+
+        if ($telefonoWp != '') {
+            $whatsappUrl = "https://wa.me/" . $telefonoWp . "?text=" . $mensaje;
+        }
+
+        echo json_encode(array(
+            "success" => 1,
+            "whatsapp_url" => $whatsappUrl
+        ));
+
+        break;
     default:
 
         echo json_encode(array(

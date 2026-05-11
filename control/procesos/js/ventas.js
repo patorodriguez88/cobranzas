@@ -2,7 +2,9 @@ let tablaVentas;
 let productosVenta = [];
 let ventaActualOffcanvas = 0;
 let numeroOrdenVentaActual = "";
-
+let turnoVentaActual = null;
+let turnoFechaSeleccionada = "";
+let turnoHoraSeleccionada = "";
 const URL_VENTAS = "control/procesos/php/ventas.php";
 
 $(document).ready(function () {
@@ -753,9 +755,9 @@ function abrirEstadoVenta(idVenta) {
                 <i class="mdi mdi-pencil"></i>
               </button>
 
-              <button class="btn btn-sm btn-outline-dark" onclick="abrirQRordenVenta('${v.NumeroOrdenVenta}')">
-                <i class="mdi mdi-qrcode"></i>
-              </button>
+              <button class="btn btn-sm btn-outline-success" onclick="abrirModalTurnoRetiro(${v.id})">
+              <i class="mdi mdi-calendar-clock"></i>
+            </button>
             </div>
           </div>
         `;
@@ -983,4 +985,191 @@ $(document).on("hidden.bs.offcanvas", "#offcanvas_venta", function () {
 
   $("body").css("overflow", "");
   $("body").css("padding-right", "");
+});
+function abrirModalTurnoRetiro(idVenta) {
+  turnoVentaActual = null;
+  turnoFechaSeleccionada = "";
+  turnoHoraSeleccionada = "";
+
+  $("#turno_id_venta").val(idVenta);
+  $("#btn_guardar_turno_retiro").prop("disabled", true);
+  $("#turno_dias").html("");
+  $("#turno_horas").html("");
+
+  $.ajax({
+    url: URL_VENTAS,
+    type: "POST",
+    dataType: "json",
+    data: {
+      accion: "estado_venta",
+      idVenta: idVenta,
+    },
+    success: function (r) {
+      if (!r.success) {
+        Swal.fire("Error", r.error || "No se pudo cargar la venta.", "error");
+        return;
+      }
+
+      turnoVentaActual = r.venta;
+
+      $("#turno_cliente").text(r.venta.RazonSocial || "");
+      $("#turno_info_venta").text(
+        "Venta #" + r.venta.NumeroVenta + (r.venta.NumeroOrdenVenta ? " | OV #" + r.venta.NumeroOrdenVenta : ""),
+      );
+
+      renderDiasTurno();
+
+      $("#modal_turno_retiro").modal("show");
+    },
+    error: function (xhr) {
+      console.log(xhr.responseText);
+      Swal.fire("Error", "No se pudo abrir el turno.", "error");
+    },
+  });
+}
+
+function renderDiasTurno() {
+  let html = "";
+
+  for (let i = 0; i <= 7; i++) {
+    let fecha = new Date();
+    fecha.setDate(fecha.getDate() + i);
+
+    let yyyy = fecha.getFullYear();
+    let mm = String(fecha.getMonth() + 1).padStart(2, "0");
+    let dd = String(fecha.getDate()).padStart(2, "0");
+
+    let fechaSQL = `${yyyy}-${mm}-${dd}`;
+    let fechaTexto = fecha.toLocaleDateString("es-AR", {
+      weekday: "short",
+      day: "2-digit",
+      month: "2-digit",
+    });
+
+    html += `
+      <div class="col-md-2 col-6 mb-2">
+        <button type="button"
+          class="btn btn-outline-primary w-100 btn-dia-turno"
+          data-fecha="${fechaSQL}">
+          ${fechaTexto}
+        </button>
+      </div>
+    `;
+  }
+
+  $("#turno_dias").html(html);
+}
+
+$(document).on("click", ".btn-dia-turno", function () {
+  turnoFechaSeleccionada = $(this).data("fecha");
+  turnoHoraSeleccionada = "";
+
+  $(".btn-dia-turno").removeClass("btn-primary").addClass("btn-outline-primary");
+  $(this).removeClass("btn-outline-primary").addClass("btn-primary");
+
+  $("#btn_guardar_turno_retiro").prop("disabled", true);
+
+  cargarHorasTurno(turnoFechaSeleccionada);
+});
+function cargarHorasTurno(fecha) {
+  $("#turno_horas").html(`
+    <div class="col-12 text-muted">Cargando horarios...</div>
+  `);
+
+  $.ajax({
+    url: URL_VENTAS,
+    type: "POST",
+    dataType: "json",
+    data: {
+      accion: "turnos_por_fecha",
+      FechaTurno: fecha,
+    },
+    success: function (r) {
+      let ocupacion = {};
+
+      if (r.success && r.data) {
+        r.data.forEach(function (x) {
+          ocupacion[x.Hora] = parseInt(x.Total || 0);
+        });
+      }
+
+      let html = "";
+
+      for (let h = 7; h <= 17; h++) {
+        let hora = String(h).padStart(2, "0") + ":00:00";
+        let horaTexto = String(h).padStart(2, "0") + ":00";
+        let total = ocupacion[hora] || 0;
+
+        html += `
+          <div class="col-md-2 col-6 mb-2">
+            <button type="button"
+              class="btn btn-outline-secondary w-100 btn-hora-turno"
+              data-hora="${hora}">
+              <strong>${horaTexto}</strong><br>
+              <small>${total} turno${total === 1 ? "" : "s"}</small>
+            </button>
+          </div>
+        `;
+      }
+
+      $("#turno_horas").html(html);
+    },
+    error: function (xhr) {
+      console.log(xhr.responseText);
+      Swal.fire("Error", "No se pudieron cargar los horarios.", "error");
+    },
+  });
+}
+
+$(document).on("click", ".btn-hora-turno", function () {
+  turnoHoraSeleccionada = $(this).data("hora");
+
+  $(".btn-hora-turno").removeClass("btn-success").addClass("btn-outline-secondary");
+  $(this).removeClass("btn-outline-secondary").addClass("btn-success");
+
+  $("#btn_guardar_turno_retiro").prop("disabled", false);
+});
+$(document).on("click", "#btn_guardar_turno_retiro", function () {
+  if (!turnoFechaSeleccionada || !turnoHoraSeleccionada) {
+    Swal.fire("Atención", "Debe seleccionar día y hora.", "warning");
+    return;
+  }
+
+  $.ajax({
+    url: URL_VENTAS,
+    type: "POST",
+    dataType: "json",
+    data: {
+      accion: "guardar_turno_retiro",
+      idVenta: $("#turno_id_venta").val(),
+      FechaTurno: turnoFechaSeleccionada,
+      HoraTurno: turnoHoraSeleccionada,
+    },
+    success: function (r) {
+      if (r.success == 1) {
+        $("#modal_turno_retiro").modal("hide");
+
+        Swal.fire({
+          icon: "success",
+          title: "Turno asignado",
+          text: "El turno fue generado correctamente.",
+          showCancelButton: true,
+          confirmButtonText: "Enviar WhatsApp",
+          cancelButtonText: "Cerrar",
+        }).then(function (result) {
+          if (result.isConfirmed && r.whatsapp_url) {
+            window.open(r.whatsapp_url, "_blank");
+          }
+        });
+
+        abrirEstadoVenta($("#turno_id_venta").val());
+      } else {
+        Swal.fire("Error", r.error || "No se pudo guardar el turno.", "error");
+      }
+    },
+    error: function (xhr) {
+      console.log(xhr.responseText);
+      Swal.fire("Error", "Error guardando turno.", "error");
+    },
+  });
 });
