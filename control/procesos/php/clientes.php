@@ -121,6 +121,15 @@ if (isset($_POST['NuevoCliente'])) {
     $Mail           = trim($_POST['Mail'] ?? '');
     $Observaciones  = trim($_POST['Observaciones'] ?? '');
 
+    if ($Ncliente == '') {
+
+        echo json_encode([
+            'success' => 0,
+            'error'   => 'Debe ingresar el número de cliente.'
+        ]);
+        exit;
+    }
+
     if ($RazonSocial == '') {
 
         echo json_encode([

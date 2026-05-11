@@ -366,7 +366,19 @@ $("#btn_guardar_cliente").click(function () {
     Mail: $("#cliente_mail").val(),
     Observaciones: $("#cliente_observaciones").val(),
   };
+  if ($("#cliente_ncliente").val().trim() === "") {
+    Swal.fire({
+      icon: "warning",
 
+      title: "Número de cliente requerido",
+
+      text: "Debe ingresar el número de cliente.",
+    });
+
+    $("#cliente_ncliente").focus();
+
+    return;
+  }
   $.ajax({
     url: "control/procesos/php/clientes.php",
     type: "POST",
