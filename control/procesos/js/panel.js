@@ -351,20 +351,40 @@ function ver_tabla_conciliados(a) {
       {
         data: null,
         render: function (data, type, row) {
-          if (row.Exportado == "" && row.Estado != "Rechazado") {
-            return (
-              '<td class="dtr-control dt-checkboxes-cell"><div class="form-check"><input value="' +
-              row.id_cobranza +
-              '" type="checkbox" class="form-check-input dt-checkboxes" onclick="calcular_total(0)"><label class="form-check-label">&nbsp;</label></div></td>'
-            );
-          } else if (row.Exportado == "" && row.Estado == "Rechazado") {
-            return (
-              `<td style="cursor:point"><i onclick="vuelve('${row.id_cobranza}')" class="mdi mdi-18px mdi-reload text-success"></i>` +
-              `<i onclick="eliminar('${row.id_cobranza}')" class="mdi mdi-18px mdi-trash-can-outline text-danger ml-3"></i></td>`
-            );
-          } else {
-            return `<td></td>`;
+          if (row.Estado == "Rechazado") {
+            return `
+        <i onclick="vuelve('${row.id_cobranza}')" 
+           class="mdi mdi-18px mdi-reload text-success ms-2" 
+           style="cursor:pointer"></i>
+
+        <i onclick="eliminar('${row.id_cobranza}')" 
+           class="mdi mdi-18px mdi-trash-can-outline text-danger ms-2" 
+           style="cursor:pointer"></i>
+      `;
           }
+
+          let checkboxExportar = "";
+
+          if (row.Exportado == "") {
+            checkboxExportar = `
+        <div class="form-check d-inline-block me-2">
+          <input value="${row.id_cobranza}" 
+                 type="checkbox" 
+                 class="form-check-input dt-checkboxes" 
+                 onclick="calcular_total(0)">
+          <label class="form-check-label">&nbsp;</label>
+        </div>
+      `;
+          }
+
+          let btnAsignar = `
+      <i class="mdi mdi-link-variant mdi-18px text-success ms-2" 
+         title="Asignar pago a ventas"
+         style="cursor:pointer" 
+         onclick="abrirAsignarPago(${row.id_cobranza})"></i>
+    `;
+
+          return checkboxExportar + btnAsignar;
         },
       },
     ],
@@ -388,4 +408,209 @@ function ver_tabla_conciliados(a) {
       $("#total_exportar").html(total);
     }
   });
+}
+
+function abrirAsignarPago(idCobranza) {
+  $.ajax({
+    type: "POST",
+    url: "control/procesos/php/panel.php",
+    dataType: "json",
+    data: {
+      Datos: 1,
+      id: idCobranza,
+    },
+    success: function (r) {
+      if (!r.data || !r.data[0]) {
+        alert("No se encontró la cobranza.");
+        return;
+      }
+
+      let c = r.data[0];
+
+      $("#asignar_id_cobranza").val(c.id);
+      $("#asignar_cliente").val(c.NombreCliente);
+      $("#asignar_numero_cliente").val(c.NumeroCliente);
+      $("#asignar_importe_pago").val(c.Importe);
+      $("#asignar_banco_operacion").val(c.Banco + " / Op.: " + c.Operacion);
+
+      $("#resumen_pago").text(formatearMonedaAsignacion(c.Importe));
+      $("#resumen_aplicado").text(formatearMonedaAsignacion(0));
+      $("#resumen_diferencia").text(formatearMonedaAsignacion(c.Importe));
+
+      cargarVentasPendientesAsignacion(c.NumeroCliente, c.Importe);
+
+      $("#modal_asignar_pago").modal("show");
+    },
+    error: function (xhr) {
+      console.log(xhr.responseText);
+      alert("Error al abrir la asignación.");
+    },
+  });
+}
+
+function cargarVentasPendientesAsignacion(numeroCliente, importePago) {
+  $("#tabla_asignar_ventas tbody").html(`
+    <tr>
+      <td colspan="6" class="text-center text-muted">Buscando ventas pendientes...</td>
+    </tr>
+  `);
+
+  $.ajax({
+    type: "POST",
+    url: "control/procesos/php/panel.php",
+    dataType: "json",
+    data: {
+      VentasPendientesCliente: 1,
+      NumeroCliente: numeroCliente,
+    },
+    success: function (r) {
+      let html = "";
+
+      if (!r.success || !r.data || r.data.length === 0) {
+        html = `
+          <tr>
+            <td colspan="6" class="text-center text-muted">
+              No hay ventas pendientes para este cliente.
+            </td>
+          </tr>
+        `;
+      } else {
+        let disponible = parseFloat(importePago || 0);
+
+        r.data.forEach(function (v) {
+          let saldo = parseFloat(v.Saldo || 0);
+          let sugerido = 0;
+
+          if (disponible > 0) {
+            sugerido = Math.min(disponible, saldo);
+            disponible -= sugerido;
+          }
+
+          html += `
+            <tr>
+              <td><span class="badge bg-primary">#${v.NumeroVenta}</span></td>
+              <td>${formatearFechaAsignacion(v.Fecha)}</td>
+              <td>${formatearMonedaAsignacion(v.Total)}</td>
+              <td>${formatearMonedaAsignacion(v.TotalPagado)}</td>
+              <td>${formatearMonedaAsignacion(v.Saldo)}</td>
+              <td>
+                <input 
+                  type="number"
+                  class="form-control form-control-sm importe_aplicar_pago"
+                  data-idventa="${v.id}"
+                  data-saldo="${v.Saldo}"
+                  value="${sugerido.toFixed(2)}"
+                  min="0"
+                  max="${v.Saldo}"
+                  step="0.01">
+              </td>
+            </tr>
+          `;
+        });
+      }
+
+      $("#tabla_asignar_ventas tbody").html(html);
+      recalcularResumenAsignacion();
+    },
+    error: function (xhr) {
+      console.log(xhr.responseText);
+    },
+  });
+}
+
+$(document).on("keyup change", ".importe_aplicar_pago", function () {
+  let valor = parseFloat($(this).val() || 0);
+  let saldo = parseFloat($(this).data("saldo") || 0);
+
+  if (valor > saldo) {
+    $(this).val(saldo.toFixed(2));
+  }
+
+  recalcularResumenAsignacion();
+});
+
+function recalcularResumenAsignacion() {
+  let pago = parseFloat($("#asignar_importe_pago").val() || 0);
+  let aplicado = 0;
+
+  $(".importe_aplicar_pago").each(function () {
+    aplicado += parseFloat($(this).val() || 0);
+  });
+
+  let diferencia = pago - aplicado;
+
+  $("#resumen_pago").text(formatearMonedaAsignacion(pago));
+  $("#resumen_aplicado").text(formatearMonedaAsignacion(aplicado));
+  $("#resumen_diferencia").text(formatearMonedaAsignacion(diferencia));
+}
+
+function obtenerAplicacionesAsignacion() {
+  let aplicaciones = [];
+
+  $(".importe_aplicar_pago").each(function () {
+    let importe = parseFloat($(this).val() || 0);
+
+    if (importe > 0) {
+      aplicaciones.push({
+        idVenta: $(this).data("idventa"),
+        ImporteAplicado: importe,
+      });
+    }
+  });
+
+  return aplicaciones;
+}
+
+$("#btn_confirmar_asignacion_pago").click(function () {
+  let aplicaciones = obtenerAplicacionesAsignacion();
+
+  if (aplicaciones.length === 0) {
+    alert("No hay importes aplicados.");
+    return;
+  }
+
+  $.ajax({
+    type: "POST",
+    url: "control/procesos/php/panel.php",
+    dataType: "json",
+    data: {
+      AsignarPagoVenta: 1,
+      idCobranza: $("#asignar_id_cobranza").val(),
+      AplicacionesVentas: JSON.stringify(aplicaciones),
+    },
+    success: function (r) {
+      if (r.success == 1) {
+        $("#modal_asignar_pago").modal("hide");
+
+        let tabla = $("#cobranzas_tabla").DataTable();
+        tabla.ajax.reload(null, false);
+
+        alert("Pago asignado correctamente.");
+      } else {
+        alert(r.error || "No se pudo asignar el pago.");
+      }
+    },
+    error: function (xhr) {
+      console.log(xhr.responseText);
+      alert("Error asignando pago.");
+    },
+  });
+});
+
+function formatearMonedaAsignacion(valor) {
+  return (
+    "$ " +
+    parseFloat(valor || 0).toLocaleString("es-AR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })
+  );
+}
+
+function formatearFechaAsignacion(fecha) {
+  if (!fecha) return "";
+  let partes = fecha.split(" ");
+  let f = partes[0].split("-").reverse().join("/");
+  let h = partes[1] ? partes[1].substring(0, 5) : "";
+  return `${f}<br><small class="text-muted">${h} hs</small>`;
 }

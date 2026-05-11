@@ -192,15 +192,172 @@ if (isset($_POST['Duplicados_tabla'])) {
 
         $rows[] = $row_1;
     }
-
-
-
-    // $rows=array();
-
-    // while($row=$sql->fetch_array(MYSQLI_ASSOC)){
-
-    // $rows[]=$row;
-
-    // }
     echo json_encode(array('data' => $rows));
+}
+//RABLA VENTAS PENDIENTES DE CLIENTE
+if (isset($_POST['VentasPendientesCliente'])) {
+
+    $numeroCliente = isset($_POST['NumeroCliente']) ? (int)$_POST['NumeroCliente'] : 0;
+
+    $sql = "
+        SELECT 
+            id,
+            NumeroVenta,
+            Fecha,
+            idCliente,
+            Total,
+            TotalPagado,
+            Saldo,
+            EstadoPago
+        FROM Ventas
+        WHERE idCliente = '$numeroCliente'
+          AND Eliminado = 0
+          AND EstadoPago <> 'PAGADA'
+          AND Saldo > 0
+        ORDER BY Fecha ASC, id ASC
+    ";
+
+    $res = $mysqli->query($sql);
+
+    if (!$res) {
+        echo json_encode(array(
+            "success" => 0,
+            "error" => $mysqli->error,
+            "data" => array()
+        ));
+        exit;
+    }
+
+    $data = array();
+
+    while ($row = $res->fetch_assoc()) {
+        $data[] = $row;
+    }
+
+    echo json_encode(array(
+        "success" => 1,
+        "data" => $data
+    ));
+    exit;
+}
+//ASIGNAR PAGO A VENTA
+if (isset($_POST['AsignarPagoVenta'])) {
+
+    $idCobranza = isset($_POST['idCobranza']) ? (int)$_POST['idCobranza'] : 0;
+    $aplicacionesJson = isset($_POST['AplicacionesVentas']) ? $_POST['AplicacionesVentas'] : '[]';
+    $aplicaciones = json_decode($aplicacionesJson, true);
+
+    $usuario = isset($_SESSION['Usuario']) ? $_SESSION['Usuario'] : '';
+
+    if ($idCobranza <= 0) {
+        echo json_encode(array(
+            "success" => 0,
+            "error" => "Cobranza inválida."
+        ));
+        exit;
+    }
+
+    if (!is_array($aplicaciones) || count($aplicaciones) == 0) {
+        echo json_encode(array(
+            "success" => 0,
+            "error" => "No hay ventas para aplicar."
+        ));
+        exit;
+    }
+
+    $mysqli->begin_transaction();
+
+    try {
+
+        foreach ($aplicaciones as $a) {
+
+            $idVenta = isset($a['idVenta']) ? (int)$a['idVenta'] : 0;
+            $importeAplicado = isset($a['ImporteAplicado']) ? (float)$a['ImporteAplicado'] : 0;
+
+            if ($idVenta <= 0 || $importeAplicado <= 0) {
+                continue;
+            }
+
+            $sqlVenta = "
+                SELECT 
+                    Total,
+                    TotalPagado,
+                    Saldo
+                FROM Ventas
+                WHERE id = '$idVenta'
+                  AND Eliminado = 0
+                LIMIT 1
+                FOR UPDATE
+            ";
+
+            $resVenta = $mysqli->query($sqlVenta);
+
+            if (!$resVenta) {
+                throw new Exception($mysqli->error);
+            }
+
+            $venta = $resVenta->fetch_assoc();
+
+            if (!$venta) {
+                throw new Exception("Venta inexistente: " . $idVenta);
+            }
+
+            $saldoActual = (float)$venta['Saldo'];
+
+            if ($importeAplicado > $saldoActual) {
+                throw new Exception("El importe aplicado supera el saldo de la venta #" . $idVenta);
+            }
+
+            $nuevoPagado = (float)$venta['TotalPagado'] + $importeAplicado;
+            $nuevoSaldo = $saldoActual - $importeAplicado;
+
+            if ($nuevoSaldo <= 0.01) {
+                $nuevoSaldo = 0;
+                $estadoPago = "PAGADA";
+            } else {
+                $estadoPago = "PARCIAL";
+            }
+
+            $sqlInsert = "
+                INSERT INTO CobranzasVentas
+                (idCobranza, idVenta, ImporteAplicado, Usuario, Fecha)
+                VALUES
+                ('$idCobranza', '$idVenta', '$importeAplicado', '$usuario', NOW())
+            ";
+
+            if (!$mysqli->query($sqlInsert)) {
+                throw new Exception($mysqli->error);
+            }
+
+            $sqlUpdateVenta = "
+                UPDATE Ventas
+                SET 
+                    TotalPagado = '$nuevoPagado',
+                    Saldo = '$nuevoSaldo',
+                    EstadoPago = '$estadoPago'
+                WHERE id = '$idVenta'
+                LIMIT 1
+            ";
+
+            if (!$mysqli->query($sqlUpdateVenta)) {
+                throw new Exception($mysqli->error);
+            }
+        }
+
+        $mysqli->commit();
+
+        echo json_encode(array(
+            "success" => 1
+        ));
+        exit;
+    } catch (Exception $e) {
+
+        $mysqli->rollback();
+
+        echo json_encode(array(
+            "success" => 0,
+            "error" => $e->getMessage()
+        ));
+        exit;
+    }
 }
