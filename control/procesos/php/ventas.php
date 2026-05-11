@@ -1050,7 +1050,7 @@ VALUES
                 NumeroOrdenVenta,
                 idCliente,
                 Cliente,
-                Celular,
+                Telefono,
                 FechaTurno,
                 HoraTurno,
                 Usuario,
