@@ -1,11 +1,5 @@
 function alerta() {
-  $.NotificationApp.send(
-    "Atención !",
-    "El cliente debe estar activo.",
-    "bottom-right",
-    "#FFFFFF",
-    "warning",
-  );
+  $.NotificationApp.send("Atención !", "El cliente debe estar activo.", "bottom-right", "#FFFFFF", "warning");
 }
 function dni(id) {
   $("#id_dni").val(id);
@@ -39,13 +33,7 @@ $("#modal_dni_btn_ok").click(function () {
 
       $("#modal_dni").modal("hide");
 
-      $.NotificationApp.send(
-        "Exito !",
-        "Modificamos el Dni del Cliente.",
-        "bottom-right",
-        "#FFFFFF",
-        "success",
-      );
+      $.NotificationApp.send("Exito !", "Modificamos el Dni del Cliente.", "bottom-right", "#FFFFFF", "success");
     },
   });
 });
@@ -223,13 +211,7 @@ function modificar_status(id, status) {
       var jsonData = JSON.parse(response);
 
       if (jsonData.success == 1) {
-        $.NotificationApp.send(
-          "Exito !",
-          "Modificamos el Status del Cliente.",
-          "bottom-right",
-          "#FFFFFF",
-          "success",
-        );
+        $.NotificationApp.send("Exito !", "Modificamos el Status del Cliente.", "bottom-right", "#FFFFFF", "success");
         var datatable_clientes = $("#clientes_tabla").DataTable();
         datatable_clientes.ajax.reload(null, false);
       } else {
@@ -272,13 +254,7 @@ $("#modal_nombre_btn_ok").click(function () {
       dt.ajax.reload(null, false); // no reset page
       $("#modal_nombre").modal("hide");
 
-      $.NotificationApp.send(
-        "Éxito!",
-        "Modificamos el nombre del cliente.",
-        "bottom-right",
-        "#FFFFFF",
-        "success",
-      );
+      $.NotificationApp.send("Éxito!", "Modificamos el nombre del cliente.", "bottom-right", "#FFFFFF", "success");
     },
   });
 });
@@ -311,13 +287,7 @@ $("#modal_direccion_btn_ok").click(function () {
       dt.ajax.reload(null, false);
       $("#modal_direccion").modal("hide");
 
-      $.NotificationApp.send(
-        "Éxito!",
-        "Modificamos la dirección del cliente.",
-        "bottom-right",
-        "#FFFFFF",
-        "success",
-      );
+      $.NotificationApp.send("Éxito!", "Modificamos la dirección del cliente.", "bottom-right", "#FFFFFF", "success");
     },
   });
 });
@@ -350,13 +320,7 @@ $("#modal_recorrido_btn_ok").click(function () {
 
       $("#modal_recorrido").modal("hide");
 
-      $.NotificationApp.send(
-        "Éxito!",
-        "Modificamos el recorrido del cliente.",
-        "bottom-right",
-        "#FFFFFF",
-        "success",
-      );
+      $.NotificationApp.send("Éxito!", "Modificamos el recorrido del cliente.", "bottom-right", "#FFFFFF", "success");
     },
   });
 });
@@ -375,3 +339,71 @@ function escapeHtml(str) {
     }[s];
   });
 }
+$("#btn_nuevo_cliente").click(function () {
+  $("#cliente_id").val(0);
+  $("#cliente_ncliente").val("");
+  $("#cliente_razon_social").val("");
+  $("#cliente_cuit").val("");
+  $("#cliente_direccion").val("");
+  $("#cliente_ciudad").val("");
+  $("#cliente_telefono").val("");
+  $("#cliente_mail").val("");
+  $("#cliente_observaciones").val("");
+
+  $("#modal_cliente").modal("show");
+});
+
+$("#btn_guardar_cliente").click(function () {
+  let datos = {
+    NuevoCliente: 1,
+    id: $("#cliente_id").val(),
+    Ncliente: $("#cliente_ncliente").val(),
+    RazonSocial: $("#cliente_razon_social").val(),
+    Cuit: $("#cliente_cuit").val(),
+    Direccion: $("#cliente_direccion").val(),
+    Ciudad: $("#cliente_ciudad").val(),
+    Telefono: $("#cliente_telefono").val(),
+    Mail: $("#cliente_mail").val(),
+    Observaciones: $("#cliente_observaciones").val(),
+  };
+
+  $.ajax({
+    url: "control/procesos/php/clientes.php",
+    type: "POST",
+    data: datos,
+    dataType: "json",
+    success: function (r) {
+      if (r.success == 1) {
+        $("#modal_cliente").modal("hide");
+        $("#clientes_tabla").DataTable().ajax.reload(null, false);
+
+        Swal.fire({
+          icon: "success",
+          title: "Cliente guardado",
+          text: "El cliente se cargó correctamente.",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "No se pudo guardar",
+          text: r.error || "No se pudo guardar el cliente.",
+        });
+      }
+    },
+    error: function (xhr) {
+      console.log(xhr.responseText);
+
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Error en clientes.php",
+      });
+    },
+    error: function (xhr) {
+      console.log(xhr.responseText);
+      alert("Error en clientes.php");
+    },
+  });
+});
