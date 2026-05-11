@@ -1035,7 +1035,7 @@ VALUES
                 NumeroOrdenVenta,
                 idCliente,
                 Cliente,
-                Telefono,
+                Celular,
                 FechaTurno,
                 HoraTurno,
                 Usuario,
@@ -1081,10 +1081,10 @@ VALUES
 
         $mensaje = "Hola! Te informamos que tu pedido ya tiene turno de retiro asignado.%0A%0A";
 
-        $mensaje .= "Venta: #" . $numeroVenta . "%0A";
-
         if ($numeroOrdenVenta != '') {
             $mensaje .= "Orden de Retiro: #" . $numeroOrdenVenta . "%0A";
+        } else {
+            $mensaje .= "Venta: #" . $numeroVenta . "%0A";
         }
 
         $mensaje .= "%0A";
