@@ -1105,17 +1105,33 @@ $(document).on("click", "#btn_guardar_turno_retiro", function () {
       if (r.success == 1) {
         $("#modal_turno_retiro").modal("hide");
 
+        let htmlWp = "";
+
+        if (r.whatsapp_url && r.whatsapp_url !== "") {
+          htmlWp = `
+    <a href="${r.whatsapp_url}" 
+       target="_blank" 
+       class="btn btn-success mt-2">
+      <i class="mdi mdi-whatsapp"></i> Enviar WhatsApp
+    </a>
+  `;
+        } else {
+          htmlWp = `
+    <div class="alert alert-warning mt-2 mb-0">
+      El cliente no tiene celular cargado.
+    </div>
+  `;
+        }
+
         Swal.fire({
           icon: "success",
           title: "Turno asignado",
-          text: "El turno fue generado correctamente.",
-          showCancelButton: true,
-          confirmButtonText: "Enviar WhatsApp",
-          cancelButtonText: "Cerrar",
-        }).then(function (result) {
-          if (result.isConfirmed && r.whatsapp_url) {
-            window.open(r.whatsapp_url, "_blank");
-          }
+          html: `
+    <p>El turno fue generado correctamente.</p>
+    ${htmlWp}
+  `,
+          showConfirmButton: true,
+          confirmButtonText: "Cerrar",
         });
 
         abrirEstadoVenta($("#turno_id_venta").val());
