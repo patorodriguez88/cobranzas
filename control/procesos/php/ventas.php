@@ -23,7 +23,8 @@ switch ($accion) {
             Cuit,
             Direccion,
             Ciudad,
-            Telefono
+            Telefono,
+            Ncliente
         FROM Clientes
         WHERE
             RazonSocial LIKE ?
@@ -198,9 +199,9 @@ switch ($accion) {
                 $usuario = isset($_SESSION['Usuario']) ? $_SESSION['Usuario'] : '';
                 $sqlVenta = "
                     INSERT INTO Ventas
-                    (Fecha, idCliente, Observaciones, Total, Usuario, Eliminado)
-                    VALUES
-                    (NOW(), '$idCliente', '$Observaciones', '$total', '$usuario', 0)
+(Fecha, idCliente, Observaciones, Total, TotalPagado, Saldo, EstadoPago, Usuario, Eliminado)
+VALUES
+(NOW(), '$idCliente', '$Observaciones', '$total', 0, '$total', 'PENDIENTE', '$usuario', 0)
                 ";
 
                 if (!$mysqli->query($sqlVenta)) {
@@ -546,7 +547,7 @@ switch ($accion) {
                 C.Ncliente,
                 GROUP_CONCAT(
                 CONCAT(VD.ProductoNombre, ' x', VD.Cantidad) SEPARATOR '||') AS Productos,
-                IFNULL(SUM(APV.ImporteAplicado),0) AS TotalPagado
+                IFNULL((SELECT SUM(APV.ImporteAplicado) FROM AplicacionesPagosVentas APV WHERE APV.idVenta = V.id AND APV.Eliminado = 0), 0) AS TotalPagado
                 FROM Ventas V
                 LEFT JOIN Clientes C 
                 ON C.id = V.idCliente
@@ -611,6 +612,7 @@ switch ($accion) {
 
         echo json_encode(array("data" => $data));
         break;
+
     case 'listar_ventas':
 
         $sql = "SELECT 
@@ -651,10 +653,15 @@ switch ($accion) {
         $data = array();
 
         while ($row = $res->fetch_assoc()) {
-            $cliente = !empty($row["RazonSocial"])
-                ? "[" . $row["idCliente"] . "] " . $row["RazonSocial"]
-                : "";
+            $cliente = "";
 
+            if (!empty($row["RazonSocial"])) {
+                if (!empty($row["Ncliente"])) {
+                    $cliente = "[" . $row["Ncliente"] . "] " . $row["RazonSocial"];
+                } else {
+                    $cliente = $row["RazonSocial"];
+                }
+            }
             $data[] = array(
                 "id" => $row["id"],
                 "NumeroVenta" => $row["NumeroVenta"],
@@ -697,19 +704,35 @@ switch ($accion) {
         $resVenta = $mysqli->query($sqlVenta);
         $venta = $resVenta->fetch_assoc();
 
-        $sqlPagos = "SELECT 
-            CV.ImporteAplicado,
-            CV.Fecha AS FechaAplicacion,
-            CB.Fecha,
-            CB.Hora,
-            CB.Banco,
-            CB.Operacion,
-            CB.Importe
-        FROM CobranzasVentas CV
-        LEFT JOIN Cobranza CB ON CB.id = CV.idCobranza
-        WHERE CV.idVenta = '$idVenta'
-        ORDER BY CV.id DESC
-    ";
+        $sqlPagos = "
+
+    SELECT 
+
+        APV.ImporteAplicado,
+
+        APV.Fecha AS FechaAplicacion,
+
+        CB.Fecha,
+
+        CB.Hora,
+
+        CB.Banco,
+
+        CB.Operacion,
+
+        CB.Importe
+
+    FROM AplicacionesPagosVentas APV
+
+    LEFT JOIN Cobranza CB ON CB.id = APV.idCobranza
+
+    WHERE APV.idVenta = '$idVenta'
+
+      AND APV.Eliminado = 0
+
+    ORDER BY APV.id DESC
+
+";
 
         $resPagos = $mysqli->query($sqlPagos);
 
