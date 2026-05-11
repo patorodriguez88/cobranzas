@@ -203,12 +203,14 @@ if (isset($_POST['NuevoCliente'])) {
         echo json_encode([
             'success' => 1
         ]);
+        exit;
     } else {
 
         echo json_encode([
             'success' => 0,
             'error'   => $stmt->error
         ]);
+        exit;
     }
 
     exit;
