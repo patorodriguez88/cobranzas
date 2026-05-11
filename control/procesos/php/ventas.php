@@ -659,7 +659,7 @@ switch ($accion) {
             V.EstadoPago,
             V.Observaciones,
             C.RazonSocial,
-            V.NumeroOrdenVenta,
+            V.NumeroOrdenVenta
         FROM Ventas V
         LEFT JOIN Clientes C ON C.id = V.idCliente
         WHERE V.id = '$idVenta'
