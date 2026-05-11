@@ -852,7 +852,31 @@ function abrirEstadoVenta(idVenta) {
         ${htmlTurnoRetiro}
         ${htmlOrdenVenta}
       `);
+      if (v.TurnoRetiro && v.TurnoRetiro !== "") {
+        $("#texto_turno_retiro").html(`
+    <i class="mdi mdi-calendar-clock"></i> ${v.TurnoRetiro}
+  `);
+      } else {
+        $("#texto_turno_retiro").html(`<span class="text-muted">Sin turno asignado</span>`);
+      }
 
+      if (v.NumeroOrdenVenta && v.NumeroOrdenVenta !== "") {
+        $("#texto_orden_venta").html(`#${v.NumeroOrdenVenta}`);
+      } else {
+        $("#texto_orden_venta").html(`<span class="text-muted">Sin orden asignada</span>`);
+      }
+
+      $("#btn_offcanvas_orden_venta")
+        .off("click")
+        .on("click", function () {
+          editarOrdenVenta(v.id, v.NumeroOrdenVenta || "");
+        });
+
+      $("#btn_offcanvas_turno_retiro")
+        .off("click")
+        .on("click", function () {
+          abrirModalTurnoRetiro(v.id);
+        });
       let htmlPagos = "";
 
       if (!r.pagos || r.pagos.length === 0) {
