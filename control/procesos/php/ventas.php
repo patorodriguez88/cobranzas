@@ -1080,27 +1080,24 @@ VALUES
         $fechaMostrar = date('d/m/Y', strtotime($FechaTurno));
         $horaMostrar = substr($HoraTurno, 0, 5);
 
-        $mensaje = "Hola! Te informamos que tu pedido ya tiene turno de retiro asignado.%0A%0A";
+        $fechaMostrar = date('d/m/Y', strtotime($FechaTurno));
+        $horaMostrar = substr($HoraTurno, 0, 5);
 
-        if (!empty($numeroOrdenVenta)) {
+        $codigoRetiro = !empty($numeroOrdenVenta) ? $numeroOrdenVenta : $numeroVenta;
+        $tipoCodigo = !empty($numeroOrdenVenta) ? "Orden de Retiro" : "Venta";
 
-            $mensaje .= "Orden de Retiro: #" . $numeroOrdenVenta . "%0A";
-        } else {
+        $mensajeTexto  = "Hola! Te informamos que tu pedido ya tiene turno de retiro asignado.\n\n";
+        $mensajeTexto .= $tipoCodigo . ": #" . $codigoRetiro . "\n\n";
+        $mensajeTexto .= "Fecha: " . $fechaMostrar . "\n";
+        $mensajeTexto .= "Hora: " . $horaMostrar . " hs\n\n";
+        $mensajeTexto .= "IMPORTANTE:\n";
+        $mensajeTexto .= "Para retirar la mercadería deberás informar este número al momento del retiro.\n";
+        $mensajeTexto .= "No compartas este código con nadie.\n\n";
+        $mensajeTexto .= "¡Gracias por tu compra!\n";
+        $mensajeTexto .= "Saludos.\n";
+        $mensajeTexto .= "Dinter S.A.";
 
-            $mensaje .= "Venta: #" . $numeroVenta . "%0A";
-        }
-
-        $mensaje .= "%0A";
-        $mensaje .= "Fecha: " . $fechaMostrar . "%0A";
-        $mensaje .= "Hora: " . $horaMostrar . " hs%0A%0A";
-
-        $mensaje .= "IMPORTANTE:%0A";
-        $mensaje .= "Para retirar la mercadería deberás informar este número al momento del retiro.%0A";
-        $mensaje .= "No compartas este código con nadie.%0A%0A";
-
-        $mensaje .= "¡Gracias por tu compra!%0A";
-        $mensaje .= "Saludos.%0A";
-        $mensaje .= "Dinter S.A.";
+        $mensaje = rawurlencode($mensajeTexto);
 
         $whatsappUrl = "";
 
