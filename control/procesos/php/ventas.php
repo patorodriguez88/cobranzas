@@ -1125,6 +1125,141 @@ VALUES
         ));
 
         break;
+
+    case 'actualizar_cantidad_producto_venta':
+
+        $idVenta = isset($_POST['idVenta']) ? (int)$_POST['idVenta'] : 0;
+        $ProductoNombre = isset($_POST['ProductoNombre']) ? trim($_POST['ProductoNombre']) : '';
+        $CantidadNueva = isset($_POST['Cantidad']) ? (float)$_POST['Cantidad'] : 0;
+
+        if ($idVenta <= 0 || $ProductoNombre == '') {
+            echo json_encode([
+                "success" => 0,
+                "error" => "Datos incompletos."
+            ]);
+            exit;
+        }
+
+        $ProductoNombreSQL = $mysqli->real_escape_string($ProductoNombre);
+
+        $sqlVenta = "
+        SELECT EstadoPago
+        FROM Ventas
+        WHERE id = '$idVenta'
+          AND Eliminado = 0
+        LIMIT 1
+    ";
+
+        $resVenta = $mysqli->query($sqlVenta);
+
+        if (!$resVenta || $resVenta->num_rows == 0) {
+            echo json_encode([
+                "success" => 0,
+                "error" => "Venta inexistente."
+            ]);
+            exit;
+        }
+
+        $venta = $resVenta->fetch_assoc();
+
+        if ($venta['EstadoPago'] !== 'PENDIENTE') {
+            echo json_encode([
+                "success" => 0,
+                "error" => "Solo se pueden editar cantidades en ventas pendientes."
+            ]);
+            exit;
+        }
+
+        $sqlDetalle = "
+        SELECT id, PrecioUnitario
+        FROM VentasDetalle
+        WHERE idVenta = '$idVenta'
+          AND ProductoNombre = '$ProductoNombreSQL'
+          AND Eliminado = 0
+        LIMIT 1
+    ";
+
+        $resDetalle = $mysqli->query($sqlDetalle);
+
+        if (!$resDetalle || $resDetalle->num_rows == 0) {
+            echo json_encode([
+                "success" => 0,
+                "error" => "Producto no encontrado en la venta."
+            ]);
+            exit;
+        }
+
+        $detalle = $resDetalle->fetch_assoc();
+
+        $idDetalle = (int)$detalle['id'];
+        $precioUnitario = (float)$detalle['PrecioUnitario'];
+        $subtotal = $CantidadNueva * $precioUnitario;
+
+        $mysqli->begin_transaction();
+
+        try {
+
+            $sqlUpdateDetalle = "
+            UPDATE VentasDetalle
+            SET 
+                Cantidad = '$CantidadNueva',
+                Subtotal = '$subtotal'
+            WHERE id = '$idDetalle'
+            LIMIT 1
+        ";
+
+            if (!$mysqli->query($sqlUpdateDetalle)) {
+                throw new Exception($mysqli->error);
+            }
+
+            $sqlTotal = "
+            SELECT IFNULL(SUM(Subtotal),0) AS Total
+            FROM VentasDetalle
+            WHERE idVenta = '$idVenta'
+              AND Eliminado = 0
+        ";
+
+            $resTotal = $mysqli->query($sqlTotal);
+            $rowTotal = $resTotal->fetch_assoc();
+
+            $totalVenta = (float)$rowTotal['Total'];
+
+            $sqlUpdateVenta = "
+            UPDATE Ventas
+            SET 
+                Total = '$totalVenta',
+                Saldo = '$totalVenta' - IFNULL(TotalPagado,0),
+                EstadoPago = CASE
+                    WHEN IFNULL(TotalPagado,0) <= 0 THEN 'PENDIENTE'
+                    WHEN IFNULL(TotalPagado,0) >= '$totalVenta' THEN 'PAGADA'
+                    ELSE 'PARCIAL'
+                END
+            WHERE id = '$idVenta'
+            LIMIT 1
+        ";
+
+            if (!$mysqli->query($sqlUpdateVenta)) {
+                throw new Exception($mysqli->error);
+            }
+
+            $mysqli->commit();
+
+            echo json_encode([
+                "success" => 1
+            ]);
+        } catch (Exception $e) {
+
+            $mysqli->rollback();
+
+            echo json_encode([
+                "success" => 0,
+                "error" => $e->getMessage()
+            ]);
+        }
+
+        break;
+
+
     default:
 
         echo json_encode(array(

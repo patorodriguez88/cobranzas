@@ -635,22 +635,50 @@ function cargarListadoVentas() {
       { data: "Cliente" },
       {
         data: "Productos",
-        render: function (data) {
+        render: function (data, type, row) {
           if (!data) return "";
 
           let productos = data.split("||");
+          let editable = row.EstadoPago === "PENDIENTE";
 
-          let html = "";
+          let html = `<div class="d-flex gap-1 flex-wrap">`;
 
           productos.forEach(function (p) {
+            let partes = p.split(" x");
+            let nombre = partes[0] || "";
+            let cantidad = partes[1] || 0;
+
+            let clase = nombre.toUpperCase().includes("ALBUM") ? "success" : "primary";
+            let icono = nombre.toUpperCase().includes("ALBUM") ? "mdi-book-open-page-variant" : "mdi-cards-outline";
+
             html += `
-        <div class="mb-1">
-          <span class="badge bg-secondary">
-            ${p}
-          </span>
+        <div class="border border-${clase} rounded p-1 text-center" style="min-width:115px;">
+          <div class="fw-bold text-${clase}" style="font-size:11px;">
+            ${nombre}
+          </div>
+
+          <i class="mdi ${icono} text-${clase}" style="font-size:22px;"></i>
+
+          <div class="small text-muted">Cantidad</div>
+
+          ${
+            editable
+              ? `<input 
+                  type="number" 
+                  class="form-control form-control-sm text-center cantidad-producto-venta"
+                  data-idventa="${row.id}"
+                  data-producto="${nombre}"
+                  value="${cantidad}"
+                  min="0"
+                  style="height:28px;"
+                >`
+              : `<div class="fw-bold">${cantidad}</div>`
+          }
         </div>
       `;
           });
+
+          html += `</div>`;
 
           return html;
         },
@@ -1142,6 +1170,56 @@ $(document).on("click", "#btn_guardar_turno_retiro", function () {
     error: function (xhr) {
       console.log(xhr.responseText);
       Swal.fire("Error", "Error guardando turno.", "error");
+    },
+  });
+});
+$(document).on("change", ".cantidad-producto-venta", function () {
+  let input = $(this);
+
+  let idVenta = input.data("idventa");
+  let producto = input.data("producto");
+  let cantidad = parseInt(input.val() || 0);
+
+  if (cantidad < 0) {
+    input.val(0);
+    cantidad = 0;
+  }
+
+  $.ajax({
+    url: URL_VENTAS,
+    type: "POST",
+    dataType: "json",
+    data: {
+      accion: "actualizar_cantidad_producto_venta",
+      idVenta: idVenta,
+      ProductoNombre: producto,
+      Cantidad: cantidad,
+    },
+    success: function (r) {
+      if (r.success == 1) {
+        Swal.fire({
+          icon: "success",
+          title: "Cantidad actualizada",
+          timer: 900,
+          showConfirmButton: false,
+        });
+
+        if ($.fn.DataTable.isDataTable("#tabla_listado_ventas")) {
+          $("#tabla_listado_ventas").DataTable().ajax.reload(null, false);
+        }
+
+        if ($.fn.DataTable.isDataTable("#tabla_ventas")) {
+          $("#tabla_ventas").DataTable().ajax.reload(null, false);
+        }
+
+        cargarResumenVentas();
+      } else {
+        Swal.fire("Error", r.error || "No se pudo actualizar.", "error");
+      }
+    },
+    error: function (xhr) {
+      console.log(xhr.responseText);
+      Swal.fire("Error", "Error actualizando cantidad.", "error");
     },
   });
 });
