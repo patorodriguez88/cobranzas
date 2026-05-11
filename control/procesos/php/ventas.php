@@ -190,9 +190,8 @@ switch ($accion) {
 
                 $sqlVenta = "
                     INSERT INTO Ventas
-                    (Fecha, idCliente, Observaciones, Total, Eliminado)
-                    VALUES
-                    (NOW(), '$idCliente', '$Observaciones', '$total', 0)
+                    (Fecha, idCliente, Observaciones, Total, TotalPagado, Saldo, EstadoPago, Eliminado) VALUES
+                    (NOW(), '$idCliente', '$Observaciones', '$total', 0, '$total', 'PENDIENTE', 0)
                 ";
 
                 if (!$mysqli->query($sqlVenta)) {
@@ -436,7 +435,10 @@ switch ($accion) {
             C.RazonSocial,
             V.Total,
             V.Observaciones,
-            COUNT(VD.id) AS Productos
+            COUNT(VD.id) AS Productos,
+            V.EstadoPago,
+            V.TotalPagado,
+            V.Saldo
         FROM Ventas V
         LEFT JOIN Clientes C ON C.id = V.idCliente
         LEFT JOIN VentasDetalle VD 
@@ -468,7 +470,10 @@ switch ($accion) {
                 "Cliente" => $cliente,
                 "Productos" => $row["Productos"],
                 "Total" => $row["Total"],
-                "Observaciones" => $row["Observaciones"]
+                "Observaciones" => $row["Observaciones"],
+                "EstadoPago" => $row["EstadoPago"],
+                "TotalPagado" => $row["TotalPagado"],
+                "Saldo" => $row["Saldo"]
             );
         }
 

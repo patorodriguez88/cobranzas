@@ -125,6 +125,25 @@ function cargarVentas() {
       },
       { data: "Observaciones" },
       {
+        data: "EstadoPago",
+
+        render: function (data) {
+          let clase = "warning";
+
+          if (data === "PAGADA") clase = "success";
+
+          if (data === "PARCIAL") clase = "info";
+
+          return `<span class="badge bg-${clase}">${data}</span>`;
+        },
+      },
+
+      {
+        data: "Saldo",
+
+        render: $.fn.dataTable.render.number(",", ".", 2, "$ "),
+      },
+      {
         data: null,
         orderable: false,
         render: function (data) {
