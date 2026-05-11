@@ -45,9 +45,17 @@ switch ($accion) {
 
         while ($row = $res->fetch_assoc()) {
 
+            $textoCliente = "";
+
+            if (!empty($row["Ncliente"])) {
+                $textoCliente = "[" . $row["Ncliente"] . "] " . $row["RazonSocial"];
+            } else {
+                $textoCliente = $row["RazonSocial"];
+            }
+
             $data[] = [
                 "id" => $row['id'],
-                "text" => $row['RazonSocial'] . " - " . $row['Cuit'],
+                "text" => $textoCliente,
                 "cliente" => $row
             ];
         }
@@ -328,20 +336,147 @@ switch ($accion) {
     case 'eliminar':
 
         $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        $usuario = isset($_SESSION['Usuario']) ? $_SESSION['Usuario'] : 'Sistema';
 
-        $sql = "
+        if ($id <= 0) {
+            echo json_encode(array(
+                "success" => 0,
+                "error" => "Venta inválida."
+            ));
+            exit;
+        }
+
+        $mysqli->begin_transaction();
+
+        try {
+
+            $sqlDetalle = "
+            SELECT 
+                idProducto,
+                ProductoNombre,
+                Cantidad
+            FROM VentasDetalle
+            WHERE idVenta = '$id'
+              AND Eliminado = 0
+        ";
+
+            $resDetalle = $mysqli->query($sqlDetalle);
+
+            if (!$resDetalle) {
+                throw new Exception($mysqli->error);
+            }
+
+            while ($item = $resDetalle->fetch_assoc()) {
+
+                $idProducto = (int)$item['idProducto'];
+                $cantidad = (int)$item['Cantidad'];
+                $productoNombre = $mysqli->real_escape_string($item['ProductoNombre']);
+
+                if ($idProducto <= 0 || $cantidad <= 0) {
+                    continue;
+                }
+
+                $sqlProducto = "
+                SELECT Stock
+                FROM Productos
+                WHERE id = '$idProducto'
+                LIMIT 1
+                FOR UPDATE
+            ";
+
+                $resProducto = $mysqli->query($sqlProducto);
+
+                if (!$resProducto) {
+                    throw new Exception($mysqli->error);
+                }
+
+                $producto = $resProducto->fetch_assoc();
+
+                if (!$producto) {
+                    throw new Exception("Producto inexistente: " . $idProducto);
+                }
+
+                $stockAnterior = (int)$producto['Stock'];
+                $stockNuevo = $stockAnterior + $cantidad;
+
+                $sqlUpdateStock = "
+                UPDATE Productos
+                SET Stock = '$stockNuevo'
+                WHERE id = '$idProducto'
+                LIMIT 1
+            ";
+
+                if (!$mysqli->query($sqlUpdateStock)) {
+                    throw new Exception($mysqli->error);
+                }
+
+                $observacionMovimiento = $mysqli->real_escape_string(
+                    "Devolución por eliminación de venta #" . $id . " - " . $productoNombre
+                );
+
+                $sqlMovimiento = "
+                INSERT INTO MovimientosStock
+                (
+                    idProducto,
+                    Tipo,
+                    Cantidad,
+                    StockAnterior,
+                    StockNuevo,
+                    Observaciones,
+                    Usuario,
+                    Fecha
+                )
+                VALUES
+                (
+                    '$idProducto',
+                    'DEVOLUCION_VENTA_ELIMINADA',
+                    '$cantidad',
+                    '$stockAnterior',
+                    '$stockNuevo',
+                    '$observacionMovimiento',
+                    '$usuario',
+                    NOW()
+                )
+            ";
+
+                if (!$mysqli->query($sqlMovimiento)) {
+                    throw new Exception($mysqli->error);
+                }
+            }
+
+            $sqlEliminarDetalle = "
+            UPDATE VentasDetalle
+            SET Eliminado = 1
+            WHERE idVenta = '$id'
+        ";
+
+            if (!$mysqli->query($sqlEliminarDetalle)) {
+                throw new Exception($mysqli->error);
+            }
+
+            $sqlEliminarVenta = "
             UPDATE Ventas 
             SET Eliminado = 1 
             WHERE id = '$id' 
             LIMIT 1
         ";
 
-        if ($mysqli->query($sql)) {
-            echo json_encode(array("success" => 1));
-        } else {
+            if (!$mysqli->query($sqlEliminarVenta)) {
+                throw new Exception($mysqli->error);
+            }
+
+            $mysqli->commit();
+
+            echo json_encode(array(
+                "success" => 1
+            ));
+        } catch (Exception $e) {
+
+            $mysqli->rollback();
+
             echo json_encode(array(
                 "success" => 0,
-                "error" => $mysqli->error
+                "error" => $e->getMessage()
             ));
         }
 
@@ -383,6 +518,7 @@ switch ($accion) {
                 C.RazonSocial,
                 V.Total,
                 V.Observaciones,
+                C.Ncliente,
                 GROUP_CONCAT(
                 CONCAT(VD.ProductoNombre, ' x', VD.Cantidad) SEPARATOR '||') AS Productos,
                 IFNULL(SUM(APV.ImporteAplicado),0) AS TotalPagado
@@ -413,7 +549,12 @@ switch ($accion) {
             $cliente = "";
 
             if (!empty($row["RazonSocial"])) {
-                $cliente = "[" . $row["idCliente"] . "] " . $row["RazonSocial"];
+
+                if (!empty($row["Ncliente"])) {
+                    $cliente = "[" . $row["Ncliente"] . "] " . $row["RazonSocial"];
+                } else {
+                    $cliente = $row["RazonSocial"];
+                }
             }
 
             $total = (float)$row["Total"];
@@ -455,6 +596,7 @@ switch ($accion) {
             V.Total,
             V.Observaciones,
             V.Usuario,
+            C.Ncliente,
             GROUP_CONCAT(
                 CONCAT(VD.ProductoNombre, ' x', VD.Cantidad)
                 SEPARATOR '||'
