@@ -1,5 +1,7 @@
 let tablaVentas;
 let productosVenta = [];
+let ventaActualOffcanvas = 0;
+let numeroOrdenVentaActual = "";
 
 const URL_VENTAS = "control/procesos/php/ventas.php";
 
@@ -8,7 +10,7 @@ $(document).ready(function () {
   cargarVentas();
   cargarProductosVentaRapida();
   mostrarPantallaVentas();
-
+  cargarResumenVentas();
   $("#btn_agregar_producto_venta").click(function () {
     agregarFilaProductoVenta();
   });
@@ -427,6 +429,7 @@ function eliminarVenta(id) {
 
           cargarProductosVenta();
           cargarProductosVentaRapida();
+          cargarResumenVentas();
         } else {
           Swal.fire({
             icon: "error",
@@ -652,6 +655,45 @@ function abrirEstadoVenta(idVenta) {
 
       let v = r.venta;
 
+      ventaActualOffcanvas = v.id;
+      numeroOrdenVentaActual = v.NumeroOrdenVenta || "";
+
+      let htmlOrdenVenta = "";
+
+      if (v.NumeroOrdenVenta && v.NumeroOrdenVenta !== "") {
+        htmlOrdenVenta = `
+          <div class="alert alert-success mt-3 d-flex justify-content-between align-items-center">
+            <div>
+              <small class="text-muted">Orden de Venta Warehouse</small>
+              <h5 class="mb-0">#${v.NumeroOrdenVenta}</h5>
+            </div>
+
+            <div>
+              <button class="btn btn-sm btn-outline-primary me-1" onclick="editarOrdenVenta(${v.id}, '${v.NumeroOrdenVenta}')">
+                <i class="mdi mdi-pencil"></i>
+              </button>
+
+              <button class="btn btn-sm btn-outline-dark" onclick="abrirQRordenVenta('${v.NumeroOrdenVenta}')">
+                <i class="mdi mdi-qrcode"></i>
+              </button>
+            </div>
+          </div>
+        `;
+      } else {
+        htmlOrdenVenta = `
+          <div class="alert alert-warning mt-3 d-flex justify-content-between align-items-center">
+            <div>
+              <small class="text-muted">Orden de Venta Warehouse</small>
+              <h6 class="mb-0">Sin número asignado</h6>
+            </div>
+
+            <button class="btn btn-sm btn-success" onclick="editarOrdenVenta(${v.id}, '')">
+              <i class="mdi mdi-plus"></i> Agregar
+            </button>
+          </div>
+        `;
+      }
+
       $("#offcanvas_venta_titulo").text("Venta #" + v.NumeroVenta);
 
       $("#venta_estado_cuenta").html(`
@@ -678,6 +720,8 @@ function abrirEstadoVenta(idVenta) {
             <h5>${badgeEstadoPago(v.EstadoPago)}</h5>
           </div>
         </div>
+
+        ${htmlOrdenVenta}
       `);
 
       let htmlPagos = "";
@@ -732,4 +776,91 @@ function badgeEstadoPago(estado) {
   if (estado === "PARCIAL") clase = "info";
 
   return `<span class="badge bg-${clase}">${estado || "PENDIENTE"}</span>`;
+}
+function cargarResumenVentas() {
+  $.ajax({
+    url: URL_VENTAS,
+    type: "POST",
+    dataType: "json",
+    data: {
+      accion: "resumen_ventas",
+    },
+    success: function (r) {
+      $("#ventas_pendientes").text(r.PENDIENTE || 0);
+      $("#ventas_parciales").text(r.PARCIAL || 0);
+      $("#ventas_pagadas").text(r.PAGADA || 0);
+      $("#ventas_total").text(r.TOTAL || 0);
+    },
+    error: function (xhr) {
+      console.log(xhr.responseText);
+    },
+  });
+}
+function editarOrdenVenta(idVenta, numeroActual) {
+  Swal.fire({
+    title: "Orden de Venta Warehouse",
+    input: "text",
+    inputValue: numeroActual || "",
+    inputPlaceholder: "Ingrese número de orden",
+    showCancelButton: true,
+    confirmButtonText: "Guardar",
+    cancelButtonText: "Cancelar",
+    inputValidator: function (value) {
+      if (!value || value.trim() === "") {
+        return "Debe ingresar un número de orden.";
+      }
+    },
+  }).then(function (result) {
+    if (!result.isConfirmed) return;
+
+    $.ajax({
+      url: URL_VENTAS,
+      type: "POST",
+      dataType: "json",
+      data: {
+        accion: "guardar_orden_venta",
+        idVenta: idVenta,
+        NumeroOrdenVenta: result.value.trim(),
+      },
+      success: function (r) {
+        if (r.success == 1) {
+          Swal.fire({
+            icon: "success",
+            title: "Orden guardada",
+            timer: 1200,
+            showConfirmButton: false,
+          });
+
+          abrirEstadoVenta(idVenta);
+
+          if ($.fn.DataTable.isDataTable("#tabla_listado_ventas")) {
+            $("#tabla_listado_ventas").DataTable().ajax.reload(null, false);
+          }
+
+          if ($.fn.DataTable.isDataTable("#tabla_ventas")) {
+            $("#tabla_ventas").DataTable().ajax.reload(null, false);
+          }
+        } else {
+          Swal.fire("Error", r.error || "No se pudo guardar la orden.", "error");
+        }
+      },
+      error: function (xhr) {
+        console.log(xhr.responseText);
+        Swal.fire("Error", "Error guardando la orden de venta.", "error");
+      },
+    });
+  });
+}
+
+function abrirQRordenVenta(numeroOrdenVenta) {
+  $("#qr_orden_venta_titulo").text("Orden de Venta #" + numeroOrdenVenta);
+  $("#qr_orden_venta").html("");
+
+  new QRCode(document.getElementById("qr_orden_venta"), {
+    text: numeroOrdenVenta,
+    width: 220,
+    height: 220,
+  });
+
+  $("#modal_qr_orden_venta").modal("show");
 }

@@ -659,6 +659,7 @@ switch ($accion) {
             V.EstadoPago,
             V.Observaciones,
             C.RazonSocial
+            V.NumeroOrdenVenta,
         FROM Ventas V
         LEFT JOIN Clientes C ON C.id = V.idCliente
         WHERE V.id = '$idVenta'
@@ -697,6 +698,47 @@ switch ($accion) {
         ));
 
         break;
+    case 'guardar_orden_venta':
+
+        $idVenta = isset($_POST['idVenta']) ? (int)$_POST['idVenta'] : 0;
+        $NumeroOrdenVenta = isset($_POST['NumeroOrdenVenta']) ? trim($_POST['NumeroOrdenVenta']) : '';
+
+        if ($idVenta <= 0) {
+            echo json_encode(array(
+                "success" => 0,
+                "error" => "Venta inválida."
+            ));
+            exit;
+        }
+
+        if ($NumeroOrdenVenta == '') {
+            echo json_encode(array(
+                "success" => 0,
+                "error" => "Debe ingresar el número de orden de venta."
+            ));
+            exit;
+        }
+
+        $NumeroOrdenVenta = $mysqli->real_escape_string($NumeroOrdenVenta);
+
+        $sql = "
+        UPDATE Ventas
+        SET NumeroOrdenVenta = '$NumeroOrdenVenta'
+        WHERE id = '$idVenta'
+        LIMIT 1
+    ";
+
+        if ($mysqli->query($sql)) {
+            echo json_encode(array("success" => 1));
+        } else {
+            echo json_encode(array(
+                "success" => 0,
+                "error" => $mysqli->error
+            ));
+        }
+
+        break;
+
 
     default:
 
@@ -706,4 +748,37 @@ switch ($accion) {
         ));
 
         break;
+}
+
+if ($accion == 'resumen_ventas') {
+
+    $data = [
+        'PENDIENTE' => 0,
+        'PARCIAL'   => 0,
+        'PAGADA'    => 0,
+        'TOTAL'     => 0
+    ];
+
+    $sql = "
+        SELECT 
+            EstadoPago,
+            COUNT(*) as Total
+        FROM Ventas
+        WHERE Eliminado = 0
+        GROUP BY EstadoPago
+    ";
+
+    $res = $mysqli->query($sql);
+
+    while ($row = $res->fetch_assoc()) {
+
+        $estado = strtoupper(trim($row['EstadoPago']));
+
+        $data[$estado] = (int)$row['Total'];
+
+        $data['TOTAL'] += (int)$row['Total'];
+    }
+
+    echo json_encode($data);
+    exit;
 }
