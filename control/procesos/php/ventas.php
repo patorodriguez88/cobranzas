@@ -772,12 +772,26 @@ VALUES
             V.EstadoPago,
             V.Observaciones,
             C.RazonSocial,
-            V.NumeroOrdenVenta
+            V.NumeroOrdenVenta,
+
+            (
+                SELECT CONCAT(
+                    DATE_FORMAT(TR.FechaTurno, '%d/%m/%Y'),
+                    ' ',
+                    LEFT(TR.HoraTurno, 5),
+                    ' hs'
+                )
+                FROM TurnosRetiro TR
+                WHERE TR.idVenta = V.id
+                AND TR.Eliminado = 0
+                ORDER BY TR.FechaTurno DESC, TR.HoraTurno DESC
+                LIMIT 1
+            ) AS TurnoRetiro
+
         FROM Ventas V
         LEFT JOIN Clientes C ON C.id = V.idCliente
         WHERE V.id = '$idVenta'
-        LIMIT 1
-    ";
+        LIMIT 1";
 
         $resVenta = $mysqli->query($sqlVenta);
         $venta = $resVenta->fetch_assoc();

@@ -770,7 +770,25 @@ function abrirEstadoVenta(idVenta) {
       numeroOrdenVentaActual = v.NumeroOrdenVenta || "";
 
       let htmlOrdenVenta = "";
+      let htmlTurnoRetiro = "";
 
+      if (v.TurnoRetiro && v.TurnoRetiro !== "") {
+        htmlTurnoRetiro = `
+    <div class="alert alert-info mt-2">
+      <small class="text-muted">Turno acordado con el cliente</small>
+      <h5 class="mb-0">
+        <i class="mdi mdi-calendar-clock"></i> ${v.TurnoRetiro}
+      </h5>
+    </div>
+  `;
+      } else {
+        htmlTurnoRetiro = `
+    <div class="alert alert-light border mt-2">
+      <small class="text-muted">Turno acordado con el cliente</small>
+      <h6 class="mb-0 text-muted">Sin turno asignado</h6>
+    </div>
+  `;
+      }
       if (v.NumeroOrdenVenta && v.NumeroOrdenVenta !== "") {
         htmlOrdenVenta = `
           <div class="alert alert-success mt-3 d-flex justify-content-between align-items-center">
@@ -830,8 +848,8 @@ function abrirEstadoVenta(idVenta) {
             <small class="text-muted">Estado</small>
             <h5>${badgeEstadoPago(v.EstadoPago)}</h5>
           </div>
-        </div>
-
+        </div>        
+        ${htmlTurnoRetiro}
         ${htmlOrdenVenta}
       `);
 
