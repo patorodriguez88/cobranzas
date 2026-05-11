@@ -32,7 +32,7 @@ switch ($accion) {
                 TR.NumeroOrdenVenta,
                 TR.idCliente,
                 TR.Cliente,
-                TR.Celular,
+                TR.Telefono,
                 TR.FechaTurno,
                 TR.HoraTurno,
                 TR.EstadoTurno,
