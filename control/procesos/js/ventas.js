@@ -596,7 +596,6 @@ function verVenta(id) {
   });
 }
 function cargarListadoVentas() {
-  $("#cards_resumen_productos_ventas").hide();
   $("#tabla_listado_ventas").DataTable({
     destroy: true,
     createdRow: function (row) {
@@ -731,9 +730,13 @@ function mostrarPantallaVentas() {
     cargarListadoVentas();
   } else {
     $("#card_nueva_venta").show();
+
     $("#card_ultimas_ventas").show();
 
     $("#cards_resumen_ventas").hide();
+
+    $("#cards_resumen_productos_ventas").hide();
+
     $("#card_listado_ventas").hide();
   }
 }
