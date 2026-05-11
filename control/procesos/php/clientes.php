@@ -109,3 +109,98 @@ if (isset($_POST['Recorrido'])) {
     echo json_encode(['success' => 1]);
     exit;
 }
+if (isset($_POST['NuevoCliente'])) {
+
+    $id             = intval($_POST['id'] ?? 0);
+    $Ncliente       = trim($_POST['Ncliente'] ?? '');
+    $RazonSocial    = trim($_POST['RazonSocial'] ?? '');
+    $Cuit           = trim($_POST['Cuit'] ?? '');
+    $Direccion      = trim($_POST['Direccion'] ?? '');
+    $Ciudad         = trim($_POST['Ciudad'] ?? '');
+    $Telefono       = trim($_POST['Telefono'] ?? '');
+    $Mail           = trim($_POST['Mail'] ?? '');
+    $Observaciones  = trim($_POST['Observaciones'] ?? '');
+
+    if ($RazonSocial == '') {
+
+        echo json_encode([
+            'success' => 0,
+            'error'   => 'Debe ingresar la razón social.'
+        ]);
+        exit;
+    }
+
+    if ($id == 0) {
+
+        $stmt = $mysqli->prepare("
+            INSERT INTO Clientes
+            (
+                Ncliente,
+                RazonSocial,
+                Cuit,
+                Direccion,
+                Ciudad,
+                Telefono,
+                Mail,
+                Observaciones
+            )
+            VALUES
+            (?,?,?,?,?,?,?,?)
+        ");
+
+        $stmt->bind_param(
+            "ssssssss",
+            $Ncliente,
+            $RazonSocial,
+            $Cuit,
+            $Direccion,
+            $Ciudad,
+            $Telefono,
+            $Mail,
+            $Observaciones
+        );
+    } else {
+
+        $stmt = $mysqli->prepare("
+            UPDATE Clientes
+            SET
+                Ncliente      = ?,
+                RazonSocial   = ?,
+                Cuit          = ?,
+                Direccion     = ?,
+                Ciudad        = ?,
+                Telefono      = ?,
+                Mail          = ?,
+                Observaciones = ?
+            WHERE id = ?
+        ");
+
+        $stmt->bind_param(
+            "ssssssssi",
+            $Ncliente,
+            $RazonSocial,
+            $Cuit,
+            $Direccion,
+            $Ciudad,
+            $Telefono,
+            $Mail,
+            $Observaciones,
+            $id
+        );
+    }
+
+    if ($stmt->execute()) {
+
+        echo json_encode([
+            'success' => 1
+        ]);
+    } else {
+
+        echo json_encode([
+            'success' => 0,
+            'error'   => $stmt->error
+        ]);
+    }
+
+    exit;
+}
