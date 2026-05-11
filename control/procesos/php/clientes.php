@@ -18,7 +18,7 @@ if (isset($_POST['NuevoCliente'])) {
     $Telefono       = trim($_POST['Telefono'] ?? '');
     $Mail           = trim($_POST['Mail'] ?? '');
     $Observaciones  = trim($_POST['Observaciones'] ?? '');
-
+    $Dni            = trim($_POST['Dni'] ?? '');
     if ($Ncliente == '') {
 
         echo json_encode([
@@ -36,6 +36,7 @@ if (isset($_POST['NuevoCliente'])) {
         ]);
         exit;
     }
+
 
     if ($id == 0) {
 

@@ -365,6 +365,7 @@ $("#btn_guardar_cliente").click(function () {
     Telefono: $("#cliente_telefono").val(),
     Mail: $("#cliente_mail").val(),
     Observaciones: $("#cliente_observaciones").val(),
+    Dni: $("#cliente_dni").val(),
   };
   if ($("#cliente_ncliente").val().trim() === "") {
     Swal.fire({
