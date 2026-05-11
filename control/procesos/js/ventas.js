@@ -197,14 +197,26 @@ function cargarVentas() {
       {
         data: "EstadoPago",
 
-        render: function (data) {
+        render: function (data, type, row) {
           let clase = "warning";
 
           if (data === "PAGADA") clase = "success";
 
           if (data === "PARCIAL") clase = "info";
 
-          return `<span class="badge bg-${clase}">${data}</span>`;
+          let html = `<span class="badge bg-${clase}">${data}</span>`;
+
+          if (row.NumeroOrdenVenta) {
+            html += `
+      <div class="mt-1">
+        <span class="badge bg-dark">
+          OV #${row.NumeroOrdenVenta}
+        </span>
+      </div>
+    `;
+          }
+
+          return html;
         },
       },
 
@@ -645,17 +657,34 @@ function cargarListadoVentas() {
       {
         data: "EstadoPago",
 
-        render: function (data) {
+        render: function (data, type, row) {
           let clase = "warning";
 
           if (data === "PAGADA") clase = "success";
 
           if (data === "PARCIAL") clase = "info";
 
-          return `<span class="badge bg-${clase}">${data || "PENDIENTE"}</span>`;
+          let html = `<span class="badge bg-${clase}">${data}</span>`;
+
+          if (row.NumeroOrdenVenta) {
+            html += `
+
+      <div class="mt-1">
+
+        <span class="badge bg-dark">
+
+          OV #${row.NumeroOrdenVenta}
+
+        </span>
+
+      </div>
+
+    `;
+          }
+
+          return html;
         },
       },
-
       { data: "Observaciones" },
       {
         data: null,
@@ -800,7 +829,10 @@ function abrirEstadoVenta(idVenta) {
 
       $("#tabla_pagos_venta").html(htmlPagos);
 
-      let offcanvas = new bootstrap.Offcanvas(document.getElementById("offcanvas_venta"));
+      const offcanvasElement = document.getElementById("offcanvas_venta");
+
+      let offcanvas = bootstrap.Offcanvas.getInstance(offcanvasElement) || new bootstrap.Offcanvas(offcanvasElement);
+
       offcanvas.show();
     },
     error: function (xhr, status, error) {
@@ -943,3 +975,12 @@ function abrirQRordenVenta(numeroOrdenVenta) {
 
   $("#modal_qr_orden_venta").modal("show");
 }
+$(document).on("hidden.bs.offcanvas", "#offcanvas_venta", function () {
+  $(".offcanvas-backdrop").remove();
+
+  $("body").removeClass("offcanvas-backdrop");
+  $("body").removeClass("modal-open");
+
+  $("body").css("overflow", "");
+  $("body").css("padding-right", "");
+});

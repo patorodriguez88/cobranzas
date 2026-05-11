@@ -537,6 +537,7 @@ switch ($accion) {
         $sql = "SELECT 
                 V.id,
                 V.NumeroVenta,
+                V.NumeroOrdenVenta,
                 V.Fecha,
                 V.idCliente,
                 C.RazonSocial,
@@ -603,7 +604,8 @@ switch ($accion) {
                 "Saldo" => $saldo,
                 "EstadoPago" => $estado,
                 "Observaciones" => $row["Observaciones"],
-                "NumeroVenta" => $row["NumeroVenta"]
+                "NumeroVenta" => $row["NumeroVenta"],
+                "NumeroOrdenVenta" => $row["NumeroOrdenVenta"]
             );
         }
 
@@ -664,6 +666,7 @@ switch ($accion) {
                 "TotalPagado" => $row["TotalPagado"],
                 "Saldo" => $row["Saldo"],
                 "Usuario" => $row["Usuario"],
+                "NumeroOrdenVenta" => $row["NumeroOrdenVenta"],
             );
         }
 
