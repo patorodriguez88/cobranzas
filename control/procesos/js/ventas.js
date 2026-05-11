@@ -852,6 +852,7 @@ function abrirEstadoVenta(idVenta) {
         ${htmlTurnoRetiro}
         ${htmlOrdenVenta}
       `);
+
       if (v.TurnoRetiro && v.TurnoRetiro !== "") {
         $("#texto_turno_retiro").html(`
     <i class="mdi mdi-calendar-clock"></i> ${v.TurnoRetiro}
