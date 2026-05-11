@@ -374,41 +374,29 @@ switch ($accion) {
 
     case 'ultimas_ventas':
 
-        $sql = "
-SELECT 
-    V.id,
-    V.NumeroVenta,
-    V.Fecha,
-    V.idCliente,
-    C.RazonSocial,
-    V.Total,
-    V.Observaciones,
-
-    COUNT(DISTINCT VD.id) AS Productos,
-
-    IFNULL(SUM(APV.ImporteAplicado),0) AS TotalPagado
-
-FROM Ventas V
-
-LEFT JOIN Clientes C 
-    ON C.id = V.idCliente
-
-LEFT JOIN VentasDetalle VD 
-    ON VD.idVenta = V.id 
-    AND VD.Eliminado = 0
-
-LEFT JOIN AplicacionesPagosVentas APV
-    ON APV.idVenta = V.id
-    AND APV.Eliminado = 0
-
-WHERE V.Eliminado = 0
-
-GROUP BY V.id
-
-ORDER BY V.id DESC
-
-LIMIT 10
-";
+        $sql = "SELECT 
+                V.id,
+                V.NumeroVenta,
+                V.Fecha,
+                V.idCliente,
+                C.RazonSocial,
+                V.Total,
+                V.Observaciones,
+                COUNT(DISTINCT VD.id) AS Productos,
+                IFNULL(SUM(APV.ImporteAplicado),0) AS TotalPagado
+                FROM Ventas V
+                LEFT JOIN Clientes C 
+                ON C.id = V.idCliente
+                LEFT JOIN VentasDetalle VD 
+                ON VD.idVenta = V.id 
+                AND VD.Eliminado = 0
+                LEFT JOIN AplicacionesPagosVentas APV
+                ON APV.idVenta = V.id
+                AND APV.Eliminado = 0
+                WHERE V.Eliminado = 0
+                GROUP BY V.id
+                ORDER BY V.id DESC
+                LIMIT 10";
 
         $res = $mysqli->query($sql);
 
