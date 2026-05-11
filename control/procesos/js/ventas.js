@@ -148,7 +148,7 @@ function cargarVentas() {
         orderable: false,
         render: function (data) {
           return `
-            <i class="mdi mdi-eye mdi-18px text-info ms-2" style="cursor:pointer" onclick="verVenta(${data.id})"></i>
+            <i class="mdi mdi-eye mdi-18px text-info ms-2" style="cursor:pointer" onclick="abrirEstadoVenta(${data.id})"></i>
             <i class="mdi mdi-delete mdi-18px text-danger ms-2" style="cursor:pointer" onclick="eliminarVenta(${data.id})"></i>
           `;
         },
@@ -522,7 +522,7 @@ function cargarListadoVentas() {
         orderable: false,
         render: function (data) {
           return `
-            <i class="mdi mdi-eye mdi-18px text-info ms-2" style="cursor:pointer" onclick="verVenta(${data.id})"></i>
+            <i class="mdi mdi-eye mdi-18px text-info ms-2" style="cursor:pointer" onclick="abrirEstadoVenta(${data.id})"></i>
             <i class="mdi mdi-delete mdi-18px text-danger ms-2" style="cursor:pointer" onclick="eliminarVenta(${data.id})"></i>
           `;
         },
@@ -549,3 +549,101 @@ function mostrarPantallaVentas() {
 $(window).on("hashchange", function () {
   mostrarPantallaVentas();
 });
+function abrirEstadoVenta(idVenta) {
+  $.ajax({
+    url: URL_VENTAS,
+    type: "POST",
+    dataType: "json",
+    data: {
+      accion: "estado_venta",
+      idVenta: idVenta,
+    },
+    success: function (r) {
+      if (!r.success) {
+        Swal.fire("Error", "No se pudo cargar la venta.", "error");
+        return;
+      }
+
+      let v = r.venta;
+
+      $("#offcanvas_venta_titulo").text("Venta #" + v.NumeroVenta);
+
+      $("#venta_estado_cuenta").html(`
+        <h5>${v.RazonSocial || ""}</h5>
+
+        <div class="row mt-3">
+          <div class="col-6">
+            <small class="text-muted">Total</small>
+            <h5>${formatoMoneda(v.Total)}</h5>
+          </div>
+
+          <div class="col-6">
+            <small class="text-muted">Pagado</small>
+            <h5>${formatoMoneda(v.TotalPagado)}</h5>
+          </div>
+
+          <div class="col-6 mt-2">
+            <small class="text-muted">Saldo</small>
+            <h5>${formatoMoneda(v.Saldo)}</h5>
+          </div>
+
+          <div class="col-6 mt-2">
+            <small class="text-muted">Estado</small>
+            <h5>${badgeEstadoPago(v.EstadoPago)}</h5>
+          </div>
+        </div>
+      `);
+
+      let htmlPagos = "";
+
+      if (!r.pagos || r.pagos.length === 0) {
+        htmlPagos = `
+          <tr>
+            <td colspan="4" class="text-center text-muted">
+              Sin pagos asignados.
+            </td>
+          </tr>
+        `;
+      } else {
+        r.pagos.forEach(function (p) {
+          htmlPagos += `
+            <tr>
+              <td>${p.Fecha || ""}<br><small class="text-muted">${p.Hora || ""}</small></td>
+              <td>${p.Banco || ""}</td>
+              <td>${p.Operacion || ""}</td>
+              <td>${formatoMoneda(p.ImporteAplicado)}</td>
+            </tr>
+          `;
+        });
+      }
+
+      $("#tabla_pagos_venta").html(htmlPagos);
+
+      let offcanvas = new bootstrap.Offcanvas(document.getElementById("offcanvas_venta"));
+      offcanvas.show();
+    },
+    error: function (xhr) {
+      console.log(xhr.responseText);
+      Swal.fire("Error", "Error consultando estado de venta.", "error");
+    },
+  });
+}
+
+function formatoMoneda(valor) {
+  return (
+    "$ " +
+    parseFloat(valor || 0).toLocaleString("es-AR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })
+  );
+}
+
+function badgeEstadoPago(estado) {
+  let clase = "warning";
+
+  if (estado === "PAGADA") clase = "success";
+  if (estado === "PARCIAL") clase = "info";
+
+  return `<span class="badge bg-${clase}">${estado || "PENDIENTE"}</span>`;
+}

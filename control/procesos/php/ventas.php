@@ -479,6 +479,61 @@ switch ($accion) {
 
         echo json_encode(array("data" => $data));
         break;
+    case 'estado_venta':
+
+        $idVenta = isset($_POST['idVenta']) ? (int)$_POST['idVenta'] : 0;
+
+        $sqlVenta = "
+        SELECT 
+            V.id,
+            V.NumeroVenta,
+            V.Fecha,
+            V.Total,
+            V.TotalPagado,
+            V.Saldo,
+            V.EstadoPago,
+            V.Observaciones,
+            C.RazonSocial
+        FROM Ventas V
+        LEFT JOIN Clientes C ON C.id = V.idCliente
+        WHERE V.id = '$idVenta'
+        LIMIT 1
+    ";
+
+        $resVenta = $mysqli->query($sqlVenta);
+        $venta = $resVenta->fetch_assoc();
+
+        $sqlPagos = "
+        SELECT 
+            CV.ImporteAplicado,
+            CV.Fecha AS FechaAplicacion,
+            CB.Fecha,
+            CB.Hora,
+            CB.Banco,
+            CB.Operacion,
+            CB.Importe
+        FROM CobranzasVentas CV
+        LEFT JOIN Cobranza CB ON CB.id = CV.idCobranza
+        WHERE CV.idVenta = '$idVenta'
+        ORDER BY CV.id DESC
+    ";
+
+        $resPagos = $mysqli->query($sqlPagos);
+
+        $pagos = array();
+
+        while ($row = $resPagos->fetch_assoc()) {
+            $pagos[] = $row;
+        }
+
+        echo json_encode(array(
+            "success" => 1,
+            "venta" => $venta,
+            "pagos" => $pagos
+        ));
+
+        break;
+
     default:
 
         echo json_encode(array(
