@@ -35,3 +35,33 @@ $(document).ready(function () {
     },
   });
 });
+
+$(document).ready(function () {
+  aplicarTemaGuardado();
+
+  $(document).on("click", "#btn_toggle_tema", function () {
+    let temaActual = $("body").attr("data-layout-color") || "light";
+    let nuevoTema = temaActual === "dark" ? "light" : "dark";
+
+    cambiarTema(nuevoTema);
+  });
+});
+
+function cambiarTema(tema) {
+  $("body").attr("data-layout-color", tema);
+
+  if (tema === "dark") {
+    $("#app-style").attr("href", "saas/assets/css/app-dark.min.css");
+    $("#icono_tema").removeClass("mdi-white-balance-sunny").addClass("mdi-weather-night");
+  } else {
+    $("#app-style").attr("href", "saas/assets/css/app.min.css");
+    $("#icono_tema").removeClass("mdi-weather-night").addClass("mdi-white-balance-sunny");
+  }
+
+  localStorage.setItem("tema_dinter", tema);
+}
+
+function aplicarTemaGuardado() {
+  let tema = localStorage.getItem("tema_dinter") || "light";
+  cambiarTema(tema);
+}
