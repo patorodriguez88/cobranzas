@@ -1,6 +1,39 @@
 function alerta() {
   $.NotificationApp.send("Atención !", "El cliente debe estar activo.", "bottom-right", "#FFFFFF", "warning");
 }
+function editar_celular(id) {
+  $("#id_celular").val(id);
+
+  $.ajax({
+    type: "POST",
+    url: "control/procesos/php/clientes.php",
+    data: { Celular_search: 1, id: id },
+    success: function (response) {
+      const jsonData = JSON.parse(response);
+      $("#celular_text").val(jsonData.Dato || "");
+      $("#modal_celular").modal("show");
+    },
+  });
+}
+
+$("#modal_celular_btn_ok").click(function () {
+  const id = $("#id_celular").val();
+  const celular = $("#celular_text").val();
+
+  $.ajax({
+    type: "POST",
+    url: "control/procesos/php/clientes.php",
+    data: { Celular: 1, id: id, Celular_text: celular },
+    success: function () {
+      const dt = $("#clientes_tabla").DataTable();
+      dt.ajax.reload(null, false);
+
+      $("#modal_celular").modal("hide");
+
+      $.NotificationApp.send("Éxito!", "Modificamos el celular del cliente.", "bottom-right", "#FFFFFF", "success");
+    },
+  });
+});
 function dni(id) {
   $("#id_dni").val(id);
 
@@ -167,6 +200,23 @@ $(document).ready(function () {
     </a>`;
         },
       },
+      {
+        data: "Celular",
+        render: function (data, type, row) {
+          const celular = row.Celular || "";
+
+          if (parseInt(row.Suspendido) === 1) {
+            return `<a style="cursor:pointer" class="text-danger" onclick="alerta()">
+        <del>${escapeHtml(celular)}</del>
+      </a>`;
+          }
+
+          return `<a style="cursor:pointer" onclick="editar_celular(${row.id})">
+      <i class="mdi mdi-cellphone"></i> ${escapeHtml(celular)}
+    </a>`;
+        },
+      },
+
       {
         data: "Recorrido",
         render: function (data, type, row) {
@@ -349,8 +399,8 @@ $("#btn_nuevo_cliente").click(function () {
   $("#cliente_telefono").val("");
   $("#cliente_mail").val("");
   $("#cliente_observaciones").val("");
-
   $("#modal_cliente").modal("show");
+  $("#cliente_celular").val("");
 });
 
 $("#btn_guardar_cliente").click(function () {
@@ -366,6 +416,7 @@ $("#btn_guardar_cliente").click(function () {
     Mail: $("#cliente_mail").val(),
     Observaciones: $("#cliente_observaciones").val(),
     Dni: $("#cliente_dni").val(),
+    Celular: $("#cliente_celular").val(),
   };
   if ($("#cliente_ncliente").val().trim() === "") {
     Swal.fire({

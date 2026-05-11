@@ -164,7 +164,7 @@ if (isset($_POST['Observaciones'])) {
 
 if (isset($_POST['Tabla_clientes'])) {
 
-    $sql = $mysqli->query("SELECT id,Ncliente,RazonSocial,Dni,Observaciones,Suspendido,Direccion,Ciudad,Recorrido FROM Clientes");
+    $sql = $mysqli->query("SELECT id,Ncliente,RazonSocial,Dni,Celular,Observaciones,Suspendido,Direccion,Ciudad,Recorrido FROM Clientes");
 
     $rows = array();
 
@@ -236,5 +236,28 @@ if (isset($_POST['Recorrido'])) {
     $recorrido = $mysqli->real_escape_string($_POST['Recorrido_text']);
     $mysqli->query("UPDATE Clientes SET Recorrido='$recorrido' WHERE id='$id'");
     echo json_encode(['success' => 1]);
+    exit;
+}
+if (isset($_POST['Celular_search'])) {
+    $id = (int)$_POST['id'];
+    $sql = $mysqli->query("SELECT Celular FROM Clientes WHERE id='$id'");
+    $row = $sql->fetch_array(MYSQLI_ASSOC);
+
+    echo json_encode([
+        'success' => 1,
+        'Dato' => $row['Celular'] ?? ''
+    ]);
+    exit;
+}
+
+if (isset($_POST['Celular'])) {
+    $id = (int)$_POST['id'];
+    $celular = $mysqli->real_escape_string($_POST['Celular_text'] ?? '');
+
+    $mysqli->query("UPDATE Clientes SET Celular='$celular' WHERE id='$id'");
+
+    echo json_encode([
+        'success' => 1
+    ]);
     exit;
 }

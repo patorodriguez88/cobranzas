@@ -39,6 +39,24 @@
     <!-- /.modal-dialog -->
   </div>
   <!-- /.modal -->
+  <div class="modal fade" id="modal_celular" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">Celular</h4>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+          <label class="form-label">Celular</label>
+          <input id="celular_text" type="text" class="form-control mb-3" />
+          <input type="hidden" id="id_celular" />
+
+          <a id="modal_celular_btn_ok" class="btn btn-success">Aceptar</a>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- MODAL OBSERVACIONES -->
   <div class="modal fade" id="modal_obs" tabindex="-1" role="dialog" aria-hidden="true">
@@ -337,7 +355,11 @@
                 <label class="form-label">Teléfono</label>
                 <input type="text" id="cliente_telefono" class="form-control" />
               </div>
+              <div class="col-md-4 mb-2">
+                <label class="form-label">Celular</label>
 
+                <input type="text" id="cliente_celular" class="form-control" />
+              </div>
               <div class="col-md-4 mb-2">
                 <label class="form-label">Mail</label>
                 <input type="email" id="cliente_mail" class="form-control" />
@@ -577,6 +599,7 @@
                             <th>Razon Social</th>
                             <th>Observaciones</th>
                             <th>Dni</th>
+                            <th>Celular</th>
                             <th>Recorrido</th>
                             <th>Estado</th>
                           </tr>
