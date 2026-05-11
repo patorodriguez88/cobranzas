@@ -36,6 +36,14 @@ if (isset($_POST['NuevoCliente'])) {
         ]);
         exit;
     }
+    if ($Dni == '') {
+
+        echo json_encode([
+            'success' => 0,
+            'error'   => 'Debe ingresar el DNI.'
+        ]);
+        exit;
+    }
 
 
     if ($id == 0) {
