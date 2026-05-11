@@ -159,3 +159,18 @@ function limpiarFormulario() {
   $("#producto_stock").val(0);
   $("#producto_descripcion").val("");
 }
+$("#btn_nuevo_producto").click(function () {
+  $("#modal_producto_titulo").text("Agregar Producto");
+
+  $("#producto_id").val(0);
+  $("#producto_codigo").val("");
+  $("#producto_nombre").val("");
+  $("#producto_categoria").val("");
+  $("#producto_costo").val("");
+  $("#producto_precio_venta").val("");
+  $("#producto_stock").val("");
+  $("#producto_descripcion").val("");
+  $("#producto_venta_rapida").prop("checked", false);
+
+  $("#modal_producto").modal("show");
+});
