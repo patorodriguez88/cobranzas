@@ -1080,16 +1080,24 @@ VALUES
         $horaMostrar = substr($HoraTurno, 0, 5);
 
         $mensaje = "Hola! Te informamos que tu pedido ya tiene turno de retiro asignado.%0A%0A";
+
         $mensaje .= "Venta: #" . $numeroVenta . "%0A";
 
         if ($numeroOrdenVenta != '') {
-            $mensaje .= "Orden de Venta: #" . $numeroOrdenVenta . "%0A";
+            $mensaje .= "Orden de Retiro: #" . $numeroOrdenVenta . "%0A";
         }
 
+        $mensaje .= "%0A";
         $mensaje .= "Fecha: " . $fechaMostrar . "%0A";
         $mensaje .= "Hora: " . $horaMostrar . " hs%0A%0A";
-        $mensaje .= "Por favor acercate en el horario indicado. Gracias.";
 
+        $mensaje .= "IMPORTANTE:%0A";
+        $mensaje .= "Para retirar la mercadería deberás informar el número de orden indicado arriba.%0A";
+        $mensaje .= "No compartas este número con nadie.%0A%0A";
+
+        $mensaje .= "¡Gracias por tu compra!%0A";
+        $mensaje .= "Saludos.%0A";
+        $mensaje .= "Dinter S.A.";
         $whatsappUrl = "";
 
         if ($telefonoWp != '') {
