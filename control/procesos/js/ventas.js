@@ -490,6 +490,32 @@ function cargarListadoVentas() {
         data: "Total",
         render: $.fn.dataTable.render.number(",", ".", 2, "$ "),
       },
+      {
+        data: "TotalPagado",
+
+        render: $.fn.dataTable.render.number(",", ".", 2, "$ "),
+      },
+
+      {
+        data: "Saldo",
+
+        render: $.fn.dataTable.render.number(",", ".", 2, "$ "),
+      },
+
+      {
+        data: "EstadoPago",
+
+        render: function (data) {
+          let clase = "warning";
+
+          if (data === "PAGADA") clase = "success";
+
+          if (data === "PARCIAL") clase = "info";
+
+          return `<span class="badge bg-${clase}">${data || "PENDIENTE"}</span>`;
+        },
+      },
+
       { data: "Observaciones" },
       {
         data: null,
