@@ -1286,19 +1286,20 @@ VALUES
 
         $data = array(
             "FIGURITAS" => array(
+                "stock" => 0,
                 "total" => 0,
                 "pendiente" => 0,
                 "vendedores" => array()
             ),
             "ALBUM" => array(
+                "stock" => 0,
                 "total" => 0,
                 "pendiente" => 0,
                 "vendedores" => array()
             )
         );
 
-        $sql = "
-        SELECT
+        $sql = "SELECT
             CASE 
                 WHEN UPPER(VD.ProductoNombre) LIKE '%ALBUM%' THEN 'ALBUM'
                 WHEN UPPER(VD.ProductoNombre) LIKE '%FIGURITA%' THEN 'FIGURITAS'
@@ -1324,8 +1325,7 @@ VALUES
             }
         }
 
-        $sqlVendedores = "
-        SELECT
+        $sqlVendedores = "SELECT
             CASE 
                 WHEN UPPER(VD.ProductoNombre) LIKE '%ALBUM%' THEN 'ALBUM'
                 WHEN UPPER(VD.ProductoNombre) LIKE '%FIGURITA%' THEN 'FIGURITAS'
@@ -1353,7 +1353,29 @@ VALUES
                 );
             }
         }
+        $sqlStock = "
+    SELECT 
+        Nombre,
+        Stock
+    FROM Productos
+    WHERE Eliminado = 0
+      AND Activo = 1
+";
 
+        $resStock = $mysqli->query($sqlStock);
+
+        while ($row = $resStock->fetch_assoc()) {
+
+            $nombre = strtoupper($row['Nombre']);
+
+            if (strpos($nombre, 'FIGURITA') !== false) {
+                $data["FIGURITAS"]["stock"] += (int)$row['Stock'];
+            }
+
+            if (strpos($nombre, 'ALBUM') !== false) {
+                $data["ALBUM"]["stock"] += (int)$row['Stock'];
+            }
+        }
         echo json_encode($data);
         break;
     default:

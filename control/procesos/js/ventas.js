@@ -1260,9 +1260,11 @@ function cargarResumenProductosVentas() {
       accion: "resumen_productos_ventas",
     },
     success: function (r) {
+      $("#figus_stock").text(r.FIGURITAS.stock || 0);
       $("#figus_total").text(r.FIGURITAS.total || 0);
       $("#figus_pendiente").text(r.FIGURITAS.pendiente || 0);
 
+      $("#album_stock").text(r.ALBUM.stock || 0);
       $("#album_total").text(r.ALBUM.total || 0);
       $("#album_pendiente").text(r.ALBUM.pendiente || 0);
 
