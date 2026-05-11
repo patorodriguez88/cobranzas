@@ -685,18 +685,27 @@ function cargarListadoVentas() {
 
           if (row.NumeroOrdenVenta) {
             html += `
-
       <div class="mt-1">
-
         <span class="badge bg-dark">
-
           OV #${row.NumeroOrdenVenta}
-
         </span>
-
       </div>
-
     `;
+          }
+          if (row.TurnoRetiro) {
+            html += `
+
+    <div class="mt-1">
+
+      <span class="badge bg-success">
+
+        <i class="mdi mdi-calendar-clock"></i> ${row.TurnoRetiro}
+
+      </span>
+
+    </div>
+
+  `;
           }
 
           return html;
