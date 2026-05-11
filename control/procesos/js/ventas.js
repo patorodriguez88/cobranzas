@@ -53,7 +53,7 @@ $(document).ready(function () {
     $("#cliente_cuit").val(cliente.Cuit || "");
     $("#cliente_direccion").val(cliente.Direccion || "");
     $("#cliente_ciudad").val(cliente.Ciudad || "");
-    $("#cliente_telefono").val(cliente.Telefono || "");
+    $("#cliente_telefono").val(cliente.Celular || "");
   });
 });
 $(document).on("click", "#btn_guardar_orden_venta", function () {

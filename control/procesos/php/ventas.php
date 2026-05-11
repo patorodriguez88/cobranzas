@@ -23,13 +23,13 @@ switch ($accion) {
             Cuit,
             Direccion,
             Ciudad,
-            Telefono,
+            Celular,
             Ncliente
         FROM Clientes
         WHERE
             RazonSocial LIKE ?
             OR Cuit LIKE ?
-            OR Telefono LIKE ?
+            OR Celular LIKE ?
         ORDER BY RazonSocial ASC
         LIMIT 20
     ";
@@ -892,7 +892,7 @@ VALUES
             V.NumeroOrdenVenta,
             V.idCliente,
             C.RazonSocial,
-            C.Telefono
+            C.Celular
         FROM Ventas V
         LEFT JOIN Clientes C ON C.id = V.idCliente
         WHERE V.id = '$idVenta'
@@ -920,7 +920,7 @@ VALUES
         }
 
         $cliente = $mysqli->real_escape_string($venta['RazonSocial']);
-        $telefono = $mysqli->real_escape_string($venta['Telefono']);
+        $telefono = $mysqli->real_escape_string($venta['Celular']);
         $numeroVenta = (int)$venta['NumeroVenta'];
         $numeroOrdenVenta = $mysqli->real_escape_string($venta['NumeroOrdenVenta']);
 
@@ -994,6 +994,9 @@ VALUES
         if (strlen($telefonoWp) > 0 && substr($telefonoWp, 0, 2) != '54') {
             $telefonoWp = '54' . $telefonoWp;
         }
+
+        $telefonoWp = str_replace('549549', '549', $telefonoWp);
+        $telefonoWp = str_replace('5415', '549', $telefonoWp);
 
         $fechaMostrar = date('d/m/Y', strtotime($FechaTurno));
         $horaMostrar = substr($HoraTurno, 0, 5);
