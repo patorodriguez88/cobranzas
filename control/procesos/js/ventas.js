@@ -731,12 +731,17 @@ function mostrarPantallaVentas() {
   if (hash === "#listado_ventas") {
     $("#card_nueva_venta").hide();
     $("#card_ultimas_ventas").hide();
+
+    $("#cards_resumen_ventas").show();
     $("#card_listado_ventas").show();
 
+    cargarResumenVentas();
     cargarListadoVentas();
   } else {
     $("#card_nueva_venta").show();
     $("#card_ultimas_ventas").show();
+
+    $("#cards_resumen_ventas").hide();
     $("#card_listado_ventas").hide();
   }
 }
