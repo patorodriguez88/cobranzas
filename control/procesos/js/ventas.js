@@ -530,14 +530,16 @@ function cargarListadoVentas() {
       {
         data: "NumeroVenta",
         render: function (data, type, row) {
-          return `<div>
-                  <span class="badge bg-primary">
-                    #${data}
-                  </span>
-                </div>
-              <small class="text-muted">
-              ${row.Usuario || ""}
-              </small>`;
+          if (type === "sort" || type === "type") {
+            return parseInt(data || 0);
+          }
+
+          return `
+      <div>
+        <span class="badge bg-primary">#${data}</span>
+      </div>
+      <small class="text-muted">${row.Usuario || ""}</small>
+    `;
         },
       },
       {

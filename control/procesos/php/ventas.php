@@ -611,7 +611,7 @@ switch ($accion) {
             AND VD.Eliminado = 0
         WHERE V.Eliminado = 0
         GROUP BY V.id
-        ORDER BY V.id DESC
+        ORDER BY V.NumeroVenta DESC
     ";
 
         $res = $mysqli->query($sql);
@@ -649,8 +649,7 @@ switch ($accion) {
 
         $idVenta = isset($_POST['idVenta']) ? (int)$_POST['idVenta'] : 0;
 
-        $sqlVenta = "
-        SELECT 
+        $sqlVenta = "SELECT 
             V.id,
             V.NumeroVenta,
             V.Fecha,
@@ -669,8 +668,7 @@ switch ($accion) {
         $resVenta = $mysqli->query($sqlVenta);
         $venta = $resVenta->fetch_assoc();
 
-        $sqlPagos = "
-        SELECT 
+        $sqlPagos = "SELECT 
             CV.ImporteAplicado,
             CV.Fecha AS FechaAplicacion,
             CB.Fecha,
