@@ -544,8 +544,10 @@ function cargarListadoVentas() {
 
           productos.forEach(function (p) {
             html += `
-        <div style="font-size:11px; line-height:14px;">
-          ${p}
+        <div class="mb-1">
+          <span class="badge bg-secondary">
+            ${p}
+          </span>
         </div>
       `;
           });
