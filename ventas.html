@@ -379,6 +379,33 @@
               </div>
             </div>
           </div>
+          <div class="modal fade" id="modal_orden_venta" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h4 class="modal-title">Orden de Venta Warehouse</h4>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                  <input type="hidden" id="orden_venta_id_venta" />
+
+                  <label class="form-label">Número de orden</label>
+                  <input
+                    type="text"
+                    id="orden_venta_numero"
+                    class="form-control"
+                    placeholder="Ingrese número de orden"
+                  />
+
+                  <div class="text-end mt-3">
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" id="btn_guardar_orden_venta">Guardar</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
           <!-- container-fluid -->
         </div>

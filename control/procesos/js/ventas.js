@@ -54,7 +54,58 @@ $(document).ready(function () {
     $("#cliente_telefono").val(cliente.Telefono || "");
   });
 });
+$(document).on("click", "#btn_guardar_orden_venta", function () {
+  let idVenta = $("#orden_venta_id_venta").val();
+  let numero = $("#orden_venta_numero").val().trim();
 
+  if (numero === "") {
+    Swal.fire({
+      icon: "warning",
+      title: "Número requerido",
+      text: "Debe ingresar un número de orden.",
+    });
+    return;
+  }
+
+  $.ajax({
+    url: URL_VENTAS,
+    type: "POST",
+    dataType: "json",
+    data: {
+      accion: "guardar_orden_venta",
+      idVenta: idVenta,
+      NumeroOrdenVenta: numero,
+    },
+    success: function (r) {
+      if (r.success == 1) {
+        $("#modal_orden_venta").modal("hide");
+
+        Swal.fire({
+          icon: "success",
+          title: "Orden guardada",
+          timer: 1200,
+          showConfirmButton: false,
+        });
+
+        abrirEstadoVenta(idVenta);
+
+        if ($.fn.DataTable.isDataTable("#tabla_listado_ventas")) {
+          $("#tabla_listado_ventas").DataTable().ajax.reload(null, false);
+        }
+
+        if ($.fn.DataTable.isDataTable("#tabla_ventas")) {
+          $("#tabla_ventas").DataTable().ajax.reload(null, false);
+        }
+      } else {
+        Swal.fire("Error", r.error || "No se pudo guardar la orden.", "error");
+      }
+    },
+    error: function (xhr) {
+      console.log(xhr.responseText);
+      Swal.fire("Error", "Error guardando la orden de venta.", "error");
+    },
+  });
+});
 function cargarProductosVenta() {
   $.ajax({
     url: URL_VENTAS,
@@ -809,68 +860,77 @@ function cargarResumenVentas() {
     },
   });
 }
+// function editarOrdenVenta(idVenta, numeroActual) {
+//   Swal.fire({
+//     title: "Orden de Venta Warehouse",
+//     input: "text",
+//     inputValue: numeroActual || "",
+//     inputPlaceholder: "Ingrese número de orden",
+//     showCancelButton: true,
+//     confirmButtonText: "Guardar",
+//     cancelButtonText: "Cancelar",
+//     backdrop: false,
+//     heightAuto: false,
+//     didOpen: () => {
+//       $(".swal2-input").trigger("focus");
+//     },
+
+//     inputValidator: function (value) {
+//       if (!value || value.trim() === "") {
+//         return "Debe ingresar un número de orden.";
+//       }
+//     },
+//   }).then(function (result) {
+//     if (!result.isConfirmed) return;
+
+//     $.ajax({
+//       url: URL_VENTAS,
+//       type: "POST",
+//       dataType: "json",
+//       data: {
+//         accion: "guardar_orden_venta",
+//         idVenta: idVenta,
+//         NumeroOrdenVenta: result.value.trim(),
+//       },
+//       success: function (r) {
+//         if (r.success == 1) {
+//           Swal.fire({
+//             icon: "success",
+//             title: "Orden guardada",
+//             timer: 1200,
+//             showConfirmButton: false,
+//           });
+
+//           abrirEstadoVenta(idVenta);
+
+//           if ($.fn.DataTable.isDataTable("#tabla_listado_ventas")) {
+//             $("#tabla_listado_ventas").DataTable().ajax.reload(null, false);
+//           }
+
+//           if ($.fn.DataTable.isDataTable("#tabla_ventas")) {
+//             $("#tabla_ventas").DataTable().ajax.reload(null, false);
+//           }
+//         } else {
+//           Swal.fire("Error", r.error || "No se pudo guardar la orden.", "error");
+//         }
+//       },
+//       error: function (xhr) {
+//         console.log(xhr.responseText);
+//         Swal.fire("Error", "Error guardando la orden de venta.", "error");
+//       },
+//     });
+//   });
+// }
 function editarOrdenVenta(idVenta, numeroActual) {
-  Swal.fire({
-    title: "Orden de Venta Warehouse",
-    input: "text",
-    inputValue: numeroActual || "",
-    inputPlaceholder: "Ingrese número de orden",
-    showCancelButton: true,
-    confirmButtonText: "Guardar",
-    cancelButtonText: "Cancelar",
-    backdrop: false,
-    heightAuto: false,
-    didOpen: () => {
-      $(".swal2-input").trigger("focus");
-    },
+  $("#orden_venta_id_venta").val(idVenta);
+  $("#orden_venta_numero").val(numeroActual || "");
 
-    inputValidator: function (value) {
-      if (!value || value.trim() === "") {
-        return "Debe ingresar un número de orden.";
-      }
-    },
-  }).then(function (result) {
-    if (!result.isConfirmed) return;
+  $("#modal_orden_venta").modal("show");
 
-    $.ajax({
-      url: URL_VENTAS,
-      type: "POST",
-      dataType: "json",
-      data: {
-        accion: "guardar_orden_venta",
-        idVenta: idVenta,
-        NumeroOrdenVenta: result.value.trim(),
-      },
-      success: function (r) {
-        if (r.success == 1) {
-          Swal.fire({
-            icon: "success",
-            title: "Orden guardada",
-            timer: 1200,
-            showConfirmButton: false,
-          });
-
-          abrirEstadoVenta(idVenta);
-
-          if ($.fn.DataTable.isDataTable("#tabla_listado_ventas")) {
-            $("#tabla_listado_ventas").DataTable().ajax.reload(null, false);
-          }
-
-          if ($.fn.DataTable.isDataTable("#tabla_ventas")) {
-            $("#tabla_ventas").DataTable().ajax.reload(null, false);
-          }
-        } else {
-          Swal.fire("Error", r.error || "No se pudo guardar la orden.", "error");
-        }
-      },
-      error: function (xhr) {
-        console.log(xhr.responseText);
-        Swal.fire("Error", "Error guardando la orden de venta.", "error");
-      },
-    });
-  });
+  setTimeout(function () {
+    $("#orden_venta_numero").trigger("focus");
+  }, 300);
 }
-
 function abrirQRordenVenta(numeroOrdenVenta) {
   $("#qr_orden_venta_titulo").text("Orden de Venta #" + numeroOrdenVenta);
   $("#qr_orden_venta").html("");
