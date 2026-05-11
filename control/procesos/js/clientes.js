@@ -401,9 +401,38 @@ $("#btn_guardar_cliente").click(function () {
         text: "Error en clientes.php",
       });
     },
-    error: function (xhr) {
-      console.log(xhr.responseText);
-      alert("Error en clientes.php");
+    error: function (xhr, status, error) {
+      console.log("STATUS:", status);
+
+      console.log("ERROR:", error);
+
+      console.log("RESPONSE:", xhr.responseText);
+
+      Swal.fire({
+        icon: "error",
+
+        title: "Error en clientes.php",
+
+        html: `
+
+      <div class="text-start">
+
+        <p><b>Status:</b> ${xhr.status}</p>
+
+        <p><b>Error:</b> ${error || "-"}</p>
+
+        <hr>
+
+        <pre style="white-space:pre-wrap; font-size:12px;">${escapeHtml(xhr.responseText || "Sin respuesta del servidor")}</pre>
+
+      </div>
+
+    `,
+
+        width: 800,
+
+        confirmButtonText: "Cerrar",
+      });
     },
   });
 });
