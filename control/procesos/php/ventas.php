@@ -1000,7 +1000,8 @@ VALUES
         $cliente = $mysqli->real_escape_string($venta['RazonSocial']);
         $telefono = $mysqli->real_escape_string($venta['Celular']);
         $numeroVenta = (int)$venta['NumeroVenta'];
-        $numeroOrdenVenta = $mysqli->real_escape_string($venta['NumeroOrdenVenta']);
+        $numeroOrdenVenta = trim($venta['NumeroOrdenVenta'] ?? '');
+        $numeroOrdenVenta = $mysqli->real_escape_string($numeroOrdenVenta);
 
         $sqlExiste = "
         SELECT id
@@ -1081,9 +1082,11 @@ VALUES
 
         $mensaje = "Hola! Te informamos que tu pedido ya tiene turno de retiro asignado.%0A%0A";
 
-        if ($numeroOrdenVenta != '') {
+        if (!empty($numeroOrdenVenta)) {
+
             $mensaje .= "Orden de Retiro: #" . $numeroOrdenVenta . "%0A";
         } else {
+
             $mensaje .= "Venta: #" . $numeroVenta . "%0A";
         }
 
@@ -1092,12 +1095,13 @@ VALUES
         $mensaje .= "Hora: " . $horaMostrar . " hs%0A%0A";
 
         $mensaje .= "IMPORTANTE:%0A";
-        $mensaje .= "Para retirar la mercadería deberás informar el número de orden indicado arriba.%0A";
-        $mensaje .= "No compartas este número con nadie.%0A%0A";
+        $mensaje .= "Para retirar la mercadería deberás informar este número al momento del retiro.%0A";
+        $mensaje .= "No compartas este código con nadie.%0A%0A";
 
         $mensaje .= "¡Gracias por tu compra!%0A";
         $mensaje .= "Saludos.%0A";
         $mensaje .= "Dinter S.A.";
+
         $whatsappUrl = "";
 
         if ($telefonoWp != '') {
