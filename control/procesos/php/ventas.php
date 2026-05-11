@@ -345,7 +345,31 @@ switch ($accion) {
             ));
             exit;
         }
+        $sqlPagos = "SELECT COUNT(*) AS Total
+                    FROM AplicacionesPagosVentas
+                    WHERE idVenta = '$id'
+                    AND Eliminado = 0
+                ";
 
+        $resPagos = $mysqli->query($sqlPagos);
+
+        if (!$resPagos) {
+            echo json_encode(array(
+                "success" => 0,
+                "error" => $mysqli->error
+            ));
+            exit;
+        }
+
+        $rowPagos = $resPagos->fetch_assoc();
+
+        if ((int)$rowPagos['Total'] > 0) {
+            echo json_encode(array(
+                "success" => 0,
+                "error" => "La venta tiene pagos aplicados. Primero debe desvincular el pago antes de eliminarla."
+            ));
+            exit;
+        }
         $mysqli->begin_transaction();
 
         try {
