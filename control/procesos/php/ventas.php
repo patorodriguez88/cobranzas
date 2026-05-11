@@ -616,6 +616,7 @@ switch ($accion) {
         $sql = "SELECT 
             V.id,
             V.NumeroVenta,
+            V.NumeroOrdenVenta,
             V.Fecha,
             V.idCliente,
             C.RazonSocial,
