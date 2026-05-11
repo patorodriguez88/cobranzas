@@ -72,6 +72,8 @@ if (isset($_POST['Datos'])) {
 
         $rows[] = $row;
 
+        $_SESSION['user_name'] = $row['Usuario'];
+
         echo json_encode(array('success' => 1, 'data' => $rows));
     } else {
 

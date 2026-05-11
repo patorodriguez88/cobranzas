@@ -196,7 +196,9 @@ switch ($accion) {
         try {
 
             if ($id == 0) {
-                $usuario = isset($_SESSION['Usuario']) ? $_SESSION['Usuario'] : '';
+                $usuario = isset($_SESSION['user_name']) && $_SESSION['user_name'] != ''
+                    ? $mysqli->real_escape_string($_SESSION['user_name'])
+                    : 'Sistema';
                 $sqlVenta = "
                     INSERT INTO Ventas
 (Fecha, idCliente, Observaciones, Total, TotalPagado, Saldo, EstadoPago, Usuario, Eliminado)
@@ -337,7 +339,9 @@ VALUES
     case 'eliminar':
 
         $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
-        $usuario = isset($_SESSION['Usuario']) ? $_SESSION['Usuario'] : 'Sistema';
+        $usuario = isset($_SESSION['user_name']) && $_SESSION['user_name'] != ''
+            ? $mysqli->real_escape_string($_SESSION['user_name'])
+            : 'Sistema';
 
         if ($id <= 0) {
             echo json_encode(array(
@@ -690,25 +694,30 @@ VALUES
             LIMIT 1
         ) AS TurnoRetiro,
 
-        (
-            SELECT IFNULL(P.Stock,0)
-            FROM Productos P
-            WHERE P.Eliminado = 0
-            AND P.Activo = 1
-            AND UPPER(P.Nombre) LIKE '%FIGURITA%'
-            ORDER BY P.id ASC
-            LIMIT 1
-        ) AS StockFiguritas,
+       (
 
-        (
-            SELECT IFNULL(P.Stock,0)
-            FROM Productos P
-            WHERE P.Eliminado = 0
-            AND P.Activo = 1
-            AND UPPER(P.Nombre) LIKE '%ALBUM%'
-            ORDER BY P.id ASC
-            LIMIT 1
-        ) AS StockAlbum
+    SELECT IFNULL(P.Stock,0)
+
+    FROM Productos P
+
+    WHERE P.Eliminado = 0
+
+      AND P.Activo = 1
+
+      AND P.Codigo = '1'
+
+    LIMIT 1
+
+) AS StockFiguritas,
+
+       (
+    SELECT IFNULL(P.Stock,0)
+    FROM Productos P
+    WHERE P.Eliminado = 0
+      AND P.Activo = 1
+      AND P.Codigo = '2'
+    LIMIT 1
+) AS StockAlbum
 
             FROM Ventas V
 
@@ -988,7 +997,9 @@ VALUES
         $idVenta = isset($_POST['idVenta']) ? (int)$_POST['idVenta'] : 0;
         $FechaTurno = isset($_POST['FechaTurno']) ? $mysqli->real_escape_string($_POST['FechaTurno']) : '';
         $HoraTurno = isset($_POST['HoraTurno']) ? $mysqli->real_escape_string($_POST['HoraTurno']) : '';
-        $usuario = isset($_SESSION['Usuario']) ? $mysqli->real_escape_string($_SESSION['Usuario']) : 'Sistema';
+        $usuario = isset($_SESSION['user_name']) && $_SESSION['user_name'] != ''
+            ? $mysqli->real_escape_string($_SESSION['user_name'])
+            : 'Sistema';
 
         if ($idVenta <= 0 || $FechaTurno == '' || $HoraTurno == '') {
             echo json_encode(array(

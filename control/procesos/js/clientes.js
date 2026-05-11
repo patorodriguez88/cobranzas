@@ -400,6 +400,7 @@ $("#btn_nuevo_cliente").click(function () {
   $("#cliente_mail").val("");
   $("#cliente_observaciones").val("");
   $("#modal_cliente").modal("show");
+  $("#cliente_dni").val("");
   $("#cliente_celular").val("");
 });
 

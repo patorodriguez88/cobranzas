@@ -12,15 +12,16 @@ if (isset($_POST['NuevoCliente'])) {
     $id             = intval($_POST['id'] ?? 0);
     $Ncliente       = trim($_POST['Ncliente'] ?? '');
     $RazonSocial    = trim($_POST['RazonSocial'] ?? '');
+    $Dni            = trim($_POST['Dni'] ?? '');
     $Cuit           = trim($_POST['Cuit'] ?? '');
     $Direccion      = trim($_POST['Direccion'] ?? '');
     $Ciudad         = trim($_POST['Ciudad'] ?? '');
     $Telefono       = trim($_POST['Telefono'] ?? '');
+    $Celular        = trim($_POST['Celular'] ?? '');
     $Mail           = trim($_POST['Mail'] ?? '');
     $Observaciones  = trim($_POST['Observaciones'] ?? '');
-    $Dni            = trim($_POST['Dni'] ?? '');
-    if ($Ncliente == '') {
 
+    if ($Ncliente == '') {
         echo json_encode([
             'success' => 0,
             'error'   => 'Debe ingresar el número de cliente.'
@@ -29,22 +30,20 @@ if (isset($_POST['NuevoCliente'])) {
     }
 
     if ($RazonSocial == '') {
-
         echo json_encode([
             'success' => 0,
             'error'   => 'Debe ingresar la razón social.'
         ]);
         exit;
     }
-    if ($Dni == '') {
 
+    if ($Dni == '') {
         echo json_encode([
             'success' => 0,
             'error'   => 'Debe ingresar el DNI.'
         ]);
         exit;
     }
-
 
     if ($id == 0) {
 
@@ -53,25 +52,29 @@ if (isset($_POST['NuevoCliente'])) {
             (
                 Ncliente,
                 RazonSocial,
+                Dni,
                 Cuit,
                 Direccion,
                 Ciudad,
                 Telefono,
+                Celular,
                 Mail,
                 Observaciones
             )
             VALUES
-            (?,?,?,?,?,?,?,?)
+            (?,?,?,?,?,?,?,?,?,?)
         ");
 
         $stmt->bind_param(
-            "ssssssss",
+            "ssssssssss",
             $Ncliente,
             $RazonSocial,
+            $Dni,
             $Cuit,
             $Direccion,
             $Ciudad,
             $Telefono,
+            $Celular,
             $Mail,
             $Observaciones
         );
@@ -82,23 +85,27 @@ if (isset($_POST['NuevoCliente'])) {
             SET
                 Ncliente      = ?,
                 RazonSocial   = ?,
+                Dni           = ?,
                 Cuit          = ?,
                 Direccion     = ?,
                 Ciudad        = ?,
                 Telefono      = ?,
+                Celular       = ?,
                 Mail          = ?,
                 Observaciones = ?
             WHERE id = ?
         ");
 
         $stmt->bind_param(
-            "ssssssssi",
+            "ssssssssssi",
             $Ncliente,
             $RazonSocial,
+            $Dni,
             $Cuit,
             $Direccion,
             $Ciudad,
             $Telefono,
+            $Celular,
             $Mail,
             $Observaciones,
             $id
@@ -106,20 +113,14 @@ if (isset($_POST['NuevoCliente'])) {
     }
 
     if ($stmt->execute()) {
-
-        echo json_encode([
-            'success' => 1
-        ]);
-        exit;
-    } else {
-
-        echo json_encode([
-            'success' => 0,
-            'error'   => $stmt->error
-        ]);
+        echo json_encode(['success' => 1]);
         exit;
     }
 
+    echo json_encode([
+        'success' => 0,
+        'error'   => $stmt->error
+    ]);
     exit;
 }
 
