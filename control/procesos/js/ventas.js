@@ -77,6 +77,10 @@ function cargarProductosVenta() {
 function cargarVentas() {
   tablaVentas = $("#tabla_ventas").DataTable({
     destroy: true,
+    order: [[0, "desc"]],
+    createdRow: function (row) {
+      $(row).css("font-size", "11px");
+    },
     ajax: {
       url: URL_VENTAS,
       type: "POST",
@@ -92,11 +96,10 @@ function cargarVentas() {
     columns: [
       {
         data: "NumeroVenta",
-        render: function (data) {
+        render: function (data, type, row) {
           return `
-      <span class="badge bg-primary">
-        #${data}
-      </span>
+      <div><span class="badge bg-primary">#${data}</span></div>
+      <small class="text-muted">${row.Usuario || ""}</small>
     `;
         },
       },
@@ -118,7 +121,21 @@ function cargarVentas() {
       },
 
       { data: "Cliente" },
-      { data: "Productos" },
+      {
+        data: "Productos",
+        render: function (data) {
+          if (!data) return "";
+
+          let productos = data.split("||");
+          let html = "";
+
+          productos.forEach(function (p) {
+            html += `<div style="font-size:11px; line-height:14px;">${p}</div>`;
+          });
+
+          return html;
+        },
+      },
       {
         data: "Total",
         render: $.fn.dataTable.render.number(",", ".", 2, "$ "),
@@ -483,6 +500,9 @@ function verVenta(id) {
 function cargarListadoVentas() {
   $("#tabla_listado_ventas").DataTable({
     destroy: true,
+    createdRow: function (row) {
+      $(row).css("font-size", "11px");
+    },
     ajax: {
       url: URL_VENTAS,
       type: "POST",
@@ -494,8 +514,15 @@ function cargarListadoVentas() {
     columns: [
       {
         data: "NumeroVenta",
-        render: function (data) {
-          return `<span class="badge bg-primary">#${data}</span>`;
+        render: function (data, type, row) {
+          return `<div>
+                  <span class="badge bg-primary">
+                    #${data}
+                  </span>
+                </div>
+              <small class="text-muted">
+              ${row.Usuario || ""}
+              </small>`;
         },
       },
       {
@@ -506,7 +533,26 @@ function cargarListadoVentas() {
         },
       },
       { data: "Cliente" },
-      { data: "Productos" },
+      {
+        data: "Productos",
+        render: function (data) {
+          if (!data) return "";
+
+          let productos = data.split("||");
+
+          let html = "";
+
+          productos.forEach(function (p) {
+            html += `
+        <div style="font-size:11px; line-height:14px;">
+          ${p}
+        </div>
+      `;
+          });
+
+          return html;
+        },
+      },
       {
         data: "Total",
         render: $.fn.dataTable.render.number(",", ".", 2, "$ "),

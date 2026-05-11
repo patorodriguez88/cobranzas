@@ -187,11 +187,12 @@ switch ($accion) {
         try {
 
             if ($id == 0) {
-
+                $usuario = isset($_SESSION['Usuario']) ? $_SESSION['Usuario'] : '';
                 $sqlVenta = "
                     INSERT INTO Ventas
-                    (Fecha, idCliente, Observaciones, Total, TotalPagado, Saldo, EstadoPago, Eliminado) VALUES
-                    (NOW(), '$idCliente', '$Observaciones', '$total', 0, '$total', 'PENDIENTE', 0)
+                    (Fecha, idCliente, Observaciones, Total, Usuario, Eliminado)
+                    VALUES
+                    (NOW(), '$idCliente', '$Observaciones', '$total', '$usuario', 0)
                 ";
 
                 if (!$mysqli->query($sqlVenta)) {
@@ -382,7 +383,8 @@ switch ($accion) {
                 C.RazonSocial,
                 V.Total,
                 V.Observaciones,
-                COUNT(DISTINCT VD.id) AS Productos,
+                GROUP_CONCAT(
+                CONCAT(VD.ProductoNombre, ' x', VD.Cantidad) SEPARATOR '||') AS Productos,
                 IFNULL(SUM(APV.ImporteAplicado),0) AS TotalPagado
                 FROM Ventas V
                 LEFT JOIN Clientes C 
@@ -444,8 +446,7 @@ switch ($accion) {
         break;
     case 'listar_ventas':
 
-        $sql = "
-        SELECT 
+        $sql = "SELECT 
             V.id,
             V.NumeroVenta,
             V.Fecha,
@@ -453,7 +454,11 @@ switch ($accion) {
             C.RazonSocial,
             V.Total,
             V.Observaciones,
-            COUNT(VD.id) AS Productos,
+            V.Usuario,
+            GROUP_CONCAT(
+                CONCAT(VD.ProductoNombre, ' x', VD.Cantidad)
+                SEPARATOR '||'
+            ) AS Productos, 
             V.EstadoPago,
             V.TotalPagado,
             V.Saldo
@@ -491,7 +496,8 @@ switch ($accion) {
                 "Observaciones" => $row["Observaciones"],
                 "EstadoPago" => $row["EstadoPago"],
                 "TotalPagado" => $row["TotalPagado"],
-                "Saldo" => $row["Saldo"]
+                "Saldo" => $row["Saldo"],
+                "Usuario" => $row["Usuario"],
             );
         }
 
