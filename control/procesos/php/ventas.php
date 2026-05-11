@@ -1351,27 +1351,25 @@ VALUES
                 );
             }
         }
-        $sqlStock = "
-    SELECT 
-        Nombre,
-        Stock
-    FROM Productos
-    WHERE Eliminado = 0
-      AND Activo = 1
-";
+        $sqlStock = "SELECT Codigo,Stock FROM Productos
+        WHERE Eliminado = 0 AND Activo = 1";
 
         $resStock = $mysqli->query($sqlStock);
 
         while ($row = $resStock->fetch_assoc()) {
 
-            $nombre = strtoupper($row['Nombre']);
+            $codigo = trim($row['Codigo']);
 
-            if (strpos($nombre, 'FIGURITA') !== false) {
-                $data["FIGURITAS"]["stock"] += (int)$row['Stock'];
+            $stock = (int)$row['Stock'];
+
+            if ($codigo == '1') {
+
+                $data["FIGURITAS"]["stock"] += $stock;
             }
 
-            if (strpos($nombre, 'ALBUM') !== false) {
-                $data["ALBUM"]["stock"] += (int)$row['Stock'];
+            if ($codigo == '2') {
+
+                $data["ALBUM"]["stock"] += $stock;
             }
         }
         echo json_encode($data);
