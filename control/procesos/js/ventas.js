@@ -596,6 +596,7 @@ function verVenta(id) {
   });
 }
 function cargarListadoVentas() {
+  $("#cards_resumen_productos_ventas").hide();
   $("#tabla_listado_ventas").DataTable({
     destroy: true,
     createdRow: function (row) {
@@ -636,51 +637,13 @@ function cargarListadoVentas() {
       {
         data: "Productos",
         render: function (data, type, row) {
-          if (!data) return "";
-
-          let productos = data.split("||");
-          let editable = row.EstadoPago === "PENDIENTE";
-
-          let html = `<div class="d-flex gap-1 flex-wrap">`;
-
-          productos.forEach(function (p) {
-            let partes = p.split(" x");
-            let nombre = partes[0] || "";
-            let cantidad = partes[1] || 0;
-
-            let clase = nombre.toUpperCase().includes("ALBUM") ? "success" : "primary";
-            let icono = nombre.toUpperCase().includes("ALBUM") ? "mdi-book-open-page-variant" : "mdi-cards-outline";
-
-            html += `
-        <div class="border border-${clase} rounded p-1 text-center" style="min-width:115px;">
-          <div class="fw-bold text-${clase}" style="font-size:11px;">
-            ${nombre}
-          </div>
-
-          <i class="mdi ${icono} text-${clase}" style="font-size:22px;"></i>
-
-          <div class="small text-muted">Cantidad</div>
-
-          ${
-            editable
-              ? `<input 
-                  type="number" 
-                  class="form-control form-control-sm text-center cantidad-producto-venta"
-                  data-idventa="${row.id}"
-                  data-producto="${nombre}"
-                  value="${cantidad}"
-                  min="0"
-                  style="height:28px;"
-                >`
-              : `<div class="fw-bold">${cantidad}</div>`
-          }
-        </div>
-      `;
-          });
-
-          html += `</div>`;
-
-          return html;
+          return renderCantidadProductoVenta(data, row, "FIGURITAS");
+        },
+      },
+      {
+        data: "Productos",
+        render: function (data, type, row) {
+          return renderCantidadProductoVenta(data, row, "ALBUM");
         },
       },
       {
@@ -762,7 +725,8 @@ function mostrarPantallaVentas() {
 
     $("#cards_resumen_ventas").show();
     $("#card_listado_ventas").show();
-
+    $("#cards_resumen_productos_ventas").show();
+    cargarResumenProductosVentas();
     cargarResumenVentas();
     cargarListadoVentas();
   } else {
@@ -1176,34 +1140,18 @@ $(document).on("click", "#btn_guardar_turno_retiro", function () {
 $(document).on("change", ".cantidad-producto-venta", function () {
   let input = $(this);
 
-  let idVenta = input.data("idventa");
-  let producto = input.data("producto");
-  let cantidad = parseInt(input.val() || 0);
-
-  if (cantidad < 0) {
-    input.val(0);
-    cantidad = 0;
-  }
-
   $.ajax({
     url: URL_VENTAS,
     type: "POST",
     dataType: "json",
     data: {
       accion: "actualizar_cantidad_producto_venta",
-      idVenta: idVenta,
-      ProductoNombre: producto,
-      Cantidad: cantidad,
+      idVenta: input.data("idventa"),
+      ProductoNombre: input.data("producto"),
+      Cantidad: input.val(),
     },
     success: function (r) {
       if (r.success == 1) {
-        Swal.fire({
-          icon: "success",
-          title: "Cantidad actualizada",
-          timer: 900,
-          showConfirmButton: false,
-        });
-
         if ($.fn.DataTable.isDataTable("#tabla_listado_ventas")) {
           $("#tabla_listado_ventas").DataTable().ajax.reload(null, false);
         }
@@ -1213,13 +1161,88 @@ $(document).on("change", ".cantidad-producto-venta", function () {
         }
 
         cargarResumenVentas();
+        cargarResumenProductosVentas();
       } else {
         Swal.fire("Error", r.error || "No se pudo actualizar.", "error");
       }
     },
-    error: function (xhr) {
-      console.log(xhr.responseText);
-      Swal.fire("Error", "Error actualizando cantidad.", "error");
-    },
   });
 });
+function renderCantidadProductoVenta(data, row, tipo) {
+  if (!data) return "-";
+
+  let productos = data.split("||");
+  let itemEncontrado = null;
+
+  productos.forEach(function (p) {
+    let partes = p.split(" x");
+    let nombre = (partes[0] || "").trim();
+    let cantidad = partes[1] || 0;
+
+    if (nombre.toUpperCase().includes(tipo)) {
+      itemEncontrado = {
+        nombre: nombre,
+        cantidad: cantidad,
+      };
+    }
+  });
+
+  if (!itemEncontrado) return `<span class="text-muted">0</span>`;
+
+  let editable = row.EstadoPago === "PENDIENTE";
+
+  if (!editable) {
+    return `<span class="fw-bold">${itemEncontrado.cantidad}</span>`;
+  }
+
+  return `
+    <input 
+      type="number" 
+      class="form-control form-control-sm text-center cantidad-producto-venta"
+      data-idventa="${row.id}"
+      data-producto="${itemEncontrado.nombre}"
+      value="${itemEncontrado.cantidad}"
+      min="0"
+      style="width:80px; height:28px;"
+    >
+  `;
+}
+function cargarResumenProductosVentas() {
+  $.ajax({
+    url: URL_VENTAS,
+    type: "POST",
+    dataType: "json",
+    data: {
+      accion: "resumen_productos_ventas",
+    },
+    success: function (r) {
+      $("#figus_total").text(r.FIGURITAS.total || 0);
+      $("#figus_pendiente").text(r.FIGURITAS.pendiente || 0);
+
+      $("#album_total").text(r.ALBUM.total || 0);
+      $("#album_pendiente").text(r.ALBUM.pendiente || 0);
+
+      $("#figus_vendedores").html(renderVendedoresResumen(r.FIGURITAS.vendedores));
+      $("#album_vendedores").html(renderVendedoresResumen(r.ALBUM.vendedores));
+    },
+  });
+}
+
+function renderVendedoresResumen(vendedores) {
+  if (!vendedores || vendedores.length === 0) {
+    return "Sin datos por vendedor.";
+  }
+
+  let html = "";
+
+  vendedores.forEach(function (v) {
+    html += `
+      <div class="d-flex justify-content-between">
+        <span>${v.Usuario || "Sin usuario"}</span>
+        <strong>${v.Total}</strong>
+      </div>
+    `;
+  });
+
+  return html;
+}

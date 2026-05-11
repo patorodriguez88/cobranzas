@@ -1259,7 +1259,80 @@ VALUES
 
         break;
 
+    case 'resumen_productos_ventas':
 
+        $data = array(
+            "FIGURITAS" => array(
+                "total" => 0,
+                "pendiente" => 0,
+                "vendedores" => array()
+            ),
+            "ALBUM" => array(
+                "total" => 0,
+                "pendiente" => 0,
+                "vendedores" => array()
+            )
+        );
+
+        $sql = "
+        SELECT
+            CASE 
+                WHEN UPPER(VD.ProductoNombre) LIKE '%ALBUM%' THEN 'ALBUM'
+                WHEN UPPER(VD.ProductoNombre) LIKE '%FIGURITA%' THEN 'FIGURITAS'
+                ELSE 'OTRO'
+            END AS TipoProducto,
+            SUM(VD.Cantidad) AS TotalAsignado,
+            SUM(CASE WHEN V.EstadoPago = 'PENDIENTE' THEN VD.Cantidad ELSE 0 END) AS TotalPendiente
+        FROM VentasDetalle VD
+        INNER JOIN Ventas V ON V.id = VD.idVenta
+        WHERE VD.Eliminado = 0
+          AND V.Eliminado = 0
+        GROUP BY TipoProducto
+    ";
+
+        $res = $mysqli->query($sql);
+
+        while ($row = $res->fetch_assoc()) {
+            $tipo = $row['TipoProducto'];
+
+            if (isset($data[$tipo])) {
+                $data[$tipo]["total"] = (int)$row["TotalAsignado"];
+                $data[$tipo]["pendiente"] = (int)$row["TotalPendiente"];
+            }
+        }
+
+        $sqlVendedores = "
+        SELECT
+            CASE 
+                WHEN UPPER(VD.ProductoNombre) LIKE '%ALBUM%' THEN 'ALBUM'
+                WHEN UPPER(VD.ProductoNombre) LIKE '%FIGURITA%' THEN 'FIGURITAS'
+                ELSE 'OTRO'
+            END AS TipoProducto,
+            IFNULL(V.Usuario, 'Sin usuario') AS Usuario,
+            SUM(VD.Cantidad) AS Total
+        FROM VentasDetalle VD
+        INNER JOIN Ventas V ON V.id = VD.idVenta
+        WHERE VD.Eliminado = 0
+          AND V.Eliminado = 0
+        GROUP BY TipoProducto, V.Usuario
+        ORDER BY TipoProducto, Total DESC
+    ";
+
+        $resVendedores = $mysqli->query($sqlVendedores);
+
+        while ($row = $resVendedores->fetch_assoc()) {
+            $tipo = $row['TipoProducto'];
+
+            if (isset($data[$tipo])) {
+                $data[$tipo]["vendedores"][] = array(
+                    "Usuario" => $row["Usuario"],
+                    "Total" => (int)$row["Total"]
+                );
+            }
+        }
+
+        echo json_encode($data);
+        break;
     default:
 
         echo json_encode(array(
