@@ -417,7 +417,22 @@ function eliminarVenta(id) {
             showConfirmButton: false,
           });
 
-          tablaVentas.ajax.reload(null, false);
+          if ($.fn.DataTable.isDataTable("#tabla_ventas")) {
+            $("#tabla_ventas").DataTable().ajax.reload(null, false);
+          }
+
+          if ($.fn.DataTable.isDataTable("#tabla_listado_ventas")) {
+            $("#tabla_listado_ventas").DataTable().ajax.reload(null, false);
+          }
+
+          cargarProductosVenta();
+          cargarProductosVentaRapida();
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: r.error || "No se pudo eliminar la venta.",
+          });
         }
       },
       error: function (xhr) {
