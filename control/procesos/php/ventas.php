@@ -658,7 +658,7 @@ switch ($accion) {
             V.Saldo,
             V.EstadoPago,
             V.Observaciones,
-            C.RazonSocial
+            C.RazonSocial,
             V.NumeroOrdenVenta,
         FROM Ventas V
         LEFT JOIN Clientes C ON C.id = V.idCliente
@@ -739,7 +739,47 @@ switch ($accion) {
 
         break;
 
+    case 'resumen_ventas':
 
+        $data = array(
+            'PENDIENTE' => 0,
+            'PARCIAL'   => 0,
+            'PAGADA'    => 0,
+            'TOTAL'     => 0
+        );
+
+        $sql = "
+        SELECT 
+            IFNULL(EstadoPago, 'PENDIENTE') AS EstadoPago,
+            COUNT(*) AS Total
+        FROM Ventas
+        WHERE Eliminado = 0
+        GROUP BY IFNULL(EstadoPago, 'PENDIENTE')
+    ";
+
+        $res = $mysqli->query($sql);
+
+        if (!$res) {
+            echo json_encode(array(
+                "success" => 0,
+                "error" => $mysqli->error
+            ));
+            exit;
+        }
+
+        while ($row = $res->fetch_assoc()) {
+            $estado = strtoupper(trim($row['EstadoPago']));
+
+            if ($estado == '') {
+                $estado = 'PENDIENTE';
+            }
+
+            $data[$estado] = (int)$row['Total'];
+            $data['TOTAL'] += (int)$row['Total'];
+        }
+
+        echo json_encode($data);
+        break;
     default:
 
         echo json_encode(array(
@@ -748,37 +788,4 @@ switch ($accion) {
         ));
 
         break;
-}
-
-if ($accion == 'resumen_ventas') {
-
-    $data = [
-        'PENDIENTE' => 0,
-        'PARCIAL'   => 0,
-        'PAGADA'    => 0,
-        'TOTAL'     => 0
-    ];
-
-    $sql = "
-        SELECT 
-            EstadoPago,
-            COUNT(*) as Total
-        FROM Ventas
-        WHERE Eliminado = 0
-        GROUP BY EstadoPago
-    ";
-
-    $res = $mysqli->query($sql);
-
-    while ($row = $res->fetch_assoc()) {
-
-        $estado = strtoupper(trim($row['EstadoPago']));
-
-        $data[$estado] = (int)$row['Total'];
-
-        $data['TOTAL'] += (int)$row['Total'];
-    }
-
-    echo json_encode($data);
-    exit;
 }

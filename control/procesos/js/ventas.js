@@ -752,9 +752,22 @@ function abrirEstadoVenta(idVenta) {
       let offcanvas = new bootstrap.Offcanvas(document.getElementById("offcanvas_venta"));
       offcanvas.show();
     },
-    error: function (xhr) {
-      console.log(xhr.responseText);
-      Swal.fire("Error", "Error consultando estado de venta.", "error");
+    error: function (xhr, status, error) {
+      console.log("ERROR estado venta:", xhr.responseText);
+
+      Swal.fire({
+        icon: "error",
+        title: "Error consultando estado de venta",
+        html: `
+      <div class="text-start">
+        <p><b>Status:</b> ${xhr.status}</p>
+        <p><b>Error:</b> ${error || "-"}</p>
+        <hr>
+        <pre style="white-space:pre-wrap;font-size:12px;">${xhr.responseText}</pre>
+      </div>
+    `,
+        width: 800,
+      });
     },
   });
 }
