@@ -536,49 +536,84 @@ VALUES
     case 'ultimas_ventas':
 
         $sql = "SELECT 
-                V.id,
-                V.NumeroVenta,
-                V.NumeroOrdenVenta,
-                V.Fecha,
-                V.idCliente,
-                C.RazonSocial,
-                V.Total,
-                V.Observaciones,
-                C.Ncliente,
-                GROUP_CONCAT(
-                CONCAT(VD.ProductoNombre, ' x', VD.Cantidad) SEPARATOR '||') AS Productos,
-                IFNULL((SELECT SUM(APV.ImporteAplicado) FROM AplicacionesPagosVentas APV WHERE APV.idVenta = V.id AND APV.Eliminado = 0), 0) AS TotalPagado
-                FROM Ventas V
-                LEFT JOIN Clientes C 
-                ON C.id = V.idCliente
-                LEFT JOIN VentasDetalle VD 
-                ON VD.idVenta = V.id 
-                AND VD.Eliminado = 0
-                LEFT JOIN AplicacionesPagosVentas APV
-                ON APV.idVenta = V.id
-                AND APV.Eliminado = 0
-                WHERE V.Eliminado = 0
-                GROUP BY V.id
-                ORDER BY V.id DESC
-                LIMIT 10";
+        V.id,
+        V.NumeroVenta,
+        V.NumeroOrdenVenta,
+        V.Fecha,
+        V.idCliente,
+        C.RazonSocial,
+        C.Ncliente,
+        V.Total,
+        V.Observaciones,
+        V.Usuario,
+
+        GROUP_CONCAT(
+            CONCAT(VD.ProductoNombre, ' x', VD.Cantidad)
+            SEPARATOR '||'
+        ) AS Productos,
+
+        IFNULL((
+            SELECT SUM(APV.ImporteAplicado)
+            FROM AplicacionesPagosVentas APV
+            WHERE APV.idVenta = V.id
+              AND APV.Eliminado = 0
+        ), 0) AS TotalPagado,
+
+        (
+            SELECT CONCAT(
+                DATE_FORMAT(TR.FechaTurno, '%d/%m/%Y'),
+                ' ',
+                LEFT(TR.HoraTurno, 5)
+            )
+            FROM TurnosRetiro TR
+            WHERE TR.idVenta = V.id
+              AND TR.Eliminado = 0
+            ORDER BY TR.FechaTurno DESC, TR.HoraTurno DESC
+            LIMIT 1
+        ) AS TurnoRetiro
+
+    FROM Ventas V
+
+    LEFT JOIN Clientes C 
+        ON C.id = V.idCliente
+
+    LEFT JOIN VentasDetalle VD 
+        ON VD.idVenta = V.id 
+        AND VD.Eliminado = 0
+
+    WHERE V.Eliminado = 0
+
+    GROUP BY V.id
+
+    ORDER BY V.id DESC
+
+    LIMIT 10";
 
         $res = $mysqli->query($sql);
 
         if (!$res) {
-            echo json_encode(array("data" => array(), "error" => $mysqli->error));
+
+            echo json_encode(array(
+                "data" => array(),
+                "error" => $mysqli->error
+            ));
+
             exit;
         }
 
         $data = array();
 
         while ($row = $res->fetch_assoc()) {
+
             $cliente = "";
 
             if (!empty($row["RazonSocial"])) {
 
                 if (!empty($row["Ncliente"])) {
+
                     $cliente = "[" . $row["Ncliente"] . "] " . $row["RazonSocial"];
                 } else {
+
                     $cliente = $row["RazonSocial"];
                 }
             }
@@ -590,95 +625,138 @@ VALUES
             $estado = "PENDIENTE";
 
             if ($saldo <= 0) {
+
                 $estado = "PAGADA";
             } elseif ($totalPagado > 0) {
+
                 $estado = "PARCIAL";
             }
 
             $data[] = array(
-                "id" => $row["id"],
-                "Fecha" => $row["Fecha"],
-                "Cliente" => $cliente,
-                "Productos" => $row["Productos"],
-                "Total" => $total,
-                "TotalPagado" => $totalPagado,
-                "Saldo" => $saldo,
-                "EstadoPago" => $estado,
-                "Observaciones" => $row["Observaciones"],
-                "NumeroVenta" => $row["NumeroVenta"],
-                "NumeroOrdenVenta" => $row["NumeroOrdenVenta"]
+                "id"                => $row["id"],
+                "NumeroVenta"       => $row["NumeroVenta"],
+                "NumeroOrdenVenta"  => $row["NumeroOrdenVenta"],
+                "Fecha"             => $row["Fecha"],
+                "Cliente"           => $cliente,
+                "Productos"         => $row["Productos"],
+                "Total"             => $total,
+                "TotalPagado"       => $totalPagado,
+                "Saldo"             => $saldo,
+                "EstadoPago"        => $estado,
+                "Observaciones"     => $row["Observaciones"],
+                "Usuario"           => $row["Usuario"],
+                "TurnoRetiro"       => $row["TurnoRetiro"]
             );
         }
 
-        echo json_encode(array("data" => $data));
+        echo json_encode(array(
+            "data" => $data
+        ));
+
         break;
 
     case 'listar_ventas':
 
         $sql = "SELECT 
-            V.id,
-            V.NumeroVenta,
-            V.NumeroOrdenVenta,
-            V.Fecha,
-            V.idCliente,
-            C.RazonSocial,
-            V.Total,
-            V.Observaciones,
-            V.Usuario,
-            C.Ncliente,
-            GROUP_CONCAT(
-                CONCAT(VD.ProductoNombre, ' x', VD.Cantidad)
-                SEPARATOR '||'
-            ) AS Productos, 
-            V.EstadoPago,
-            V.TotalPagado,
-            V.Saldo
-        FROM Ventas V
-        LEFT JOIN Clientes C ON C.id = V.idCliente
-        LEFT JOIN VentasDetalle VD 
-            ON VD.idVenta = V.id 
-            AND VD.Eliminado = 0
-        WHERE V.Eliminado = 0
-        GROUP BY V.id
-        ORDER BY V.NumeroVenta DESC
+        V.id,
+        V.NumeroVenta,
+        V.NumeroOrdenVenta,
+        V.Fecha,
+        V.idCliente,
+        C.RazonSocial,
+        C.Ncliente,
+        V.Total,
+        V.Observaciones,
+        V.Usuario,
+
+        GROUP_CONCAT(
+            CONCAT(VD.ProductoNombre, ' x', VD.Cantidad)
+            SEPARATOR '||'
+        ) AS Productos,
+
+        V.EstadoPago,
+        V.TotalPagado,
+        V.Saldo,
+
+        (
+            SELECT CONCAT(
+                DATE_FORMAT(TR.FechaTurno, '%d/%m/%Y'),
+                ' ',
+                LEFT(TR.HoraTurno, 5)
+            )
+            FROM TurnosRetiro TR
+            WHERE TR.idVenta = V.id
+              AND TR.Eliminado = 0
+            ORDER BY TR.FechaTurno DESC, TR.HoraTurno DESC
+            LIMIT 1
+        ) AS TurnoRetiro
+
+    FROM Ventas V
+
+    LEFT JOIN Clientes C 
+        ON C.id = V.idCliente
+
+    LEFT JOIN VentasDetalle VD 
+        ON VD.idVenta = V.id 
+        AND VD.Eliminado = 0
+
+    WHERE V.Eliminado = 0
+
+    GROUP BY V.id
+
+    ORDER BY V.NumeroVenta DESC
     ";
 
         $res = $mysqli->query($sql);
 
         if (!$res) {
-            echo json_encode(array("data" => array(), "error" => $mysqli->error));
+
+            echo json_encode(array(
+                "data" => array(),
+                "error" => $mysqli->error
+            ));
+
             exit;
         }
 
         $data = array();
 
         while ($row = $res->fetch_assoc()) {
+
             $cliente = "";
 
             if (!empty($row["RazonSocial"])) {
+
                 if (!empty($row["Ncliente"])) {
+
                     $cliente = "[" . $row["Ncliente"] . "] " . $row["RazonSocial"];
                 } else {
+
                     $cliente = $row["RazonSocial"];
                 }
             }
+
             $data[] = array(
-                "id" => $row["id"],
-                "NumeroVenta" => $row["NumeroVenta"],
-                "Fecha" => $row["Fecha"],
-                "Cliente" => $cliente,
-                "Productos" => $row["Productos"],
-                "Total" => $row["Total"],
-                "Observaciones" => $row["Observaciones"],
-                "EstadoPago" => $row["EstadoPago"],
-                "TotalPagado" => $row["TotalPagado"],
-                "Saldo" => $row["Saldo"],
-                "Usuario" => $row["Usuario"],
-                "NumeroOrdenVenta" => $row["NumeroOrdenVenta"],
+                "id"                => $row["id"],
+                "NumeroVenta"       => $row["NumeroVenta"],
+                "NumeroOrdenVenta"  => $row["NumeroOrdenVenta"],
+                "Fecha"             => $row["Fecha"],
+                "Cliente"           => $cliente,
+                "Productos"         => $row["Productos"],
+                "Total"             => $row["Total"],
+                "Observaciones"     => $row["Observaciones"],
+                "EstadoPago"        => $row["EstadoPago"],
+                "TotalPagado"       => $row["TotalPagado"],
+                "Saldo"             => $row["Saldo"],
+                "Usuario"           => $row["Usuario"],
+                "TurnoRetiro"       => $row["TurnoRetiro"]
             );
         }
 
-        echo json_encode(array("data" => $data));
+        echo json_encode(array(
+            "data" => $data
+        ));
+
         break;
     case 'estado_venta':
 

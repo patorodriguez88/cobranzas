@@ -217,6 +217,21 @@ function cargarVentas() {
       </div>
     `;
           }
+          if (row.TurnoRetiro) {
+            html += `
+
+    <div class="mt-1">
+
+      <span class="badge bg-success">
+
+        <i class="mdi mdi-calendar-clock"></i> ${row.TurnoRetiro}
+
+      </span>
+
+    </div>
+
+  `;
+          }
 
           return html;
         },
