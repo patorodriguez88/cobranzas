@@ -1143,6 +1143,31 @@ $(document).on("click", "#btn_guardar_turno_retiro", function () {
 $(document).on("change", ".cantidad-producto-venta", function () {
   let input = $(this);
 
+  let cantidad = parseInt(input.val() || 0);
+  let stock = parseInt(input.data("stock") || 0);
+  let cantidadAnterior = parseInt(input.data("actual") || 0);
+
+  // stock disponible real:
+  // lo que tengo + lo ya asignado a esta venta
+  let maximoPermitido = stock + cantidadAnterior;
+
+  if (cantidad > maximoPermitido) {
+    Swal.fire({
+      icon: "warning",
+      title: "Stock insuficiente",
+      html: `
+        <div class="text-start">
+          <b>Stock actual:</b> ${stock}<br>
+          <b>Ya asignado en esta venta:</b> ${cantidadAnterior}<br>
+          <b>Máximo permitido:</b> ${maximoPermitido}
+        </div>
+      `,
+    });
+
+    input.val(cantidadAnterior);
+    return;
+  }
+
   $.ajax({
     url: URL_VENTAS,
     type: "POST",
@@ -1151,7 +1176,7 @@ $(document).on("change", ".cantidad-producto-venta", function () {
       accion: "actualizar_cantidad_producto_venta",
       idVenta: input.data("idventa"),
       ProductoNombre: input.data("producto"),
-      Cantidad: input.val(),
+      Cantidad: cantidad,
     },
     success: function (r) {
       if (r.success == 1) {
@@ -1167,6 +1192,8 @@ $(document).on("change", ".cantidad-producto-venta", function () {
         cargarResumenProductosVentas();
       } else {
         Swal.fire("Error", r.error || "No se pudo actualizar.", "error");
+
+        input.val(cantidadAnterior);
       }
     },
   });
@@ -1199,16 +1226,30 @@ function renderCantidadProductoVenta(data, row, tipo) {
   }
 
   return `
-    <input 
-      type="number" 
-      class="form-control form-control-sm text-center cantidad-producto-venta"
-      data-idventa="${row.id}"
-      data-producto="${itemEncontrado.nombre}"
-      value="${itemEncontrado.cantidad}"
-      min="0"
-      style="width:80px; height:28px;"
-    >
-  `;
+
+  <input 
+
+    type="number" 
+
+    class="form-control form-control-sm text-center cantidad-producto-venta"
+
+    data-idventa="${row.id}"
+
+    data-producto="${itemEncontrado.nombre}"
+
+    data-actual="${itemEncontrado.cantidad}"
+
+    data-stock="${row.StockDisponible || 0}"
+
+    value="${itemEncontrado.cantidad}"
+
+    min="0"
+
+    style="width:80px; height:28px;"
+
+  >
+
+`;
 }
 function cargarResumenProductosVentas() {
   $.ajax({

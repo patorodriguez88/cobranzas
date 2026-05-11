@@ -679,17 +679,38 @@ VALUES
         V.Saldo,
 
         (
-            SELECT CONCAT(
-                DATE_FORMAT(TR.FechaTurno, '%d/%m/%Y'),
-                ' ',
-                LEFT(TR.HoraTurno, 5)
-            )
-            FROM TurnosRetiro TR
-            WHERE TR.idVenta = V.id
-              AND TR.Eliminado = 0
-            ORDER BY TR.FechaTurno DESC, TR.HoraTurno DESC
-            LIMIT 1
-        ) AS TurnoRetiro
+            (
+    SELECT CONCAT(
+        DATE_FORMAT(TR.FechaTurno, '%d/%m/%Y'),
+        ' ',
+        LEFT(TR.HoraTurno, 5)
+    )
+    FROM TurnosRetiro TR
+    WHERE TR.idVenta = V.id
+      AND TR.Eliminado = 0
+    ORDER BY TR.FechaTurno DESC, TR.HoraTurno DESC
+    LIMIT 1
+) AS TurnoRetiro,
+
+(
+    SELECT IFNULL(P.Stock,0)
+    FROM Productos P
+    WHERE P.Eliminado = 0
+      AND P.Activo = 1
+      AND UPPER(P.Nombre) LIKE '%FIGURITA%'
+    ORDER BY P.id ASC
+    LIMIT 1
+) AS StockFiguritas,
+
+(
+    SELECT IFNULL(P.Stock,0)
+    FROM Productos P
+    WHERE P.Eliminado = 0
+      AND P.Activo = 1
+      AND UPPER(P.Nombre) LIKE '%ALBUM%'
+    ORDER BY P.id ASC
+    LIMIT 1
+) AS StockAlbum
 
     FROM Ventas V
 
@@ -749,7 +770,9 @@ VALUES
                 "TotalPagado"       => $row["TotalPagado"],
                 "Saldo"             => $row["Saldo"],
                 "Usuario"           => $row["Usuario"],
-                "TurnoRetiro"       => $row["TurnoRetiro"]
+                "TurnoRetiro"       => $row["TurnoRetiro"],
+                "StockFiguritas"    => $row["StockFiguritas"],
+                "StockAlbum"        => $row["StockAlbum"]
             );
         }
 
