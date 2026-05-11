@@ -769,89 +769,33 @@ function abrirEstadoVenta(idVenta) {
       ventaActualOffcanvas = v.id;
       numeroOrdenVentaActual = v.NumeroOrdenVenta || "";
 
-      let htmlOrdenVenta = "";
-      let htmlTurnoRetiro = "";
-
-      if (v.TurnoRetiro && v.TurnoRetiro !== "") {
-        htmlTurnoRetiro = `
-    <div class="alert alert-info mt-2">
-      <small class="text-muted">Turno acordado con el cliente</small>
-      <h5 class="mb-0">
-        <i class="mdi mdi-calendar-clock"></i> ${v.TurnoRetiro}
-      </h5>
-    </div>
-  `;
-      } else {
-        htmlTurnoRetiro = `
-    <div class="alert alert-light border mt-2">
-      <small class="text-muted">Turno acordado con el cliente</small>
-      <h6 class="mb-0 text-muted">Sin turno asignado</h6>
-    </div>
-  `;
-      }
-      if (v.NumeroOrdenVenta && v.NumeroOrdenVenta !== "") {
-        htmlOrdenVenta = `
-          <div class="alert alert-success mt-3 d-flex justify-content-between align-items-center">
-            <div>
-              <small class="text-muted">Orden de Venta Warehouse</small>
-              <h5 class="mb-0">#${v.NumeroOrdenVenta}</h5>
-            </div>
-
-            <div>
-              <button class="btn btn-sm btn-outline-primary me-1" onclick="editarOrdenVenta(${v.id}, '${v.NumeroOrdenVenta}')">
-                <i class="mdi mdi-pencil"></i>
-              </button>
-
-              <button class="btn btn-sm btn-outline-success" onclick="abrirModalTurnoRetiro(${v.id})">
-              <i class="mdi mdi-calendar-clock"></i>
-            </button>
-            </div>
-          </div>
-        `;
-      } else {
-        htmlOrdenVenta = `
-          <div class="alert alert-warning mt-3 d-flex justify-content-between align-items-center">
-            <div>
-              <small class="text-muted">Orden de Venta Warehouse</small>
-              <h6 class="mb-0">Sin número asignado</h6>
-            </div>
-
-            <button class="btn btn-sm btn-success" onclick="editarOrdenVenta(${v.id}, '')">
-              <i class="mdi mdi-plus"></i> Agregar
-            </button>
-          </div>
-        `;
-      }
-
       $("#offcanvas_venta_titulo").text("Venta #" + v.NumeroVenta);
 
       $("#venta_estado_cuenta").html(`
-        <h5>${v.RazonSocial || ""}</h5>
+  <h5>${v.RazonSocial || ""}</h5>
 
-        <div class="row mt-3">
-          <div class="col-6">
-            <small class="text-muted">Total</small>
-            <h5>${formatoMoneda(v.Total)}</h5>
-          </div>
+  <div class="row mt-3">
+    <div class="col-6">
+      <small class="text-muted">Total</small>
+      <h5>${formatoMoneda(v.Total)}</h5>
+    </div>
 
-          <div class="col-6">
-            <small class="text-muted">Pagado</small>
-            <h5>${formatoMoneda(v.TotalPagado)}</h5>
-          </div>
+    <div class="col-6">
+      <small class="text-muted">Pagado</small>
+      <h5>${formatoMoneda(v.TotalPagado)}</h5>
+    </div>
 
-          <div class="col-6 mt-2">
-            <small class="text-muted">Saldo</small>
-            <h5>${formatoMoneda(v.Saldo)}</h5>
-          </div>
+    <div class="col-6 mt-2">
+      <small class="text-muted">Saldo</small>
+      <h5>${formatoMoneda(v.Saldo)}</h5>
+    </div>
 
-          <div class="col-6 mt-2">
-            <small class="text-muted">Estado</small>
-            <h5>${badgeEstadoPago(v.EstadoPago)}</h5>
-          </div>
-        </div>        
-        ${htmlTurnoRetiro}
-        ${htmlOrdenVenta}
-      `);
+    <div class="col-6 mt-2">
+      <small class="text-muted">Estado</small>
+      <h5>${badgeEstadoPago(v.EstadoPago)}</h5>
+    </div>
+  </div>
+`);
 
       if (v.TurnoRetiro && v.TurnoRetiro !== "") {
         $("#texto_turno_retiro").html(`
