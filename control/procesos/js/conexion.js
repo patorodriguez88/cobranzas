@@ -37,31 +37,35 @@ $(document).ready(function () {
 });
 
 $(document).ready(function () {
-  aplicarTemaGuardado();
+  aplicarTema();
 
   $(document).on("click", "#btn_toggle_tema", function () {
-    let temaActual = $("body").attr("data-layout-color") || "light";
-    let nuevoTema = temaActual === "dark" ? "light" : "dark";
+    let temaActual = $("html").attr("data-bs-theme");
 
-    cambiarTema(nuevoTema);
+    if (temaActual === "dark") {
+      $("html").attr("data-bs-theme", "light");
+
+      $("#icono_tema").removeClass("mdi-weather-night").addClass("mdi-white-balance-sunny");
+
+      localStorage.setItem("tema_dinter", "light");
+    } else {
+      $("html").attr("data-bs-theme", "dark");
+
+      $("#icono_tema").removeClass("mdi-white-balance-sunny").addClass("mdi-weather-night");
+
+      localStorage.setItem("tema_dinter", "dark");
+    }
   });
 });
 
-function cambiarTema(tema) {
-  $("body").attr("data-layout-color", tema);
+function aplicarTema() {
+  let tema = localStorage.getItem("tema_dinter") || "light";
+
+  $("html").attr("data-bs-theme", tema);
 
   if (tema === "dark") {
-    $("#app-style").attr("href", "saas/assets/css/app-dark.min.css");
     $("#icono_tema").removeClass("mdi-white-balance-sunny").addClass("mdi-weather-night");
   } else {
-    $("#app-style").attr("href", "saas/assets/css/app.min.css");
     $("#icono_tema").removeClass("mdi-weather-night").addClass("mdi-white-balance-sunny");
   }
-
-  localStorage.setItem("tema_dinter", tema);
-}
-
-function aplicarTemaGuardado() {
-  let tema = localStorage.getItem("tema_dinter") || "light";
-  cambiarTema(tema);
 }
