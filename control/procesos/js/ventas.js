@@ -877,3 +877,8 @@ function abrirQRordenVenta(numeroOrdenVenta) {
 
   $("#modal_qr_orden_venta").modal("show");
 }
+$(document).on("focusin", function (e) {
+  if ($(e.target).closest(".swal2-container").length) {
+    e.stopImmediatePropagation();
+  }
+});
