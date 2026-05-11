@@ -452,7 +452,28 @@ function verVenta(id) {
     dataType: "json",
     success: function (r) {
       console.log(r);
-      alert("Venta #" + id + "\nTotal: $ " + r.venta.Total);
+
+      Swal.fire({
+        icon: "info",
+        title: "Venta #" + r.venta.NumeroVenta,
+        html: `
+    <div class="text-start">
+      <p><b>Cliente:</b> ${r.venta.Cliente || "-"}</p>
+      <p><b>Total:</b> $ ${parseFloat(r.venta.Total || 0).toLocaleString("es-AR", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}</p>
+      <p><b>Estado:</b> ${r.venta.EstadoPago || "PENDIENTE"}</p>
+      <p><b>Saldo:</b> $ ${parseFloat(r.venta.Saldo || 0).toLocaleString("es-AR", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}</p>
+      <p><b>Observaciones:</b><br>${r.venta.Observaciones || "-"}</p>
+    </div>
+  `,
+        width: 600,
+        confirmButtonText: "Cerrar",
+      });
     },
     error: function (xhr) {
       console.log("ERROR ver venta:", xhr.responseText);
