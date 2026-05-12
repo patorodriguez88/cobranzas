@@ -1320,7 +1320,13 @@ function generarOrdenVentaWepoint(idVenta) {
       },
       error: function (xhr) {
         console.log(xhr.responseText);
-        Swal.fire("Error", "No se pudo conectar con el servidor", "error");
+
+        Swal.fire({
+          icon: "error",
+          title: "Error PHP",
+          html: `<pre style="text-align:left;font-size:11px;">${xhr.responseText}</pre>`,
+          width: 900,
+        });
       },
     });
   });
