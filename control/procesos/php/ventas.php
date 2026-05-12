@@ -558,7 +558,7 @@ VALUES
 
         IFNULL((
             SELECT SUM(APV.ImporteAplicado)
-            FROM AplicacionesPagosVentas APV
+            FROM CobranzasVentas APV
             WHERE APV.idVenta = V.id
               AND APV.Eliminado = 0
         ), 0) AS TotalPagado,
@@ -1402,6 +1402,7 @@ VALUES
         echo json_encode($data);
         break;
 
+
     case 'validar_orden_para_turno':
 
         $idVenta = isset($_POST['idVenta']) ? (int)$_POST['idVenta'] : 0;
@@ -1409,72 +1410,7 @@ VALUES
         if ($idVenta <= 0) {
             echo json_encode(array(
                 "success" => 0,
-                "error" => "Venta inválida."
-            ));
-            exit;
-        }
-
-        $sqlVenta = "
-        SELECT 
-            id,
-            NumeroVenta,
-            NumeroOrdenVenta,
-            WepointIdOrdenVenta,
-            WepointEstado
-        FROM Ventas
-        WHERE id = '$idVenta'
-          AND Eliminado = 0
-        LIMIT 1
-    ";
-
-        $resVenta = $mysqli->query($sqlVenta);
-
-        if (!$resVenta || $resVenta->num_rows == 0) {
-            echo json_encode(array(
-                "success" => 0,
-                "error" => "Venta inexistente."
-            ));
-            exit;
-        }
-
-        $venta = $resVenta->fetch_assoc();
-
-        if (empty($venta['NumeroOrdenVenta']) || empty($venta['WepointIdOrdenVenta'])) {
-            echo json_encode(array(
-                "success" => 0,
-                "error" => "Primero tenés que generar la Orden de Venta en Warehouse."
-            ));
-            exit;
-        }
-
-        /*
-      Por ahora validamos contra el último estado guardado.
-      Después podemos sumar consulta real a Wepoint por API.
-    */
-
-        $estadoWepoint = strtolower(trim($venta['WepointEstado']));
-
-        if ($estadoWepoint != 'listo para enviar') {
-            echo json_encode(array(
-                "success" => 0,
-                "error" => "La orden " . $venta['NumeroOrdenVenta'] . " todavía no está lista para enviar.<br><br>Estado actual: <b>" . $venta['WepointEstado'] . "</b>"
-            ));
-            exit;
-        }
-
-        echo json_encode(array(
-            "success" => 1
-        ));
-
-        break;
-    case 'validar_orden_para_turno':
-
-        $idVenta = isset($_POST['idVenta']) ? (int)$_POST['idVenta'] : 0;
-
-        if ($idVenta <= 0) {
-            echo json_encode(array(
-                "success" => 0,
-                "error" => "Venta inválida."
+                "error" => "No se recibió un ID de venta válido."
             ));
             exit;
         }
@@ -1485,34 +1421,50 @@ VALUES
             NumeroVenta,
             NumeroOrdenVenta,
             wepoint_id_orden_venta,
+            wepoint_nro_orden_venta,
             wepoint_estado
         FROM Ventas
         WHERE id = '$idVenta'
-          AND Eliminado = 0
         LIMIT 1
     ";
 
         $resVenta = $mysqli->query($sqlVenta);
 
-        if (!$resVenta || $resVenta->num_rows == 0) {
+        if (!$resVenta) {
             echo json_encode(array(
                 "success" => 0,
-                "error" => "Venta inexistente."
+                "error" => "Error consultando la venta en la base local: " . $mysqli->error
+            ));
+            exit;
+        }
+
+        if ($resVenta->num_rows == 0) {
+            echo json_encode(array(
+                "success" => 0,
+                "error" => "No existe una venta local con ID #" . $idVenta . "."
             ));
             exit;
         }
 
         $venta = $resVenta->fetch_assoc();
 
-        if (empty($venta['NumeroOrdenVenta']) || empty($venta['wepoint_id_orden_venta'])) {
+        if (empty($venta['NumeroOrdenVenta'])) {
             echo json_encode(array(
                 "success" => 0,
-                "error" => "Primero tenés que generar la Orden de Venta en Warehouse."
+                "error" => "La venta #" . $venta['NumeroVenta'] . " todavía no tiene número de Orden de Venta asignado."
             ));
             exit;
         }
 
-        $token = '1383|1w3olMBz6851a6JdfbA1GH0jdF5QdUnwUtAfehSL0f00e3a5';
+        if (empty($venta['wepoint_id_orden_venta'])) {
+            echo json_encode(array(
+                "success" => 0,
+                "error" => "La venta #" . $venta['NumeroVenta'] . " tiene OV local <b>" . $venta['NumeroOrdenVenta'] . "</b>, pero no tiene guardado el ID técnico de Wepoint."
+            ));
+            exit;
+        }
+
+        $token = 'PEGAR_TOKEN_NUEVO_ACA';
 
         $idOrdenVentaWepoint = (int)$venta['wepoint_id_orden_venta'];
 
@@ -1540,18 +1492,33 @@ VALUES
         if ($curlError != '') {
             echo json_encode(array(
                 "success" => 0,
-                "error" => "Error consultando Wepoint: " . $curlError
+                "error" => "No se pudo conectar con Wepoint: " . $curlError
             ));
             exit;
         }
 
         $data = json_decode($response, true);
 
+        if ($httpCode == 401) {
+            echo json_encode(array(
+                "success" => 0,
+                "error" => "Wepoint rechazó la consulta por autorización. Revisar token/API Key."
+            ));
+            exit;
+        }
+
+        if ($httpCode == 404) {
+            echo json_encode(array(
+                "success" => 0,
+                "error" => "Wepoint no encontró la OV con ID técnico #" . $idOrdenVentaWepoint . "."
+            ));
+            exit;
+        }
+
         if ($httpCode < 200 || $httpCode >= 300 || !$data) {
             echo json_encode(array(
                 "success" => 0,
-                "error" => "No se pudo consultar el estado de la OV en Wepoint.",
-                "http_code" => $httpCode,
+                "error" => "Wepoint no devolvió una respuesta válida. HTTP: " . $httpCode,
                 "response" => $response
             ));
             exit;
@@ -1573,6 +1540,15 @@ VALUES
             $estadoWepoint = $orden['ordenes_envio'][0]['estado'];
         }
 
+        if ($estadoWepoint == '') {
+            echo json_encode(array(
+                "success" => 0,
+                "error" => "Wepoint respondió, pero no se pudo identificar el estado de la OV.",
+                "response" => $data
+            ));
+            exit;
+        }
+
         $estadoSql = $mysqli->real_escape_string($estadoWepoint);
         $responseSql = $mysqli->real_escape_string(json_encode($data, JSON_UNESCAPED_UNICODE));
 
@@ -1588,7 +1564,7 @@ VALUES
         if (strtolower(trim($estadoWepoint)) != 'listo para enviar') {
             echo json_encode(array(
                 "success" => 0,
-                "error" => "La OV <b>" . $venta['NumeroOrdenVenta'] . "</b> todavía no está lista para generar turno.<br><br>Estado actual: <b>" . $estadoWepoint . "</b>",
+                "error" => "La OV <b>" . $venta['NumeroOrdenVenta'] . "</b> existe, pero todavía no está lista para generar turno.<br><br>Estado actual en Wepoint: <b>" . $estadoWepoint . "</b>",
                 "estado" => $estadoWepoint
             ));
             exit;
@@ -1596,7 +1572,8 @@ VALUES
 
         echo json_encode(array(
             "success" => 1,
-            "estado" => $estadoWepoint
+            "estado" => $estadoWepoint,
+            "message" => "La OV está lista para enviar. Ya podés generar el turno."
         ));
 
         break;
