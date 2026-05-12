@@ -1579,7 +1579,38 @@ VALUES
         break;
 
 
+    case 'guardar_observaciones_venta':
 
+        $idVenta = isset($_POST['idVenta']) ? (int)$_POST['idVenta'] : 0;
+        $Observaciones = isset($_POST['Observaciones']) ? $mysqli->real_escape_string($_POST['Observaciones']) : '';
+
+        if ($idVenta <= 0) {
+            echo json_encode(array(
+                "success" => 0,
+                "error" => "Venta inválida."
+            ));
+            exit;
+        }
+
+        $sql = "
+        UPDATE Ventas
+        SET Observaciones = '$Observaciones'
+        WHERE id = '$idVenta'
+        LIMIT 1
+    ";
+
+        if ($mysqli->query($sql)) {
+            echo json_encode(array(
+                "success" => 1
+            ));
+        } else {
+            echo json_encode(array(
+                "success" => 0,
+                "error" => $mysqli->error
+            ));
+        }
+
+        break;
 
     default:
 

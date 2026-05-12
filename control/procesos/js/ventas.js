@@ -791,11 +791,7 @@ function abrirEstadoVenta(idVenta) {
         </div>
       </div>
     `);
-      $("#texto_observaciones_venta").html(
-        v.Observaciones && v.Observaciones.trim() !== ""
-          ? v.Observaciones
-          : '<span class="text-muted">Sin observaciones.</span>',
-      );
+      $("#texto_observaciones_venta").val(v.Observaciones || "");
 
       let htmlDetalleTotal = "";
       let totalDetalle = 0;
@@ -1475,3 +1471,41 @@ function validarOrdenAntesDeTurno(idVenta) {
     },
   });
 }
+$(document).on("click", "#btn_guardar_observaciones_venta", function () {
+  let observaciones = $("#texto_observaciones_venta").val();
+
+  $.ajax({
+    url: URL_VENTAS,
+    type: "POST",
+    dataType: "json",
+    data: {
+      accion: "guardar_observaciones_venta",
+      idVenta: ventaActualOffcanvas,
+      Observaciones: observaciones,
+    },
+    success: function (r) {
+      if (r.success == 1) {
+        Swal.fire({
+          icon: "success",
+          title: "Observaciones guardadas",
+          timer: 1000,
+          showConfirmButton: false,
+        });
+
+        if ($.fn.DataTable.isDataTable("#tabla_ventas")) {
+          $("#tabla_ventas").DataTable().ajax.reload(null, false);
+        }
+
+        if ($.fn.DataTable.isDataTable("#tabla_listado_ventas")) {
+          $("#tabla_listado_ventas").DataTable().ajax.reload(null, false);
+        }
+      } else {
+        Swal.fire("Error", r.error || "No se pudieron guardar las observaciones.", "error");
+      }
+    },
+    error: function (xhr) {
+      console.log(xhr.responseText);
+      Swal.fire("Error", "Error guardando observaciones.", "error");
+    },
+  });
+});

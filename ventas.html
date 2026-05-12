@@ -419,9 +419,20 @@
 
                 <div class="alert alert-light border mt-3">
                   <small class="text-muted d-block mb-1">Observaciones</small>
-                  <div id="texto_observaciones_venta" class="fw-semibold text-muted">Sin observaciones.</div>
-                </div>
 
+                  <textarea
+                    id="texto_observaciones_venta"
+                    class="form-control form-control-sm"
+                    rows="3"
+                    placeholder="Sin observaciones."
+                  ></textarea>
+
+                  <div class="text-end mt-2">
+                    <button type="button" class="btn btn-success btn-sm" id="btn_guardar_observaciones_venta">
+                      <i class="mdi mdi-content-save"></i> Guardar
+                    </button>
+                  </div>
+                </div>
                 <div class="mt-3">
                   <h6 class="mb-2">Composición del total</h6>
 
@@ -489,21 +500,6 @@
                 </div>
               </div>
             </div>
-            <!-- <div class="modal fade" id="modal_qr_orden_venta" tabindex="-1" aria-hidden="true">
-              <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                  <div class="modal-header">
-                    <h4 class="modal-title">QR Orden de Venta</h4>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                  </div>
-
-                  <div class="modal-body text-center">
-                    <h5 id="qr_orden_venta_titulo"></h5>
-                    <div id="qr_orden_venta" class="d-flex justify-content-center my-3"></div>
-                  </div>
-                </div>
-              </div>
-            </div> -->
           </div>
           <div class="modal fade" id="modal_orden_venta" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
