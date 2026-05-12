@@ -351,7 +351,7 @@ VALUES
             exit;
         }
         $sqlPagos = "SELECT COUNT(*) AS Total
-                    FROM AplicacionesPagosVentas
+                    FROM CobranzasVentas
                     WHERE idVenta = '$id'
                     AND Eliminado = 0
                 ";
@@ -827,19 +827,18 @@ VALUES
         $venta = $resVenta->fetch_assoc();
 
         $sqlPagos = "SELECT 
-            APV.ImporteAplicado,
-            APV.Fecha AS FechaAplicacion,
-            CB.Fecha,
-            CB.Hora,
-            CB.Banco,
-            CB.Operacion,
-            CB.Importe
-        FROM AplicacionesPagosVentas APV
-        LEFT JOIN Cobranza CB ON CB.id = APV.idCobranza
-        WHERE APV.idVenta = '$idVenta'
-        AND APV.Eliminado = 0
-        ORDER BY APV.id DESC
-";
+        CV.ImporteAplicado,
+        CV.Fecha AS FechaAplicacion,
+        CB.Fecha,
+        CB.Hora,
+        CB.Banco,
+        CB.Operacion,
+        CB.Importe
+            FROM CobranzasVentas CV
+            LEFT JOIN Cobranza CB ON CB.id = CV.idCobranza
+            WHERE CV.idVenta = '$idVenta'
+            ORDER BY CV.id DESC
+        ";
 
         $resPagos = $mysqli->query($sqlPagos);
 
@@ -847,6 +846,17 @@ VALUES
 
         while ($row = $resPagos->fetch_assoc()) {
             $pagos[] = $row;
+        }
+        if (count($pagos) == 0 && isset($venta['TotalPagado']) && (float)$venta['TotalPagado'] > 0) {
+            $pagos[] = array(
+                "ImporteAplicado" => $venta['TotalPagado'],
+                "FechaAplicacion" => $venta['Fecha'],
+                "Fecha" => $venta['Fecha'],
+                "Hora" => "",
+                "Banco" => "Pago registrado",
+                "Operacion" => "Sin detalle vinculado",
+                "Importe" => $venta['TotalPagado']
+            );
         }
 
         $sqlDetalle = "SELECT 

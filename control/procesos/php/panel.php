@@ -199,40 +199,22 @@ if (isset($_POST['VentasPendientesCliente'])) {
 
     $numeroCliente = isset($_POST['NumeroCliente']) ? (int)$_POST['NumeroCliente'] : 0;
 
-    $sql = "
-
-    SELECT 
-
+    $sql = "SELECT 
         V.id,
-
         V.NumeroVenta,
-
         V.Fecha,
-
         V.idCliente,
-
         V.Total,
-
         V.TotalPagado,
-
         V.Saldo,
-
         V.EstadoPago
-
     FROM Ventas V
-
     INNER JOIN Clientes C ON C.id = V.idCliente
-
     WHERE C.Ncliente = '$numeroCliente'
-
       AND V.Eliminado = 0
-
       AND V.EstadoPago <> 'PAGADA'
-
       AND V.Saldo > 0
-
     ORDER BY V.NumeroVenta DESC
-
 ";
 
     $res = $mysqli->query($sql);
