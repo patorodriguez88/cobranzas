@@ -21,11 +21,9 @@ $sqlVenta = "
     SELECT 
         V.*,
         C.RazonSocial,
-        C.Celular,
-        C.Email,
+        C.Celular,        
         C.Direccion,
-        C.Ciudad,
-        C.CodigoPostal
+        C.Ciudad        
     FROM Ventas V
     LEFT JOIN Clientes C ON C.id = V.idCliente
     WHERE V.id = ?
@@ -34,7 +32,19 @@ $sqlVenta = "
 ";
 
 $stmt = $mysqli->prepare($sqlVenta);
+
+if (!$stmt) {
+    echo json_encode([
+        "success" => false,
+        "message" => "Error preparando sqlVenta",
+        "sql_error" => $mysqli->error,
+        "sql" => $sqlVenta
+    ]);
+    exit;
+}
+
 $stmt->bind_param("i", $idVenta);
+
 $stmt->execute();
 $resVenta = $stmt->get_result();
 
@@ -106,11 +116,11 @@ $payload = [
     "destinatario" => [
         "nombre" => $venta['RazonSocial'] ?? '',
         "telefono" => $venta['Celular'] ?? '',
-        "email" => $venta['Email'] ?? '',
+        "email" => '',
         "direccion" => $venta['Direccion'] ?? '',
         "provincia" => "Cordoba",
         "ciudad" => $venta['Ciudad'] ?? 'Cordoba',
-        "codigo_postal" => $venta['CodigoPostal'] ?? '5000',
+        "codigo_postal" => '5000',
         "barrio" => "",
         "entre_calles" => ""
     ],
