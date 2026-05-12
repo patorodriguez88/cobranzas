@@ -195,7 +195,7 @@ function cargarVentas() {
         data: "Total",
         render: $.fn.dataTable.render.number(",", ".", 2, "$ "),
       },
-      { data: "Observaciones" },
+      // { data: "Observaciones" },
       {
         data: "EstadoPago",
 
@@ -767,30 +767,35 @@ function abrirEstadoVenta(idVenta) {
       $("#offcanvas_venta_titulo").text("Venta #" + v.NumeroVenta);
 
       $("#venta_estado_cuenta").html(`
-  <h5>${v.RazonSocial || ""}</h5>
+      <h5>${v.RazonSocial || ""}</h5>
 
-  <div class="row mt-3">
-    <div class="col-6">
-      <small class="text-muted">Total</small>
-      <h5>${formatoMoneda(v.Total)}</h5>
-    </div>
+      <div class="row mt-3">
+        <div class="col-6">
+          <small class="text-muted">Total</small>
+          <h5>${formatoMoneda(v.Total)}</h5>
+        </div>
 
-    <div class="col-6">
-      <small class="text-muted">Pagado</small>
-      <h5>${formatoMoneda(v.TotalPagado)}</h5>
-    </div>
+        <div class="col-6">
+          <small class="text-muted">Pagado</small>
+          <h5>${formatoMoneda(v.TotalPagado)}</h5>
+        </div>
 
-    <div class="col-6 mt-2">
-      <small class="text-muted">Saldo</small>
-      <h5>${formatoMoneda(v.Saldo)}</h5>
-    </div>
+        <div class="col-6 mt-2">
+          <small class="text-muted">Saldo</small>
+          <h5>${formatoMoneda(v.Saldo)}</h5>
+        </div>
 
-    <div class="col-6 mt-2">
-      <small class="text-muted">Estado</small>
-      <h5>${badgeEstadoPago(v.EstadoPago)}</h5>
-    </div>
-  </div>
-`);
+        <div class="col-6 mt-2">
+          <small class="text-muted">Estado</small>
+          <h5>${badgeEstadoPago(v.EstadoPago)}</h5>
+        </div>
+      </div>
+    `);
+      $("#texto_observaciones_venta").html(
+        v.Observaciones && v.Observaciones.trim() !== ""
+          ? v.Observaciones
+          : '<span class="text-muted">Sin observaciones.</span>',
+      );
 
       let htmlDetalleTotal = "";
       let totalDetalle = 0;
@@ -845,11 +850,6 @@ function abrirEstadoVenta(idVenta) {
         $("#texto_orden_venta").html(`<span class="text-muted">Sin orden asignada</span>`);
       }
 
-      // $("#btn_offcanvas_orden_venta")
-      //   .off("click")
-      //   .on("click", function () {
-      //     generarOrdenVentaWepoint(v.id);
-      //   });
       if (v.EstadoPago === "PAGADA") {
         $("#btn_offcanvas_orden_venta")
           .prop("disabled", false)
