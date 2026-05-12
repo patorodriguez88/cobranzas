@@ -767,30 +767,38 @@ function abrirEstadoVenta(idVenta) {
       $("#offcanvas_venta_titulo").text("Venta #" + v.NumeroVenta);
 
       $("#venta_estado_cuenta").html(`
-      <h5>${v.RazonSocial || ""}</h5>
 
-      <div class="row mt-1">
-        <div class="col-6">
-          <small class="text-muted">Total</small>
-          <h5>${formatoMoneda(v.Total)}</h5>
-        </div>
+<div class="d-flex flex-wrap align-items-center gap-3 small mb-2">
 
-        <div class="col-6">
-          <small class="text-muted">Pagado</small>
-          <h5>${formatoMoneda(v.TotalPagado)}</h5>
-        </div>
+    <div>
+        <span class="text-muted">Total:</span>
+        <strong>${formatoMoneda(v.Total)}</strong>
+    </div>
 
-        <div class="col-6 mt-1">
-          <small class="text-muted">Saldo</small>
-          <h5>${formatoMoneda(v.Saldo)}</h5>
-        </div>
+    <div class="text-muted">|</div>
 
-        <div class="col-6 mt-1">
-          <small class="text-muted">Estado</small>
-          <h5>${badgeEstadoPago(v.EstadoPago)}</h5>
-        </div>
-      </div>
-    `);
+    <div>
+        <span class="text-muted">Total pagado:</span>
+        <strong>${formatoMoneda(v.TotalPagado)}</strong>
+    </div>
+
+    <div class="text-muted">|</div>
+
+    <div>
+        <span class="text-muted">Saldo:</span>
+        <strong>${formatoMoneda(v.Saldo)}</strong>
+    </div>
+
+    <div class="text-muted">|</div>
+
+    <div>
+        <span class="text-muted me-1">Estado:</span>
+        ${badgeEstadoPago(v.EstadoPago)}
+    </div>
+
+</div>
+
+`);
       $("#texto_observaciones_venta").val(v.Observaciones || "");
 
       let htmlDetalleTotal = "";
