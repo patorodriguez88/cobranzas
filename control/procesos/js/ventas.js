@@ -1319,12 +1319,18 @@ function generarOrdenVentaWepoint(idVenta) {
         }
       },
       error: function (xhr) {
-        console.log(xhr.responseText);
+        console.log("STATUS:", xhr.status);
+        console.log("RESPONSE:", xhr.responseText);
 
         Swal.fire({
           icon: "error",
           title: "Error PHP",
-          html: `<pre style="text-align:left;font-size:11px;">${xhr.responseText}</pre>`,
+          html: `
+      <div class="text-start">
+        <b>Status:</b> ${xhr.status}<br>
+        <pre style="font-size:11px;white-space:pre-wrap;max-height:400px;overflow:auto;">${xhr.responseText}</pre>
+      </div>
+    `,
           width: 900,
         });
       },
