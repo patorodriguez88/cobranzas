@@ -1339,7 +1339,9 @@ function renderVendedoresResumen(vendedores) {
     html += `
       <div class="d-flex justify-content-between">
         <span>${v.Usuario || "Sin usuario"}</span>
-        <strong>${v.Total}</strong>
+        <strong>
+        ${parseInt(v.Total || 0).toLocaleString("es-AR")}
+        </strong>
       </div>
     `;
   });
