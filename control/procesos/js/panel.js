@@ -614,3 +614,116 @@ function formatearFechaAsignacion(fecha) {
   let h = partes[1] ? partes[1].substring(0, 5) : "";
   return `${f}<br><small class="text-muted">${h} hs</small>`;
 }
+function cargarVentasAplicadas(idCobranza) {
+  $.ajax({
+    url: "control/procesos/php/conciliaciones.php",
+    type: "POST",
+    dataType: "json",
+    data: {
+      accion: "ventas_aplicadas",
+      idCobranza: idCobranza,
+    },
+    success: function (r) {
+      let html = "";
+
+      if (!r.success || !r.data || r.data.length === 0) {
+        html = `
+                    <tr>
+                        <td colspan="7" class="text-center text-muted">
+                            Sin aplicaciones.
+                        </td>
+                    </tr>
+                `;
+      } else {
+        r.data.forEach(function (v) {
+          html += `
+                        <tr>
+
+                            <td>
+                                <b>#${v.NumeroVenta}</b>
+                                ${v.NumeroOrdenVenta ? `<br><small class="text-muted">OV ${v.NumeroOrdenVenta}</small>` : ""}
+                            </td>
+
+                            <td>
+                                ${v.Fecha}
+                            </td>
+
+                            <td class="text-end">
+                                $ ${parseFloat(v.Total || 0).toLocaleString("es-AR")}
+                            </td>
+
+                            <td class="text-end">
+                                $ ${parseFloat(v.ImporteAplicado || 0).toLocaleString("es-AR")}
+                            </td>
+
+                            <td class="text-end">
+                                $ ${parseFloat(v.Saldo || 0).toLocaleString("es-AR")}
+                            </td>
+
+                            <td>
+                                <span class="badge bg-${obtenerColorEstado(v.EstadoPago)}">
+                                    ${v.EstadoPago}
+                                </span>
+                            </td>
+
+                            <td class="text-center">
+
+                                <i class="mdi mdi-link-off mdi-18px text-danger ms-2"
+                                   style="cursor:pointer"
+                                   onclick="desvincularPagoVenta(${v.id})">
+                                </i>
+
+                            </td>
+
+                        </tr>
+                    `;
+        });
+      }
+
+      $("#tabla_ventas_aplicadas tbody").html(html);
+    },
+  });
+}
+function obtenerColorEstado(estado) {
+  if (estado === "PAGADA") return "success";
+
+  if (estado === "PARCIAL") return "info";
+
+  return "warning";
+}
+function desvincularPagoVenta(idAplicacion) {
+  Swal.fire({
+    title: "¿Desvincular pago?",
+    text: "La venta volverá a recalcular su saldo.",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Sí, desvincular",
+    cancelButtonText: "Cancelar",
+  }).then((result) => {
+    if (!result.isConfirmed) return;
+
+    $.ajax({
+      url: "control/procesos/php/conciliaciones.php",
+      type: "POST",
+      dataType: "json",
+      data: {
+        accion: "desvincular_pago_venta",
+        idAplicacion: idAplicacion,
+      },
+      success: function (r) {
+        if (r.success == 1) {
+          Swal.fire({
+            icon: "success",
+            title: "Pago desvinculado",
+            timer: 1200,
+            showConfirmButton: false,
+          });
+
+          cargarVentasAplicadas(window.idCobranzaActual);
+        } else {
+          Swal.fire("Error", r.error || "No se pudo desvincular.", "error");
+        }
+      },
+    });
+  });
+}
