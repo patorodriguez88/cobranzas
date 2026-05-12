@@ -845,12 +845,27 @@ function abrirEstadoVenta(idVenta) {
         $("#texto_orden_venta").html(`<span class="text-muted">Sin orden asignada</span>`);
       }
 
-      $("#btn_offcanvas_orden_venta")
-        .off("click")
-        .on("click", function () {
-          generarOrdenVentaWepoint(v.id);
-        });
-
+      // $("#btn_offcanvas_orden_venta")
+      //   .off("click")
+      //   .on("click", function () {
+      //     generarOrdenVentaWepoint(v.id);
+      //   });
+      if (v.EstadoPago === "PAGADA") {
+        $("#btn_offcanvas_orden_venta")
+          .prop("disabled", false)
+          .removeClass("btn-outline-secondary")
+          .addClass("btn-outline-primary")
+          .off("click")
+          .on("click", function () {
+            generarOrdenVentaWepoint(v.id);
+          });
+      } else {
+        $("#btn_offcanvas_orden_venta")
+          .prop("disabled", true)
+          .removeClass("btn-outline-primary")
+          .addClass("btn-outline-secondary")
+          .off("click");
+      }
       $("#btn_offcanvas_turno_retiro")
         .off("click")
         .on("click", function () {

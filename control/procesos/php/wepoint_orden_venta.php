@@ -15,6 +15,26 @@ if ($idVenta <= 0) {
     exit;
 }
 
+$sqlEstado = "SELECT EstadoPago FROM Ventas WHERE id = '$idVenta' LIMIT 1";
+$resEstado = $mysqli->query($sqlEstado);
+$rowEstado = $resEstado->fetch_assoc();
+
+if (!$rowEstado) {
+    echo json_encode(array(
+        "success" => false,
+        "message" => "Venta inexistente"
+    ));
+    exit;
+}
+
+if ($rowEstado['EstadoPago'] != 'PAGADA') {
+    echo json_encode(array(
+        "success" => false,
+        "message" => "La venta debe estar PAGADA para generar la OV."
+    ));
+    exit;
+}
+
 $token = '1383|1w3olMBz6851a6JdfbA1GH0jdF5QdUnwUtAfehSL0f00e3a5';
 
 $sqlVenta = "
