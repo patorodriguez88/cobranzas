@@ -869,7 +869,7 @@ function abrirEstadoVenta(idVenta) {
       $("#btn_offcanvas_turno_retiro")
         .off("click")
         .on("click", function () {
-          abrirModalTurnoRetiro(v.id);
+          validarOrdenAntesDeTurno(v.id);
         });
       let htmlPagos = "";
 
@@ -1447,5 +1447,32 @@ function generarOrdenVentaWepoint(idVenta) {
         Swal.fire("Error", "No se pudo conectar con el servidor", "error");
       },
     });
+  });
+}
+function validarOrdenAntesDeTurno(idVenta) {
+  $.ajax({
+    url: URL_VENTAS,
+    type: "POST",
+    dataType: "json",
+    data: {
+      accion: "validar_orden_para_turno",
+      idVenta: idVenta,
+    },
+    success: function (r) {
+      if (r.success == 1) {
+        abrirModalTurnoRetiro(idVenta);
+        return;
+      }
+
+      Swal.fire({
+        icon: "warning",
+        title: "No se puede generar turno",
+        html: r.error || "Primero debe generarse la orden de venta.",
+      });
+    },
+    error: function (xhr) {
+      console.log(xhr.responseText);
+      Swal.fire("Error", "No se pudo validar la orden de venta.", "error");
+    },
   });
 }
