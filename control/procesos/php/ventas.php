@@ -826,34 +826,19 @@ VALUES
         $resVenta = $mysqli->query($sqlVenta);
         $venta = $resVenta->fetch_assoc();
 
-        $sqlPagos = "
-
-    SELECT 
-
-        APV.ImporteAplicado,
-
-        APV.Fecha AS FechaAplicacion,
-
-        CB.Fecha,
-
-        CB.Hora,
-
-        CB.Banco,
-
-        CB.Operacion,
-
-        CB.Importe
-
-    FROM AplicacionesPagosVentas APV
-
-    LEFT JOIN Cobranza CB ON CB.id = APV.idCobranza
-
-    WHERE APV.idVenta = '$idVenta'
-
-      AND APV.Eliminado = 0
-
-    ORDER BY APV.id DESC
-
+        $sqlPagos = "SELECT 
+            APV.ImporteAplicado,
+            APV.Fecha AS FechaAplicacion,
+            CB.Fecha,
+            CB.Hora,
+            CB.Banco,
+            CB.Operacion,
+            CB.Importe
+        FROM AplicacionesPagosVentas APV
+        LEFT JOIN Cobranza CB ON CB.id = APV.idCobranza
+        WHERE APV.idVenta = '$idVenta'
+        AND APV.Eliminado = 0
+        ORDER BY APV.id DESC
 ";
 
         $resPagos = $mysqli->query($sqlPagos);
@@ -864,10 +849,31 @@ VALUES
             $pagos[] = $row;
         }
 
+        $sqlDetalle = "SELECT 
+        VD.ProductoNombre,
+        VD.Cantidad,
+        VD.PrecioUnitario,
+        VD.Subtotal
+        FROM VentasDetalle VD
+        WHERE VD.idVenta = '$idVenta'
+        AND VD.Eliminado = 0
+        ORDER BY VD.id ASC
+    ";
+
+        $resDetalle = $mysqli->query($sqlDetalle);
+
+        $detalle = array();
+
+        while ($row = $resDetalle->fetch_assoc()) {
+            $detalle[] = $row;
+        }
+
+
         echo json_encode(array(
             "success" => 1,
             "venta" => $venta,
-            "pagos" => $pagos
+            "pagos" => $pagos,
+            "detalle" => $detalle
         ));
 
         break;

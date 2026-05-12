@@ -792,6 +792,45 @@ function abrirEstadoVenta(idVenta) {
   </div>
 `);
 
+      let htmlDetalleTotal = "";
+      let totalDetalle = 0;
+
+      if (!r.detalle || r.detalle.length === 0) {
+        htmlDetalleTotal = `
+    <tr>
+      <td colspan="4" class="text-center text-muted">
+        Sin productos.
+      </td>
+    </tr>
+  `;
+      } else {
+        r.detalle.forEach(function (item) {
+          let cantidad = parseFloat(item.Cantidad || 0);
+          let precio = parseFloat(item.PrecioUnitario || 0);
+          let subtotal = parseFloat(item.Subtotal || cantidad * precio);
+
+          totalDetalle += subtotal;
+
+          htmlDetalleTotal += `
+      <tr>
+        <td>${item.ProductoNombre || ""}</td>
+        <td class="text-end">${cantidad.toLocaleString("es-AR")}</td>
+        <td class="text-end">${formatoMoneda(precio)}</td>
+        <td class="text-end">${formatoMoneda(subtotal)}</td>
+      </tr>
+    `;
+        });
+
+        htmlDetalleTotal += `
+    <tr class="table-light">
+      <td colspan="3" class="text-end fw-bold">Total</td>
+      <td class="text-end fw-bold">${formatoMoneda(totalDetalle)}</td>
+    </tr>
+  `;
+      }
+
+      $("#tabla_detalle_total_venta").html(htmlDetalleTotal);
+
       if (v.TurnoRetiro && v.TurnoRetiro !== "") {
         $("#texto_turno_retiro").html(`
     <i class="mdi mdi-calendar-clock"></i> ${v.TurnoRetiro}
