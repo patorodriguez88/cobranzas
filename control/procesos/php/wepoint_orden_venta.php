@@ -9,12 +9,12 @@ header('Content-Type: application/json; charset=utf-8');
 date_default_timezone_set('America/Argentina/Cordoba');
 
 $idVenta = isset($_POST['idVenta']) ? (int)$_POST['idVenta'] : 0;
+$idTransportista = isset($_POST['idTransportista']) ? (int)$_POST['idTransportista'] : 0;
 
 if ($idVenta <= 0) {
     echo json_encode(["success" => false, "message" => "ID de venta inválido"]);
     exit;
 }
-$idTransportista = isset($_POST['idTransportista']) ? (int)$_POST['idTransportista'] : 0;
 
 if ($idTransportista <= 0) {
     echo json_encode([
@@ -26,21 +26,31 @@ if ($idTransportista <= 0) {
 
 $sqlEstado = "SELECT EstadoPago FROM Ventas WHERE id = '$idVenta' LIMIT 1";
 $resEstado = $mysqli->query($sqlEstado);
+
+if (!$resEstado) {
+    echo json_encode([
+        "success" => false,
+        "message" => "Error consultando estado de venta.",
+        "mysql_error" => $mysqli->error
+    ]);
+    exit;
+}
+
 $rowEstado = $resEstado->fetch_assoc();
 
 if (!$rowEstado) {
-    echo json_encode(array(
+    echo json_encode([
         "success" => false,
         "message" => "Venta inexistente"
-    ));
+    ]);
     exit;
 }
 
 if ($rowEstado['EstadoPago'] != 'PAGADA') {
-    echo json_encode(array(
+    echo json_encode([
         "success" => false,
         "message" => "La venta debe estar PAGADA para generar la OV."
-    ));
+    ]);
     exit;
 }
 
@@ -66,7 +76,7 @@ if (!$stmt) {
     echo json_encode([
         "success" => false,
         "message" => "Error preparando sqlVenta",
-        "sql_error" => $mysqli->error,
+        "mysql_error" => $mysqli->error,
         "sql" => $sqlVenta
     ]);
     exit;
@@ -74,11 +84,22 @@ if (!$stmt) {
 
 $stmt->bind_param("i", $idVenta);
 
-$stmt->execute();
+if (!$stmt->execute()) {
+    echo json_encode([
+        "success" => false,
+        "message" => "Error ejecutando sqlVenta",
+        "mysql_error" => $stmt->error
+    ]);
+    exit;
+}
+
 $resVenta = $stmt->get_result();
 
 if ($resVenta->num_rows === 0) {
-    echo json_encode(["success" => false, "message" => "Venta no encontrada"]);
+    echo json_encode([
+        "success" => false,
+        "message" => "Venta no encontrada o eliminada."
+    ]);
     exit;
 }
 
@@ -88,7 +109,9 @@ if (!empty($venta['NumeroOrdenVenta'])) {
     echo json_encode([
         "success" => true,
         "message" => "La orden ya fue generada anteriormente",
-        "nro_orden_venta" => $venta['NumeroOrdenVenta']
+        "id_orden_venta" => isset($venta['wepoint_id_orden_venta']) ? $venta['wepoint_id_orden_venta'] : null,
+        "nro_orden_venta" => $venta['NumeroOrdenVenta'],
+        "estado" => isset($venta['wepoint_estado']) ? $venta['wepoint_estado'] : null
     ]);
     exit;
 }
@@ -107,8 +130,28 @@ $sqlDetalle = "
 ";
 
 $stmtDet = $mysqli->prepare($sqlDetalle);
+
+if (!$stmtDet) {
+    echo json_encode([
+        "success" => false,
+        "message" => "Error preparando detalle de venta.",
+        "mysql_error" => $mysqli->error,
+        "sql" => $sqlDetalle
+    ]);
+    exit;
+}
+
 $stmtDet->bind_param("i", $idVenta);
-$stmtDet->execute();
+
+if (!$stmtDet->execute()) {
+    echo json_encode([
+        "success" => false,
+        "message" => "Error ejecutando detalle de venta.",
+        "mysql_error" => $stmtDet->error
+    ]);
+    exit;
+}
+
 $resDetalle = $stmtDet->get_result();
 
 $detalle = [];
@@ -132,7 +175,10 @@ while ($row = $resDetalle->fetch_assoc()) {
 }
 
 if (empty($detalle)) {
-    echo json_encode(["success" => false, "message" => "La venta no tiene productos cargados"]);
+    echo json_encode([
+        "success" => false,
+        "message" => "La venta no tiene productos cargados."
+    ]);
     exit;
 }
 
@@ -141,7 +187,7 @@ $payload = [
     "fecha" => date('Y-m-d'),
     "notas" => isset($venta['Observaciones']) ? $venta['Observaciones'] : '',
     "id_transportista" => (string)$idTransportista,
-    "id_cliente" => "219", //216 (Dinter)
+    "id_cliente" => "219",
     "destinatario" => [
         "nombre" => $venta['RazonSocial'] ?? '',
         "telefono" => $venta['Celular'] ?? '',
@@ -205,7 +251,7 @@ if ($httpCode < 200 || $httpCode >= 300 || empty($data['success'])) {
 $idOrdenWepoint = $data['data']['id_orden_venta'] ?? null;
 $nroOrdenVenta = $data['data']['nro_orden_venta'] ?? null;
 $estado = $data['data']['estado'] ?? null;
-$total = $data['data']['total'] ?? 0;
+$total = isset($data['data']['total']) ? (float)$data['data']['total'] : 0;
 
 if (empty($nroOrdenVenta)) {
     echo json_encode([
@@ -223,20 +269,33 @@ $sqlUpdate = "
     UPDATE Ventas
     SET 
         NumeroOrdenVenta = ?,
-        WepointIdOrdenVenta = ?,
-        WepointEstado = ?,
-        WepointTotal = ?,
-        WepointResponse = ?,
-        WepointFechaCreacion = ?
+        wepoint_id_orden_venta = ?,
+        wepoint_nro_orden_venta = ?,
+        wepoint_estado = ?,
+        wepoint_total = ?,
+        wepoint_response = ?,
+        wepoint_created_at = ?
     WHERE id = ?
     LIMIT 1
 ";
 
 $stmtUpd = $mysqli->prepare($sqlUpdate);
+
+if (!$stmtUpd) {
+    echo json_encode([
+        "success" => false,
+        "message" => "Error preparando UPDATE local de la venta.",
+        "mysql_error" => $mysqli->error,
+        "sql" => $sqlUpdate
+    ]);
+    exit;
+}
+
 $stmtUpd->bind_param(
-    "sisdssi",
+    "sissdssi",
     $nroOrdenVenta,
     $idOrdenWepoint,
+    $nroOrdenVenta,
     $estado,
     $total,
     $responseJson,
