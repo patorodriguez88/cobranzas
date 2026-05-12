@@ -16,7 +16,7 @@ if (isset($_POST['NuevoCliente'])) {
     $Cuit           = trim($_POST['Cuit'] ?? '');
     $Direccion      = trim($_POST['Direccion'] ?? '');
     $Ciudad         = trim($_POST['Ciudad'] ?? '');
-    $Telefono       = trim($_POST['Telefono'] ?? '');
+    $Distribuidora  = trim($_POST['Distribuidora'] ?? '');
     $Celular        = trim($_POST['Celular'] ?? '');
     $Mail           = trim($_POST['Mail'] ?? '');
     $Observaciones  = trim($_POST['Observaciones'] ?? '');
@@ -45,6 +45,10 @@ if (isset($_POST['NuevoCliente'])) {
         exit;
     }
 
+
+    if ($Distribuidora != 'Dinter' && $Distribuidora != 'Misas') {
+        $Distribuidora = 'Dinter';
+    }
     if ($id == 0) {
 
         $stmt = $mysqli->prepare("
@@ -55,11 +59,11 @@ if (isset($_POST['NuevoCliente'])) {
                 Dni,
                 Cuit,
                 Direccion,
-                Ciudad,
-                Telefono,
+                Ciudad,                
                 Celular,
                 Mail,
-                Observaciones
+                Observaciones,
+                Distribuidora
             )
             VALUES
             (?,?,?,?,?,?,?,?,?,?)
@@ -73,10 +77,10 @@ if (isset($_POST['NuevoCliente'])) {
             $Cuit,
             $Direccion,
             $Ciudad,
-            $Telefono,
             $Celular,
             $Mail,
-            $Observaciones
+            $Observaciones,
+            $Distribuidora
         );
     } else {
 
@@ -89,7 +93,7 @@ if (isset($_POST['NuevoCliente'])) {
                 Cuit          = ?,
                 Direccion     = ?,
                 Ciudad        = ?,
-                Telefono      = ?,
+                Distribuidora      = ?,
                 Celular       = ?,
                 Mail          = ?,
                 Observaciones = ?
@@ -104,7 +108,7 @@ if (isset($_POST['NuevoCliente'])) {
             $Cuit,
             $Direccion,
             $Ciudad,
-            $Telefono,
+            $Distribuidora,
             $Celular,
             $Mail,
             $Observaciones,
@@ -165,8 +169,7 @@ if (isset($_POST['Observaciones'])) {
 
 if (isset($_POST['Tabla_clientes'])) {
 
-    $sql = $mysqli->query("SELECT id,Ncliente,RazonSocial,Dni,Celular,Observaciones,Suspendido,Direccion,Ciudad,Recorrido FROM Clientes");
-
+    $sql = $mysqli->query("SELECT id,Ncliente,RazonSocial,Dni,Celular,Observaciones,Suspendido,Direccion,Ciudad,Recorrido,Distribuidora FROM Clientes");
     $rows = array();
 
     while ($row = $sql->fetch_array(MYSQLI_ASSOC)) {

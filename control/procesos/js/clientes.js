@@ -395,13 +395,13 @@ $("#btn_nuevo_cliente").click(function () {
   $("#cliente_razon_social").val("");
   $("#cliente_cuit").val("");
   $("#cliente_direccion").val("");
-  $("#cliente_ciudad").val("");
-  $("#cliente_telefono").val("");
+  $("#cliente_ciudad").val("Córdoba");
+  $("#cliente_distribuidora").val("Dinter");
   $("#cliente_mail").val("");
   $("#cliente_observaciones").val("");
-  $("#modal_cliente").modal("show");
   $("#cliente_dni").val("");
   $("#cliente_celular").val("");
+  $("#modal_cliente").modal("show");
 });
 
 $("#btn_guardar_cliente").click(function () {
@@ -413,7 +413,7 @@ $("#btn_guardar_cliente").click(function () {
     Cuit: $("#cliente_cuit").val(),
     Direccion: $("#cliente_direccion").val(),
     Ciudad: $("#cliente_ciudad").val(),
-    Telefono: $("#cliente_telefono").val(),
+    Distribuidora: $("#cliente_distribuidora").val(),
     Mail: $("#cliente_mail").val(),
     Observaciones: $("#cliente_observaciones").val(),
     Dni: $("#cliente_dni").val(),
