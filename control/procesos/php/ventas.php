@@ -1464,7 +1464,7 @@ VALUES
             exit;
         }
 
-        $token = 'PEGAR_TOKEN_NUEVO_ACA';
+        $token = '1383|1w3olMBz6851a6JdfbA1GH0jdF5QdUnwUtAfehSL0f00e3a5';
 
         $idOrdenVentaWepoint = (int)$venta['wepoint_id_orden_venta'];
 
