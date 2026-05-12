@@ -437,7 +437,10 @@ function abrirAsignarPago(idCobranza) {
       $("#resumen_aplicado").text(formatearMonedaAsignacion(0));
       $("#resumen_diferencia").text(formatearMonedaAsignacion(c.Importe));
 
+      window.idCobranzaActual = idCobranza;
+
       cargarVentasPendientesAsignacion(c.NumeroCliente, c.Importe);
+      cargarVentasAplicadas(idCobranza);
 
       $("#modal_asignar_pago").modal("show");
     },
@@ -580,7 +583,7 @@ $("#btn_confirmar_asignacion_pago").click(function () {
     },
     success: function (r) {
       if (r.success == 1) {
-        $("#modal_asignar_pago").modal("hide");
+        cargarVentasAplicadas($("#asignar_id_cobranza").val());
 
         let tabla = $("#cobranzas_tabla").DataTable();
         tabla.ajax.reload(null, false);
@@ -615,6 +618,7 @@ function formatearFechaAsignacion(fecha) {
   return `${f}<br><small class="text-muted">${h} hs</small>`;
 }
 function cargarVentasAplicadas(idCobranza) {
+  console.log("ID COBRANZA:", idCobranza);
   $.ajax({
     url: "control/procesos/php/conciliaciones.php",
     type: "POST",
@@ -624,6 +628,7 @@ function cargarVentasAplicadas(idCobranza) {
       idCobranza: idCobranza,
     },
     success: function (r) {
+      console.log("VENTAS APLICADAS:", r);
       let html = "";
 
       if (!r.success || !r.data || r.data.length === 0) {
