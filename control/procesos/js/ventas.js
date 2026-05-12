@@ -1228,25 +1228,15 @@ function renderCantidadProductoVenta(data, row, tipo) {
   return `
 
   <input 
-
     type="number" 
-
-    class="form-control form-control-sm text-center cantidad-producto-venta"
-
+    class="form-control form-control-sm text-center cantidad-producto-venta input-cantidad-venta"
     data-idventa="${row.id}"
-
     data-producto="${itemEncontrado.nombre}"
-
     data-actual="${itemEncontrado.cantidad}"
-
     data-stock="${row.StockDisponible || 0}"
-
     value="${itemEncontrado.cantidad}"
-
     min="0"
-
-    style="width:80px; height:28px;"
-
+    style="width:90px; height:28px; font-size:11px; padding-left:2px; padding-right:2px;"
   >
 
 `;
