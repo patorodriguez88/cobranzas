@@ -256,3 +256,13 @@ function normalizarTelefonoWp(tel) {
 
   return t;
 }
+$(document).on("click", "#btn_imprimir_turnos", function () {
+  let fecha = $("#filtro_fecha_turnos").val();
+
+  if (!fecha) {
+    Swal.fire("Atención", "Seleccioná una fecha para imprimir.", "warning");
+    return;
+  }
+
+  window.open("control/procesos/php/imprimir_turnos.php?fecha=" + encodeURIComponent(fecha), "_blank");
+});
