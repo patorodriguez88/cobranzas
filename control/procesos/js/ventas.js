@@ -769,7 +769,7 @@ function abrirEstadoVenta(idVenta) {
       $("#venta_estado_cuenta").html(`
       <h5>${v.RazonSocial || ""}</h5>
 
-      <div class="row mt-3">
+      <div class="row mt-1">
         <div class="col-6">
           <small class="text-muted">Total</small>
           <h5>${formatoMoneda(v.Total)}</h5>
