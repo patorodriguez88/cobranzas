@@ -11,19 +11,21 @@ if ($idVenta <= 0) {
     exit;
 }
 
-/*
-IMPORTANTE:
-Idealmente guardar este token fuera del código:
-- tabla Configuracion
-- archivo .env
-- constante en config privado
-*/
 $token = '1383|1w3olMBz6851a6JdfbA1GH0jdF5QdUnwUtAfehSL0f00e3a5';
 
 $sqlVenta = "
-    SELECT *
-    FROM Ventas
-    WHERE id = ?
+    SELECT 
+        V.*,
+        C.RazonSocial,
+        C.Celular,
+        C.Email,
+        C.Direccion,
+        C.Ciudad,
+        C.CodigoPostal
+    FROM Ventas V
+    LEFT JOIN Clientes C ON C.id = V.idCliente
+    WHERE V.id = ?
+      AND V.Eliminado = 0
     LIMIT 1
 ";
 
@@ -39,27 +41,26 @@ if ($resVenta->num_rows === 0) {
 
 $venta = $resVenta->fetch_assoc();
 
-if (!empty($venta['wepoint_nro_orden_venta'])) {
+if (!empty($venta['NumeroOrdenVenta'])) {
     echo json_encode([
         "success" => true,
         "message" => "La orden ya fue generada anteriormente",
-        "nro_orden_venta" => $venta['wepoint_nro_orden_venta'],
-        "id_orden_venta" => $venta['wepoint_id_orden_venta']
+        "nro_orden_venta" => $venta['NumeroOrdenVenta']
     ]);
     exit;
 }
 
-/*
-Ajustar nombre de tabla/campos según cómo hayas armado el detalle.
-Ejemplo: VentasDetalle
-*/
 $sqlDetalle = "
     SELECT 
-        vd.id_producto_wepoint,
-        vd.cantidad,
-        vd.precio
-    FROM VentasDetalle vd
-    WHERE vd.idVenta = ?
+        VD.idProducto,
+        VD.Cantidad,
+        VD.PrecioUnitario,
+        P.idProductoWepoint,
+        P.Nombre
+    FROM VentasDetalle VD
+    INNER JOIN Productos P ON P.id = VD.idProducto
+    WHERE VD.idVenta = ?
+      AND VD.Eliminado = 0
 ";
 
 $stmtDet = $mysqli->prepare($sqlDetalle);
@@ -70,10 +71,20 @@ $resDetalle = $stmtDet->get_result();
 $detalle = [];
 
 while ($row = $resDetalle->fetch_assoc()) {
+    $idProductoWepoint = (int)($row['idProductoWepoint'] ?? 0);
+
+    if ($idProductoWepoint <= 0) {
+        echo json_encode([
+            "success" => false,
+            "message" => "El producto " . $row['Nombre'] . " no tiene idProductoWepoint configurado."
+        ]);
+        exit;
+    }
+
     $detalle[] = [
-        "id_producto" => (int)$row['id_producto_wepoint'],
-        "cantidad" => (float)$row['cantidad'],
-        "precio" => (float)$row['precio']
+        "id_producto" => $idProductoWepoint,
+        "cantidad" => (float)$row['Cantidad'],
+        "precio" => (float)$row['PrecioUnitario']
     ];
 }
 
@@ -83,21 +94,21 @@ if (empty($detalle)) {
 }
 
 $payload = [
-    "no_referencia" => (string)$idVenta,
+    "no_referencia" => (string)$venta['NumeroVenta'],
     "fecha" => date('Y-m-d'),
     "notas" => isset($venta['Observaciones']) ? $venta['Observaciones'] : '',
     "id_transportista" => "2",
     "id_cliente" => "219",
     "destinatario" => [
-        "nombre" => $venta['Cliente'] ?? $venta['RazonSocial'] ?? '',
-        "telefono" => $venta['Telefono'] ?? '',
+        "nombre" => $venta['RazonSocial'] ?? '',
+        "telefono" => $venta['Celular'] ?? '',
         "email" => $venta['Email'] ?? '',
         "direccion" => $venta['Direccion'] ?? '',
-        "provincia" => $venta['Provincia'] ?? 'Cordoba',
+        "provincia" => "Cordoba",
         "ciudad" => $venta['Ciudad'] ?? 'Cordoba',
         "codigo_postal" => $venta['CodigoPostal'] ?? '5000',
-        "barrio" => $venta['Barrio'] ?? '',
-        "entre_calles" => $venta['EntreCalles'] ?? ''
+        "barrio" => "",
+        "entre_calles" => ""
     ],
     "detalle_orden_venta" => $detalle
 ];
@@ -130,8 +141,7 @@ curl_close($curl);
 if ($error) {
     echo json_encode([
         "success" => false,
-        "message" => "Error cURL",
-        "error" => $error
+        "message" => "Error cURL: " . $error
     ]);
     exit;
 }
@@ -143,7 +153,8 @@ if ($httpCode < 200 || $httpCode >= 300 || empty($data['success'])) {
         "success" => false,
         "message" => "Wepoint rechazó la orden",
         "http_code" => $httpCode,
-        "response" => $data ?: $response
+        "response" => $data ?: $response,
+        "payload" => $payload
     ]);
     exit;
 }
@@ -153,26 +164,36 @@ $nroOrdenVenta = $data['data']['nro_orden_venta'] ?? null;
 $estado = $data['data']['estado'] ?? null;
 $total = $data['data']['total'] ?? 0;
 
-$sqlUpdate = "
-    UPDATE Ventas
-    SET 
-        wepoint_id_orden_venta = ?,
-        wepoint_nro_orden_venta = ?,
-        wepoint_estado = ?,
-        wepoint_total = ?,
-        wepoint_response = ?,
-        wepoint_created_at = ?
-    WHERE id = ?
-";
+if (empty($nroOrdenVenta)) {
+    echo json_encode([
+        "success" => false,
+        "message" => "Wepoint creó la orden pero no devolvió nro_orden_venta.",
+        "response" => $data
+    ]);
+    exit;
+}
 
 $responseJson = json_encode($data, JSON_UNESCAPED_UNICODE);
 $createdAt = date('Y-m-d H:i:s');
 
+$sqlUpdate = "
+    UPDATE Ventas
+    SET 
+        NumeroOrdenVenta = ?,
+        WepointIdOrdenVenta = ?,
+        WepointEstado = ?,
+        WepointTotal = ?,
+        WepointResponse = ?,
+        WepointFechaCreacion = ?
+    WHERE id = ?
+    LIMIT 1
+";
+
 $stmtUpd = $mysqli->prepare($sqlUpdate);
 $stmtUpd->bind_param(
-    "issdssi",
-    $idOrdenWepoint,
+    "sisdssi",
     $nroOrdenVenta,
+    $idOrdenWepoint,
     $estado,
     $total,
     $responseJson,
@@ -180,7 +201,15 @@ $stmtUpd->bind_param(
     $idVenta
 );
 
-$stmtUpd->execute();
+if (!$stmtUpd->execute()) {
+    echo json_encode([
+        "success" => false,
+        "message" => "La OV se generó en Wepoint, pero no se pudo guardar localmente.",
+        "error" => $stmtUpd->error,
+        "nro_orden_venta" => $nroOrdenVenta
+    ]);
+    exit;
+}
 
 echo json_encode([
     "success" => true,

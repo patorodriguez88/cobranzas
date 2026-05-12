@@ -809,7 +809,7 @@ function abrirEstadoVenta(idVenta) {
       $("#btn_offcanvas_orden_venta")
         .off("click")
         .on("click", function () {
-          editarOrdenVenta(v.id, v.NumeroOrdenVenta || "");
+          generarOrdenVentaWepoint(v.id);
         });
 
       $("#btn_offcanvas_turno_retiro")
@@ -1304,7 +1304,7 @@ function generarOrdenVentaWepoint(idVenta) {
     if (!result.isConfirmed) return;
 
     $.ajax({
-      url: "Procesos/php/wepoint_orden_venta.php",
+      url: "control/procesos/php/wepoint_orden_venta.php",
       type: "POST",
       dataType: "json",
       data: {
@@ -1314,10 +1314,18 @@ function generarOrdenVentaWepoint(idVenta) {
         if (res.success) {
           Swal.fire("OV generada", "Número: " + res.nro_orden_venta, "success");
 
-          // Acá podés refrescar el modal o la tabla
-          cargarDetalleVenta(idVenta);
+          abrirEstadoVenta(idVenta);
+
+          if ($.fn.DataTable.isDataTable("#tabla_ventas")) {
+            $("#tabla_ventas").DataTable().ajax.reload(null, false);
+          }
+
+          if ($.fn.DataTable.isDataTable("#tabla_listado_ventas")) {
+            $("#tabla_listado_ventas").DataTable().ajax.reload(null, false);
+          }
         } else {
-          Swal.fire("Error", res.message, "error");
+          Swal.fire("Error", res.message || res.error || "No se pudo generar la OV", "error");
+          console.log(res);
         }
       },
       error: function (xhr) {
