@@ -823,8 +823,8 @@ function abrirEstadoVenta(idVenta) {
 
         htmlDetalleTotal += `
     <tr class="table-light">
-      <td colspan="3" class="text-end fw-bold">Total</td>
-      <td class="text-end fw-bold">${formatoMoneda(totalDetalle)}</td>
+      <td colspan="3" class="text-end fw-bold small">Total</td>
+      <td class="text-end fw-bold small">${formatoMoneda(totalDetalle)}</td>
     </tr>
   `;
       }
