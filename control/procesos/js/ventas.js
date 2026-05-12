@@ -853,8 +853,18 @@ function abrirEstadoVenta(idVenta) {
       } else {
         $("#texto_orden_venta").html(`<span class="text-muted">Sin orden asignada</span>`);
       }
+      if (v.NumeroOrdenVenta && v.NumeroOrdenVenta !== "") {
+        $("#btn_offcanvas_orden_venta")
+          .prop("disabled", true)
 
-      if (v.EstadoPago === "PAGADA") {
+          .removeClass("btn-outline-primary")
+
+          .addClass("btn-outline-secondary")
+
+          .attr("title", "La OV ya fue generada")
+
+          .off("click");
+      } else if (v.EstadoPago === "PAGADA") {
         $("#btn_offcanvas_orden_venta")
           .prop("disabled", false)
           .removeClass("btn-outline-secondary")
