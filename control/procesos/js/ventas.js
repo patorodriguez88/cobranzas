@@ -281,7 +281,7 @@ function agregarFilaProductoVenta() {
     <select class="form-select form-select-sm producto_venta">
       ${opciones}
     </select>
-    <small class="stock_disponible text-muted d-block mt-1"></small>
+    
      </td>
       <td>
         <input type="number" class="form-control form-control-sm cantidad_venta" value="1" min="1">
@@ -309,20 +309,6 @@ $(document).on("change", ".producto_venta", function () {
   fila.find(".precio_venta").val(precio);
   fila.find(".cantidad_venta").attr("max", stock);
 
-  if (stock > 0) {
-    fila
-      .find(".stock_disponible")
-      .removeClass("text-danger text-warning")
-      .addClass("text-muted")
-      .text("Stock disponible: " + stock);
-  } else {
-    fila
-      .find(".stock_disponible")
-      .removeClass("text-muted text-warning")
-      .addClass("text-danger")
-      .text("Sin stock disponible");
-  }
-
   calcularFilaVenta(fila);
 });
 
@@ -334,12 +320,6 @@ $(document).on("keyup change", ".cantidad_venta, .precio_venta", function () {
 
   if (stock > 0 && cantidad > stock) {
     fila.find(".cantidad_venta").val(stock);
-
-    fila
-      .find(".stock_disponible")
-      .removeClass("text-muted text-warning")
-      .addClass("text-danger")
-      .text("No podés vender más de " + stock + " unidades.");
   }
 
   calcularFilaVenta(fila);
