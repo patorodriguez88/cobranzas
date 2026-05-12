@@ -417,19 +417,25 @@
               <div class="offcanvas-body">
                 <div id="venta_estado_cuenta"></div>
 
-                <div class="alert alert-light border mt-3">
-                  <small class="text-muted d-block mb-1">Observaciones</small>
+                <div class="mt-3">
+                  <small class="text-muted d-block mb-2"> Observaciones </small>
 
                   <textarea
                     id="texto_observaciones_venta"
-                    class="form-control form-control-sm"
+                    class="form-control border-light shadow-none"
                     rows="3"
                     placeholder="Sin observaciones."
+                    style="resize: vertical; font-size: 14px; background: #fff"
                   ></textarea>
 
                   <div class="text-end mt-2">
-                    <button type="button" class="btn btn-success btn-sm" id="btn_guardar_observaciones_venta">
-                      <i class="mdi mdi-content-save"></i> Guardar
+                    <button
+                      type="button"
+                      id="btn_guardar_observaciones_venta"
+                      class="btn btn-link text-success p-0"
+                      title="Guardar observaciones"
+                    >
+                      <i class="mdi mdi-content-save mdi-24px"></i>
                     </button>
                   </div>
                 </div>
