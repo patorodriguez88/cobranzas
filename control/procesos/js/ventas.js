@@ -581,12 +581,10 @@ function cargarListadoVentas() {
     dom: "Bfrtip",
     buttons: [
       {
-        extend: "excelHtml5",
         text: '<i class="mdi mdi-file-excel"></i> Descargar Excel',
         className: "btn btn-success btn-sm mb-2",
-        title: "Listado_Ventas",
-        exportOptions: {
-          columns: ":visible:not(:last-child)",
+        action: function () {
+          window.open("control/procesos/php/ventas.php?accion=exportar_ventas_excel", "_blank");
         },
       },
     ],

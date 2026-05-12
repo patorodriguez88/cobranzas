@@ -5,6 +5,87 @@ error_reporting(E_ALL);
 session_start();
 include_once __DIR__ . "/../../../conexion/conexioni.php";
 
+if (isset($_GET['accion']) && $_GET['accion'] === 'exportar_ventas_excel') {
+
+    header("Content-Type: application/vnd.ms-excel; charset=utf-8");
+    header("Content-Disposition: attachment; filename=Listado_Ventas_" . date('Ymd_His') . ".xls");
+    header("Pragma: no-cache");
+    header("Expires: 0");
+
+    echo "\xEF\xBB\xBF";
+
+    $sql = "
+        SELECT 
+            V.id,
+            V.NumeroVenta,
+            DATE_FORMAT(V.Fecha, '%d/%m/%Y') AS Fecha,
+            DATE_FORMAT(V.Fecha, '%H:%i') AS Hora,
+            C.Ncliente,
+            C.RazonSocial,
+            V.Usuario,
+            SUM(CASE WHEN UPPER(VD.ProductoNombre) LIKE '%FIGURITA%' THEN VD.Cantidad ELSE 0 END) AS Figuritas,
+            SUM(CASE WHEN UPPER(VD.ProductoNombre) LIKE '%ALBUM%' THEN VD.Cantidad ELSE 0 END) AS Album,
+            V.Total,
+            V.TotalPagado,
+            V.Saldo,
+            V.EstadoPago
+        FROM Ventas V
+        LEFT JOIN Clientes C ON C.id = V.idCliente
+        LEFT JOIN VentasDetalle VD ON VD.idVenta = V.id AND VD.Eliminado = 0
+        WHERE V.Eliminado = 0
+        GROUP BY V.id
+        ORDER BY V.NumeroVenta DESC
+    ";
+
+    $res = $mysqli->query($sql);
+
+    echo "<table border='1'>";
+    echo "
+        <tr>
+            <th>ID</th>
+            <th>Venta</th>
+            <th>Usuario</th>
+            <th>Fecha</th>
+            <th>Hora</th>
+            <th>NCliente</th>
+            <th>Razón Social</th>
+            <th>Figuritas</th>
+            <th>Álbum</th>
+            <th>Total</th>
+            <th>Pagado</th>
+            <th>Saldo</th>
+            <th>Estado</th>
+        </tr>
+    ";
+
+    while ($row = $res->fetch_assoc()) {
+        echo "<tr>";
+        echo "<td>{$row['id']}</td>";
+        echo "<td>{$row['NumeroVenta']}</td>";
+        echo "<td>{$row['Usuario']}</td>";
+        echo "<td>{$row['Fecha']}</td>";
+        echo "<td>{$row['Hora']}</td>";
+        echo "<td>{$row['Ncliente']}</td>";
+        echo "<td>{$row['RazonSocial']}</td>";
+        echo "<td>{$row['Figuritas']}</td>";
+        echo "<td>{$row['Album']}</td>";
+        echo "<td>{$row['Total']}</td>";
+        echo "<td>{$row['TotalPagado']}</td>";
+        echo "<td>{$row['Saldo']}</td>";
+        echo "<td>{$row['EstadoPago']}</td>";
+        echo "</tr>";
+    }
+
+    echo "</table>";
+    exit;
+}
+
+
+
+
+
+
+
 header('Content-Type: application/json; charset=utf-8');
 date_default_timezone_set('America/Argentina/Cordoba');
 
