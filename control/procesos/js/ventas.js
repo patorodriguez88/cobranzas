@@ -1314,14 +1314,13 @@ function cargarResumenProductosVentas() {
       accion: "resumen_productos_ventas",
     },
     success: function (r) {
-      $("#figus_stock").text(r.FIGURITAS.stock || 0);
-      $("#figus_total").text(r.FIGURITAS.total || 0);
-      $("#figus_pendiente").text(r.FIGURITAS.pendiente || 0);
+      $("#figus_stock").text(parseInt(r.FIGURITAS.stock || 0).toLocaleString("es-AR"));
+      $("#figus_total").text(parseInt(r.FIGURITAS.total || 0).toLocaleString("es-AR"));
+      $("#figus_pendiente").text(parseInt(r.FIGURITAS.pendiente || 0).toLocaleString("es-AR"));
 
-      $("#album_stock").text(r.ALBUM.stock || 0);
-      $("#album_total").text(r.ALBUM.total || 0);
-      $("#album_pendiente").text(r.ALBUM.pendiente || 0);
-
+      $("#album_stock").text(parseInt(r.ALBUM.stock || 0).toLocaleString("es-AR"));
+      $("#album_total").text(parseInt(r.ALBUM.total || 0).toLocaleString("es-AR"));
+      $("#album_pendiente").text(parseInt(r.ALBUM.pendiente || 0).toLocaleString("es-AR"));
       $("#figus_vendedores").html(renderVendedoresResumen(r.FIGURITAS.vendedores));
       $("#album_vendedores").html(renderVendedoresResumen(r.ALBUM.vendedores));
     },
