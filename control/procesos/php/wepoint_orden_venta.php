@@ -14,6 +14,15 @@ if ($idVenta <= 0) {
     echo json_encode(["success" => false, "message" => "ID de venta inválido"]);
     exit;
 }
+$idTransportista = isset($_POST['idTransportista']) ? (int)$_POST['idTransportista'] : 0;
+
+if ($idTransportista <= 0) {
+    echo json_encode([
+        "success" => false,
+        "message" => "Debe seleccionar una forma de entrega."
+    ]);
+    exit;
+}
 
 $sqlEstado = "SELECT EstadoPago FROM Ventas WHERE id = '$idVenta' LIMIT 1";
 $resEstado = $mysqli->query($sqlEstado);
@@ -131,7 +140,7 @@ $payload = [
     "no_referencia" => (string)$venta['NumeroVenta'],
     "fecha" => date('Y-m-d'),
     "notas" => isset($venta['Observaciones']) ? $venta['Observaciones'] : '',
-    "id_transportista" => "2",
+    "id_transportista" => (string)$idTransportista,
     "id_cliente" => "219",
     "destinatario" => [
         "nombre" => $venta['RazonSocial'] ?? '',

@@ -1348,14 +1348,27 @@ function renderVendedoresResumen(vendedores) {
 }
 function generarOrdenVentaWepoint(idVenta) {
   Swal.fire({
-    title: "Generar OV",
-    text: "¿Querés generar la orden de venta en Wepoint?",
+    title: "Forma de entrega",
+    input: "select",
+    inputOptions: {
+      1: "Caddy",
+      2: "Retira cliente",
+      3: "Comisionista",
+    },
+    inputPlaceholder: "Seleccione una forma de entrega",
     icon: "question",
     showCancelButton: true,
-    confirmButtonText: "Sí, generar",
+    confirmButtonText: "Generar OV",
     cancelButtonText: "Cancelar",
+    inputValidator: function (value) {
+      if (!value) {
+        return "Debe seleccionar una forma de entrega.";
+      }
+    },
   }).then((result) => {
     if (!result.isConfirmed) return;
+
+    let idTransportista = result.value;
 
     $.ajax({
       url: "control/procesos/php/wepoint_orden_venta.php",
@@ -1363,6 +1376,7 @@ function generarOrdenVentaWepoint(idVenta) {
       dataType: "json",
       data: {
         idVenta: idVenta,
+        idTransportista: idTransportista,
       },
       success: function (res) {
         if (res.success) {
@@ -1382,91 +1396,44 @@ function generarOrdenVentaWepoint(idVenta) {
 
           if (res.response && res.response.errors && Array.isArray(res.response.errors)) {
             htmlError += `
-
-      <div class="text-start">
-
-        <p><b>${res.response.message || "Wepoint rechazó la orden."}</b></p>
-
-        <table class="table table-sm table-bordered mt-2">
-
-          <thead>
-
-            <tr>
-
-              <th>Producto</th>
-
-              <th>SKU</th>
-
-              <th>Disponible</th>
-
-              <th>Solicitado</th>
-
-            </tr>
-
-          </thead>
-
-          <tbody>
-
-    `;
+              <div class="text-start">
+                <p><b>${res.response.message || "Wepoint rechazó la orden."}</b></p>
+                <table class="table table-sm table-bordered mt-2">
+                  <thead>
+                    <tr>
+                      <th>Producto</th>
+                      <th>SKU</th>
+                      <th>Disponible</th>
+                      <th>Solicitado</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+            `;
 
             res.response.errors.forEach(function (item) {
               htmlError += `
-
-        <tr>
-
-          <td>${item.nombre || "-"}</td>
-
-          <td>${item.sku || "-"}</td>
-
-          <td class="text-end">${item.disponible_para_venta || 0}</td>
-
-          <td class="text-end">${item.cantidadRequerida || 0}</td>
-
-        </tr>
-
-      `;
+                <tr>
+                  <td>${item.nombre || "-"}</td>
+                  <td>${item.sku || "-"}</td>
+                  <td class="text-end">${item.disponible_para_venta || 0}</td>
+                  <td class="text-end">${item.cantidadRequerida || 0}</td>
+                </tr>
+              `;
             });
 
             htmlError += `
-
-          </tbody>
-
-        </table>
-
-        <small class="text-muted">
-
-          La orden no fue generada. Ajustá cantidades o stock en Wepoint.
-
-        </small>
-
-      </div>
-
-    `;
+                  </tbody>
+                </table>
+              </div>
+            `;
           } else {
-            htmlError = `
-
-      <div class="text-start">
-
-        <p>${res.message || res.error || "No se pudo generar la OV."}</p>
-
-        <pre style="font-size:11px;white-space:pre-wrap;max-height:250px;overflow:auto;">
-
-${JSON.stringify(res, null, 2)}
-
-        </pre>
-
-      </div>
-
-    `;
+            htmlError = res.message || res.error || "No se pudo generar la OV.";
           }
 
           Swal.fire({
             icon: "error",
-
             title: "Wepoint rechazó la OV",
-
             html: htmlError,
-
             width: 850,
           });
 
@@ -1474,20 +1441,8 @@ ${JSON.stringify(res, null, 2)}
         }
       },
       error: function (xhr) {
-        console.log("STATUS:", xhr.status);
-        console.log("RESPONSE:", xhr.responseText);
-
-        Swal.fire({
-          icon: "error",
-          title: "Error PHP",
-          html: `
-      <div class="text-start">
-        <b>Status:</b> ${xhr.status}<br>
-        <pre style="font-size:11px;white-space:pre-wrap;max-height:400px;overflow:auto;">${xhr.responseText}</pre>
-      </div>
-    `,
-          width: 900,
-        });
+        console.log(xhr.responseText);
+        Swal.fire("Error", "No se pudo conectar con el servidor", "error");
       },
     });
   });
