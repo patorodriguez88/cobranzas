@@ -701,7 +701,7 @@ function cargarListadoVentas() {
           return html;
         },
       },
-      { data: "Observaciones" },
+      // { data: "Observaciones" },
       {
         data: null,
         orderable: false,
