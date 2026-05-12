@@ -780,12 +780,12 @@ function abrirEstadoVenta(idVenta) {
           <h5>${formatoMoneda(v.TotalPagado)}</h5>
         </div>
 
-        <div class="col-6 mt-2">
+        <div class="col-6 mt-1">
           <small class="text-muted">Saldo</small>
           <h5>${formatoMoneda(v.Saldo)}</h5>
         </div>
 
-        <div class="col-6 mt-2">
+        <div class="col-6 mt-1">
           <small class="text-muted">Estado</small>
           <h5>${badgeEstadoPago(v.EstadoPago)}</h5>
         </div>
