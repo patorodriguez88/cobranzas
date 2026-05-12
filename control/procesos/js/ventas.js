@@ -1314,7 +1314,98 @@ function generarOrdenVentaWepoint(idVenta) {
             $("#tabla_listado_ventas").DataTable().ajax.reload(null, false);
           }
         } else {
-          Swal.fire("Error", res.message || res.error || "No se pudo generar la OV", "error");
+          let htmlError = "";
+
+          if (res.response && res.response.errors && Array.isArray(res.response.errors)) {
+            htmlError += `
+
+      <div class="text-start">
+
+        <p><b>${res.response.message || "Wepoint rechazó la orden."}</b></p>
+
+        <table class="table table-sm table-bordered mt-2">
+
+          <thead>
+
+            <tr>
+
+              <th>Producto</th>
+
+              <th>SKU</th>
+
+              <th>Disponible</th>
+
+              <th>Solicitado</th>
+
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+    `;
+
+            res.response.errors.forEach(function (item) {
+              htmlError += `
+
+        <tr>
+
+          <td>${item.nombre || "-"}</td>
+
+          <td>${item.sku || "-"}</td>
+
+          <td class="text-end">${item.disponible_para_venta || 0}</td>
+
+          <td class="text-end">${item.cantidadRequerida || 0}</td>
+
+        </tr>
+
+      `;
+            });
+
+            htmlError += `
+
+          </tbody>
+
+        </table>
+
+        <small class="text-muted">
+
+          La orden no fue generada. Ajustá cantidades o stock en Wepoint.
+
+        </small>
+
+      </div>
+
+    `;
+          } else {
+            htmlError = `
+
+      <div class="text-start">
+
+        <p>${res.message || res.error || "No se pudo generar la OV."}</p>
+
+        <pre style="font-size:11px;white-space:pre-wrap;max-height:250px;overflow:auto;">
+
+${JSON.stringify(res, null, 2)}
+
+        </pre>
+
+      </div>
+
+    `;
+          }
+
+          Swal.fire({
+            icon: "error",
+
+            title: "Wepoint rechazó la OV",
+
+            html: htmlError,
+
+            width: 850,
+          });
+
           console.log(res);
         }
       },
