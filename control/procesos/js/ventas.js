@@ -1292,3 +1292,38 @@ function renderVendedoresResumen(vendedores) {
 
   return html;
 }
+function generarOrdenVentaWepoint(idVenta) {
+  Swal.fire({
+    title: "Generar OV",
+    text: "¿Querés generar la orden de venta en Wepoint?",
+    icon: "question",
+    showCancelButton: true,
+    confirmButtonText: "Sí, generar",
+    cancelButtonText: "Cancelar",
+  }).then((result) => {
+    if (!result.isConfirmed) return;
+
+    $.ajax({
+      url: "Procesos/php/wepoint_orden_venta.php",
+      type: "POST",
+      dataType: "json",
+      data: {
+        idVenta: idVenta,
+      },
+      success: function (res) {
+        if (res.success) {
+          Swal.fire("OV generada", "Número: " + res.nro_orden_venta, "success");
+
+          // Acá podés refrescar el modal o la tabla
+          cargarDetalleVenta(idVenta);
+        } else {
+          Swal.fire("Error", res.message, "error");
+        }
+      },
+      error: function (xhr) {
+        console.log(xhr.responseText);
+        Swal.fire("Error", "No se pudo conectar con el servidor", "error");
+      },
+    });
+  });
+}
