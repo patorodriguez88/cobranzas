@@ -128,7 +128,7 @@
 
       <!-- CONTENIDO -->
       <div class="content-page">
-        <div class="content-page" style="margin-left: 0">
+        <div class="content">
           <div class="content">
             <div class="container-fluid">
               <div class="row">
@@ -212,6 +212,66 @@
                   </div>
                 </div>
               </div>
+              <div class="row mt-3">
+                <div class="col-md-6">
+                  <div class="card">
+                    <div class="card-header">
+                      <h4 class="header-title mb-0">Ventas por vendedor</h4>
+                    </div>
+                    <div class="card-body">
+                      <canvas id="chart_ventas_vendedor" height="130"></canvas>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="card">
+                    <div class="card-header">
+                      <h4 class="header-title mb-0">Ventas por hora</h4>
+                    </div>
+                    <div class="card-body">
+                      <canvas id="chart_ventas_hora" height="130"></canvas>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row mt-3">
+                <div class="col-md-5">
+                  <div class="card">
+                    <div class="card-header">
+                      <h4 class="header-title mb-0">Ranking vendedores</h4>
+                    </div>
+                    <div class="card-body" id="ranking_vendedores">
+                      <div class="text-muted">Cargando...</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-md-7">
+                  <div class="card">
+                    <div class="card-header">
+                      <h4 class="header-title mb-0">Últimos movimientos de stock</h4>
+                    </div>
+                    <div class="card-body">
+                      <div class="table-responsive">
+                        <table id="tabla_ultimos_movimientos" class="table table-sm table-bordered w-100">
+                          <thead class="table-light">
+                            <tr>
+                              <th>Fecha</th>
+                              <th>Producto</th>
+                              <th>Tipo</th>
+                              <th class="text-end">Cantidad</th>
+                              <th>Usuario</th>
+                            </tr>
+                          </thead>
+                          <tbody></tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               <div class="card mt-3">
                 <div class="card-header">
@@ -268,6 +328,7 @@
     <!-- <script src="saas/assets/js/vendor/select2.min.js"></script> -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="control/procesos/js/dashboard.js"></script>
     <script src="control/procesos/js/totales.js"></script>
     <script src="control/procesos/js/conexion.js"></script>

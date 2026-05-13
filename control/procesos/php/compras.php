@@ -412,29 +412,6 @@ switch ($accion) {
 
                     $sqlMovReversa = "
                     INSERT INTO MovimientosStock
-                    (
-                        idProducto,
-                        Tipo,
-                        idReferencia,
-                        Cantidad,
-                        StockAnterior,
-                        StockNuevo,
-                        Usuario,
-                        Observaciones,
-                        Fecha
-                    )
-                    VALUES
-                    (
-                        '$idProductoViejo',
-                        'REVERSA_INGRESO_COMPRA',
-                        '$idOrdenEditar',
-                        '$cantidadVieja',
-                        '$stockAnterior',
-                        '$stockNuevo',
-                        '$usuario',
-                        '$obsMov',
-                        NOW()
-                    )
                 ";
 
                     if (!$mysqli->query($sqlMovReversa)) {
