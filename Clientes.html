@@ -17,6 +17,38 @@
     <link href="saas/assets/css/icons.min.css" rel="stylesheet" type="text/css" />
     <link href="saas/assets/css/app.min.css" rel="stylesheet" type="text/css" id="app-style" />
   </head>
+  <!-- MODAL ENVIAR ACCESO A CLIENTES -->
+  <div class="modal fade" id="modal_whatsapp_cliente" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">Enviar acceso de pagos</h4>
+
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label"> Mensaje </label>
+
+            <textarea id="texto_whatsapp_cliente" class="form-control" rows="10"></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-danger" data-bs-dismiss="modal">
+            <i class="mdi mdi-close"></i>
+            Cancelar
+          </button>
+
+          <a id="btn_enviar_whatsapp_cliente" target="_blank" class="btn btn-success">
+            <i class="mdi mdi-whatsapp"></i>
+            Enviar WhatsApp
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
   <!-- MODAL DNI -->
   <div class="modal fade" id="modal_dni" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">

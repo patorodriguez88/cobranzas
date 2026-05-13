@@ -238,15 +238,29 @@ $(document).ready(function () {
         render: function (data, type, row) {
           const susp = parseInt(row.Suspendido) === 1;
 
+          let html = "";
+
           if (susp) {
-            return `<i onclick="modificar_status('${row.id}',0)"
-                style="cursor:pointer"
-                class="mdi mdi-18px mdi-close-circle text-danger"></i>`;
+            html += `
+                <i onclick="modificar_status('${row.id}',0)"
+                   style="cursor:pointer"
+                   class="mdi mdi-18px mdi-close-circle text-danger ms-2"></i>
+            `;
+          } else {
+            html += `
+                <i onclick="modificar_status('${row.id}',1)"
+                   style="cursor:pointer"
+                   class="mdi mdi-18px mdi-check-circle text-success ms-2"></i>
+            `;
+
+            html += `
+                <i onclick='abrir_modal_whatsapp(${JSON.stringify(row)})'
+                   style="cursor:pointer"
+                   class="mdi mdi-18px mdi-cellphone-message text-primary ms-2"></i>
+            `;
           }
 
-          return `<i onclick="modificar_status('${row.id}',1)"
-              style="cursor:pointer"
-              class="mdi mdi-18px mdi-check-circle text-success"></i>`;
+          return html;
         },
       },
     ],
@@ -501,3 +515,45 @@ $("#btn_guardar_cliente").click(function () {
     },
   });
 });
+
+function abrir_modal_whatsapp(cliente) {
+  let celular = (cliente.Celular || "").replace(/\D/g, "");
+
+  if (celular === "") {
+    Swal.fire({
+      icon: "warning",
+      title: "Cliente sin celular",
+      text: "El cliente no posee celular cargado.",
+    });
+
+    return;
+  }
+
+  let mensaje = `Estimado cliente,
+
+A los efectos de mejorar nuestro servicio, hemos implementado un acceso para que Ud. pueda cargar automáticamente los pagos realizados en nuestro sistema.
+
+🔗 Acceso:
+https://www.dintersa.com.ar/pagos
+
+Desde allí podrá seguir los pasos para informar el comprobante de pago y dejarlo automáticamente registrado en nuestro sistema.
+
+También puede guardar esta página en su teléfono móvil para futuras transacciones.
+
+🔐 Clave de acceso:
+${cliente.Dni || "-"}
+
+Muchas gracias.
+
+Dinter S.A.`;
+
+  $("#texto_whatsapp_cliente").val(mensaje);
+
+  let textoEncoded = encodeURIComponent(mensaje);
+
+  let whatsappURL = `https://wa.me/54${celular}?text=${textoEncoded}`;
+
+  $("#btn_enviar_whatsapp_cliente").attr("href", whatsappURL);
+
+  $("#modal_whatsapp_cliente").modal("show");
+}
