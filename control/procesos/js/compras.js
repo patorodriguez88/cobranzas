@@ -1,9 +1,11 @@
 let productosCompra = [];
+let tablaOrdenesCompra;
 
 const URL_COMPRAS = "control/procesos/php/compras.php";
 
 $(document).ready(function () {
   cargarProductosCompra();
+  cargarOrdenesCompra();
 
   $("#btn_agregar_producto_compra").click(function () {
     console.log("CLICK AGREGAR PRODUCTO COMPRA");
@@ -137,6 +139,7 @@ function guardarCompra() {
     dataType: "json",
     data: {
       accion: "guardar",
+      id: $("#compra_id").val(),
       Observaciones: $("#compra_observaciones").val(),
       detalle: JSON.stringify(detalle),
     },
@@ -152,6 +155,10 @@ function guardarCompra() {
 
         limpiarCompra();
         cargarProductosCompra();
+
+        if ($.fn.DataTable.isDataTable("#tabla_ordenes_compra")) {
+          $("#tabla_ordenes_compra").DataTable().ajax.reload(null, false);
+        }
       } else {
         Swal.fire("Error", r.error || "No se pudo guardar la orden.", "error");
       }
@@ -167,4 +174,160 @@ function limpiarCompra() {
   $("#compra_observaciones").val("");
   $("#tabla_detalle_compra tbody").empty();
   agregarFilaProductoCompra();
+  $("#compra_id").val(0);
+}
+function cargarOrdenesCompra() {
+  tablaOrdenesCompra = $("#tabla_ordenes_compra").DataTable({
+    destroy: true,
+    pageLength: 25,
+    order: [[0, "desc"]],
+    ajax: {
+      url: URL_COMPRAS,
+      type: "POST",
+      data: { accion: "listar" },
+      dataSrc: "data",
+      error: function (xhr) {
+        console.log("ERROR listar compras:", xhr.responseText);
+      },
+    },
+    columns: [
+      {
+        data: "NumeroOrden",
+        render: function (data) {
+          return `<span class="badge bg-primary">#${data}</span>`;
+        },
+      },
+      {
+        data: "Fecha",
+        render: function (data) {
+          if (!data) return "";
+          let partes = data.split(" ");
+          let fecha = partes[0].split("-").reverse().join("/");
+          let hora = partes[1] ? partes[1].substring(0, 5) : "";
+          return `${fecha}<br><small class="text-muted">${hora} hs</small>`;
+        },
+      },
+      { data: "Usuario" },
+      {
+        data: "Productos",
+        render: function (data) {
+          if (!data) return "";
+          return data
+            .split("||")
+            .map((p) => `<div style="font-size:11px;">${p}</div>`)
+            .join("");
+        },
+      },
+      {
+        data: "TotalItems",
+        className: "text-end",
+        render: function (data) {
+          return parseInt(data || 0).toLocaleString("es-AR");
+        },
+      },
+      { data: "Observaciones" },
+      {
+        data: null,
+        orderable: false,
+        render: function (row) {
+          return `
+            <i class="mdi mdi-pencil mdi-18px text-warning ms-2"
+               style="cursor:pointer"
+               onclick="editarCompra(${row.id})"></i>
+
+            <i class="mdi mdi-delete mdi-18px text-danger ms-2"
+               style="cursor:pointer"
+               onclick="eliminarCompra(${row.id})"></i>
+          `;
+        },
+      },
+    ],
+  });
+}
+
+function editarCompra(idOrden) {
+  $.ajax({
+    url: URL_COMPRAS,
+    type: "POST",
+    dataType: "json",
+    data: {
+      accion: "ver",
+      idOrden: idOrden,
+    },
+    success: function (r) {
+      if (r.success != 1) {
+        Swal.fire("Error", r.error || "No se pudo cargar la orden.", "error");
+        return;
+      }
+
+      $("#compra_id").val(r.orden.id);
+      $("#compra_observaciones").val(r.orden.Observaciones || "");
+      $("#tabla_detalle_compra tbody").empty();
+
+      r.detalle.forEach(function (item) {
+        agregarFilaProductoCompra();
+
+        let fila = $("#tabla_detalle_compra tbody tr").last();
+
+        fila.find(".producto_compra").val(item.idProducto);
+        fila.find(".stock_actual_compra").val(item.StockActual);
+        fila.find(".cantidad_compra").val(item.Cantidad);
+
+        calcularFilaCompra(fila);
+      });
+
+      $("html, body").animate({ scrollTop: 0 }, 300);
+    },
+    error: function (xhr) {
+      console.log(xhr.responseText);
+      Swal.fire("Error", "Error cargando orden.", "error");
+    },
+  });
+}
+
+function eliminarCompra(idOrden) {
+  Swal.fire({
+    title: "¿Anular orden de ingreso?",
+    text: "Esto revertirá el stock ingresado por esta orden.",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Sí, anular",
+    cancelButtonText: "Cancelar",
+    confirmButtonColor: "#fa5c7c",
+  }).then(function (result) {
+    if (!result.isConfirmed) return;
+
+    $.ajax({
+      url: URL_COMPRAS,
+      type: "POST",
+      dataType: "json",
+      data: {
+        accion: "eliminar",
+        idOrden: idOrden,
+      },
+      success: function (r) {
+        if (r.success == 1) {
+          Swal.fire({
+            icon: "success",
+            title: "Orden anulada",
+            timer: 1200,
+            showConfirmButton: false,
+          });
+
+          limpiarCompra();
+          cargarProductosCompra();
+
+          if ($.fn.DataTable.isDataTable("#tabla_ordenes_compra")) {
+            $("#tabla_ordenes_compra").DataTable().ajax.reload(null, false);
+          }
+        } else {
+          Swal.fire("Error", r.error || "No se pudo anular la orden.", "error");
+        }
+      },
+      error: function (xhr) {
+        console.log(xhr.responseText);
+        Swal.fire("Error", "Error anulando orden.", "error");
+      },
+    });
+  });
 }

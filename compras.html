@@ -186,6 +186,7 @@
               </div>
 
               <div class="card-body">
+                <input type="hidden" id="compra_id" value="0" />
                 <div class="mb-3">
                   <label class="form-label">Observaciones</label>
                   <input
@@ -224,6 +225,31 @@
                     <i class="mdi mdi-close"></i> Cancelar
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card mt-3">
+            <div class="card-header">
+              <h4 class="header-title mb-0">Órdenes de Ingreso cargadas</h4>
+            </div>
+
+            <div class="card-body">
+              <div class="table-responsive">
+                <table id="tabla_ordenes_compra" class="table table-striped table-bordered dt-responsive nowrap w-100">
+                  <thead>
+                    <tr>
+                      <th>Orden</th>
+                      <th>Fecha</th>
+                      <th>Usuario</th>
+                      <th>Productos</th>
+                      <th>Total Items</th>
+                      <th>Observaciones</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
               </div>
             </div>
           </div>
