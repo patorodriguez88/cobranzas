@@ -219,7 +219,11 @@ $("#btn_exportar").click(function (e) {
       },
     });
   } else {
-    alert("Seleccione al menos una opcion");
+    Swal.fire({
+      icon: "error",
+      title: "Error",
+      text: "Seleccione al menos una opcion.",
+    });
   }
 });
 $(document).ready(function () {
@@ -421,7 +425,11 @@ function abrirAsignarPago(idCobranza) {
     },
     success: function (r) {
       if (!r.data || !r.data[0]) {
-        alert("No se encontró la cobranza.");
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "No se encontró la cobranza.",
+        });
         return;
       }
 
@@ -446,7 +454,11 @@ function abrirAsignarPago(idCobranza) {
     },
     error: function (xhr) {
       console.log(xhr.responseText);
-      alert("Error al abrir la asignación.");
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Error al abrir la asignación.",
+      });
     },
   });
 }
@@ -615,7 +627,11 @@ $("#btn_confirmar_asignacion_pago").click(function () {
   }
 
   if (aplicaciones.length === 0) {
-    alert("No hay importes aplicados.");
+    Swal.fire({
+      icon: "warning",
+      title: "Sin aplicaciones",
+      text: "No hay importes aplicados.",
+    });
     return;
   }
 
@@ -635,14 +651,28 @@ $("#btn_confirmar_asignacion_pago").click(function () {
         let tabla = $("#cobranzas_tabla").DataTable();
         tabla.ajax.reload(null, false);
 
-        alert("Pago asignado correctamente.");
+        Swal.fire({
+          icon: "success",
+          title: "Pago asignado",
+          text: "El pago fue asignado correctamente.",
+          timer: 1600,
+          showConfirmButton: false,
+        });
       } else {
-        alert(r.error || "No se pudo asignar el pago.");
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: r.error || "No se pudo asignar el pago.",
+        });
       }
     },
     error: function (xhr) {
       console.log(xhr.responseText);
-      alert("Error asignando pago.");
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Error asignando pago.",
+      });
     },
   });
 });
