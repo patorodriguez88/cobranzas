@@ -772,6 +772,16 @@ function desvincularPagoVenta(idAplicacion) {
           });
 
           cargarVentasAplicadas(window.idCobranzaActual);
+
+          let numeroCliente = $("#asignar_numero_cliente").val();
+          let importePago = $("#asignar_importe_pago").val();
+
+          cargarVentasPendientesAsignacion(numeroCliente, importePago);
+          recalcularResumenAsignacion();
+
+          if ($.fn.DataTable.isDataTable("#cobranzas_tabla")) {
+            $("#cobranzas_tabla").DataTable().ajax.reload(null, false);
+          }
         } else {
           Swal.fire("Error", r.error || "No se pudo desvincular.", "error");
         }

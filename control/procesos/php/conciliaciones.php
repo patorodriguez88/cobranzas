@@ -1,15 +1,12 @@
 <?php
-
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 session_start();
-
-include_once __DIR__ . "/../../../conexion/conexioni.php";
+include_once "../../../conexion/conexioni.php";
 
 header('Content-Type: application/json; charset=utf-8');
-
 date_default_timezone_set('America/Argentina/Cordoba');
 
 $accion = isset($_POST['accion']) ? $_POST['accion'] : '';
@@ -18,14 +15,15 @@ switch ($accion) {
 
     case 'ventas_aplicadas':
 
-        $idCobranza = (int)$_POST['idCobranza'];
+        $idCobranza = isset($_POST['idCobranza']) ? (int)$_POST['idCobranza'] : 0;
 
         $sql = "
             SELECT 
-                CV.id,
+                CV.id AS id,
+                CV.idCobranza,
+                CV.idVenta,
                 CV.ImporteAplicado,
-
-                V.id AS idVenta,
+                CV.Fecha AS FechaAplicacion,
                 V.NumeroVenta,
                 V.NumeroOrdenVenta,
                 V.Fecha,
@@ -33,61 +31,81 @@ switch ($accion) {
                 V.TotalPagado,
                 V.Saldo,
                 V.EstadoPago
-
             FROM CobranzasVentas CV
-
-            INNER JOIN Ventas V
-                ON V.id = CV.idVenta
-
+            INNER JOIN Ventas V ON V.id = CV.idVenta
             WHERE CV.idCobranza = '$idCobranza'
-              AND CV.Eliminado = 0
-
+              AND IFNULL(CV.Eliminado,0) = 0
+              AND V.Eliminado = 0
             ORDER BY CV.id DESC
         ";
 
         $res = $mysqli->query($sql);
 
-        $data = array();
+        if (!$res) {
+            echo json_encode([
+                "success" => 0,
+                "error" => $mysqli->error,
+                "data" => []
+            ]);
+            exit;
+        }
+
+        $data = [];
 
         while ($row = $res->fetch_assoc()) {
-
             $data[] = $row;
         }
 
-        echo json_encode(array(
+        echo json_encode([
             "success" => 1,
             "data" => $data
-        ));
-
+        ]);
         break;
+
 
     case 'desvincular_pago_venta':
 
-        $idAplicacion = (int)$_POST['idAplicacion'];
+        $idAplicacion = isset($_POST['idAplicacion']) ? (int)$_POST['idAplicacion'] : 0;
+
+        if ($idAplicacion <= 0) {
+            echo json_encode([
+                "success" => 0,
+                "error" => "Aplicación inválida."
+            ]);
+            exit;
+        }
 
         $mysqli->begin_transaction();
 
         try {
 
-            $sql = "
-                SELECT *
+            $sqlAplicacion = "
+                SELECT 
+                    id,
+                    idCobranza,
+                    idVenta,
+                    ImporteAplicado
                 FROM CobranzasVentas
                 WHERE id = '$idAplicacion'
-                  AND Eliminado = 0
+                  AND IFNULL(Eliminado,0) = 0
                 LIMIT 1
+                FOR UPDATE
             ";
 
-            $res = $mysqli->query($sql);
+            $resAplicacion = $mysqli->query($sqlAplicacion);
 
-            if (!$res || $res->num_rows == 0) {
-
-                throw new Exception("La aplicación no existe.");
+            if (!$resAplicacion) {
+                throw new Exception($mysqli->error);
             }
 
-            $app = $res->fetch_assoc();
+            if ($resAplicacion->num_rows == 0) {
+                throw new Exception("La aplicación no existe o ya fue desvinculada.");
+            }
 
-            $idVenta = (int)$app['idVenta'];
-            $importe = (float)$app['ImporteAplicado'];
+            $aplicacion = $resAplicacion->fetch_assoc();
+
+            $idCobranza = (int)$aplicacion['idCobranza'];
+            $idVenta = (int)$aplicacion['idVenta'];
 
             $sqlEliminar = "
                 UPDATE CobranzasVentas
@@ -97,48 +115,57 @@ switch ($accion) {
             ";
 
             if (!$mysqli->query($sqlEliminar)) {
-
                 throw new Exception($mysqli->error);
             }
 
+            $sqlTotalPagado = "
+                SELECT IFNULL(SUM(ImporteAplicado),0) AS TotalPagado
+                FROM CobranzasVentas
+                WHERE idVenta = '$idVenta'
+                  AND IFNULL(Eliminado,0) = 0
+            ";
+
+            $resTotalPagado = $mysqli->query($sqlTotalPagado);
+
+            if (!$resTotalPagado) {
+                throw new Exception($mysqli->error);
+            }
+
+            $rowPagado = $resTotalPagado->fetch_assoc();
+            $totalPagado = (float)$rowPagado['TotalPagado'];
+
             $sqlVenta = "
-                SELECT Total, TotalPagado
+                SELECT Total
                 FROM Ventas
                 WHERE id = '$idVenta'
                 LIMIT 1
+                FOR UPDATE
             ";
 
             $resVenta = $mysqli->query($sqlVenta);
 
             if (!$resVenta || $resVenta->num_rows == 0) {
-
-                throw new Exception("La venta vinculada no existe.");
+                throw new Exception("Venta inexistente.");
             }
 
             $venta = $resVenta->fetch_assoc();
 
-            $nuevoPagado = (float)$venta['TotalPagado'] - $importe;
+            $totalVenta = (float)$venta['Total'];
+            $saldo = $totalVenta - $totalPagado;
 
-            if ($nuevoPagado < 0) {
-                $nuevoPagado = 0;
-            }
-
-            $saldo = (float)$venta['Total'] - $nuevoPagado;
-
-            $estado = 'PENDIENTE';
-
-            if ($saldo <= 0) {
-
-                $estado = 'PAGADA';
-            } elseif ($nuevoPagado > 0) {
-
-                $estado = 'PARCIAL';
+            if ($saldo <= 0.01) {
+                $saldo = 0;
+                $estado = "PAGADA";
+            } elseif ($totalPagado > 0) {
+                $estado = "PARCIAL";
+            } else {
+                $estado = "PENDIENTE";
             }
 
             $sqlUpdateVenta = "
                 UPDATE Ventas
                 SET 
-                    TotalPagado = '$nuevoPagado',
+                    TotalPagado = '$totalPagado',
                     Saldo = '$saldo',
                     EstadoPago = '$estado'
                 WHERE id = '$idVenta'
@@ -146,33 +173,33 @@ switch ($accion) {
             ";
 
             if (!$mysqli->query($sqlUpdateVenta)) {
-
                 throw new Exception($mysqli->error);
             }
 
             $mysqli->commit();
 
-            echo json_encode(array(
-                "success" => 1
-            ));
+            echo json_encode([
+                "success" => 1,
+                "idCobranza" => $idCobranza,
+                "idVenta" => $idVenta
+            ]);
         } catch (Exception $e) {
 
             $mysqli->rollback();
 
-            echo json_encode(array(
+            echo json_encode([
                 "success" => 0,
                 "error" => $e->getMessage()
-            ));
+            ]);
         }
 
         break;
 
-    default:
 
-        echo json_encode(array(
+    default:
+        echo json_encode([
             "success" => 0,
             "error" => "Acción inválida."
-        ));
-
+        ]);
         break;
 }
