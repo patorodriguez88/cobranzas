@@ -440,23 +440,48 @@ $("#centermodal").on("show.bs.modal", function () {
     //   });
   });
 
-  $("#img_deposito").attr("src", "#");
-
   let id = $("#id_cobranza").val();
+  cargarImagenDeposito(id);
 
-  let img = `images/depositos/${id}.jpg`;
+  function cargarImagenDeposito(id) {
+    $("#img_deposito").attr("src", "#");
 
-  let noimg = "images/NoImageAvailable.png";
+    const noimg = "images/NoImageAvailable.png";
 
-  var request = new XMLHttpRequest();
-  request.open("GET", img, true);
-  request.send();
-  request.onload = function () {
-    let status = request.status;
-    if (status == 200) {
-      $("#img_deposito").attr("src", img);
-    } else {
-      $("#img_deposito").attr("src", noimg);
+    const posiblesImagenes = [
+      `images/depositos/${id}.jpg`,
+      `images/depositos/${id}.jpeg`,
+      `images/depositos/${id}.JPG`,
+      `images/depositos/${id}.JPEG`,
+      `images/depositos/${id}.png`,
+      `images/depositos/${id}.PNG`,
+    ];
+
+    let index = 0;
+
+    function probarSiguiente() {
+      if (index >= posiblesImagenes.length) {
+        $("#img_deposito").attr("src", noimg);
+        return;
+      }
+
+      const img = posiblesImagenes[index];
+      index++;
+
+      const request = new XMLHttpRequest();
+      request.open("HEAD", img, true);
+      request.onload = function () {
+        if (request.status === 200) {
+          $("#img_deposito").attr("src", img + "?v=" + Date.now());
+        } else {
+          probarSiguiente();
+        }
+      };
+
+      request.onerror = probarSiguiente;
+      request.send();
     }
-  };
+
+    probarSiguiente();
+  }
 });
