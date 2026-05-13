@@ -79,48 +79,80 @@ switch ($accion) {
             }
 
             $clienteNorm = normalizarTexto($clienteExcel);
-            $like = "%" . $mysqli->real_escape_string($clienteExcel) . "%";
+
+            $palabras = explode(' ', $clienteNorm);
+
+            $where = array();
+
+            foreach ($palabras as $p) {
+
+                $p = trim($p);
+
+                if (strlen($p) >= 3) {
+
+                    $p = $mysqli->real_escape_string($p);
+
+                    $where[] = "
+                    UPPER(
+                        REPLACE(
+                            REPLACE(
+                                REPLACE(RazonSocial,'.',''),
+                            ',',''),
+                        '-','')
+                    ) LIKE '%$p%'
+                ";
+                }
+            }
+
+            if (count($where) == 0) {
+
+                $like = $mysqli->real_escape_string($clienteNorm);
+
+                $where[] = "RazonSocial LIKE '%$like%'";
+            }
 
             $sql = "
-                SELECT 
-                    id,
-                    Ncliente,
-                    RazonSocial,
-                    Dni,
-                    Celular,
-                    Suspendido
-                FROM Clientes
-                WHERE Suspendido = 0
-                  AND (
-                        RazonSocial LIKE ?
-                        OR Ncliente LIKE ?
-                  )
-                ORDER BY RazonSocial ASC
-                LIMIT 10
-            ";
+            SELECT
+                id,
+                Ncliente,
+                RazonSocial,
+                Dni,
+                Celular,
+                Suspendido
+            FROM Clientes
+            WHERE Suspendido = 0
+              AND (
+                    " . implode(" OR ", $where) . "
+              )
+            ORDER BY RazonSocial ASC
+            LIMIT 20
+        ";
 
-            $stmt = $mysqli->prepare($sql);
-            $stmt->bind_param("ss", $like, $like);
-            $stmt->execute();
-            $res = $stmt->get_result();
+            $res = $mysqli->query($sql);
 
             $coincidencias = array();
             $idCliente = 0;
             $estado = "SIN_COINCIDENCIA";
 
             while ($c = $res->fetch_assoc()) {
+
                 $coincidencias[] = $c;
 
-                if (normalizarTexto($c['RazonSocial']) == $clienteNorm) {
+                $razonNorm = normalizarTexto($c['RazonSocial']);
+
+                if ($razonNorm == $clienteNorm) {
+
                     $idCliente = (int)$c['id'];
                     $estado = "OK";
                 }
             }
 
             if ($idCliente == 0 && count($coincidencias) == 1) {
+
                 $idCliente = (int)$coincidencias[0]['id'];
                 $estado = "OK";
             } elseif ($idCliente == 0 && count($coincidencias) > 1) {
+
                 $estado = "DUDOSO";
             }
 
