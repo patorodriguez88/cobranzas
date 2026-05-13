@@ -522,11 +522,43 @@ function cargarVentasPendientesAsignacion(numeroCliente, importePago) {
 }
 
 $(document).on("keyup change", ".importe_aplicar_pago", function () {
-  let valor = parseFloat($(this).val() || 0);
-  let saldo = parseFloat($(this).data("saldo") || 0);
+  let input = $(this);
+
+  let valor = parseFloat(input.val() || 0);
+  let saldo = parseFloat(input.data("saldo") || 0);
+  let pago = parseFloat($("#asignar_importe_pago").val() || 0);
+
+  if (valor < 0) {
+    valor = 0;
+    input.val("0.00");
+  }
 
   if (valor > saldo) {
-    $(this).val(saldo.toFixed(2));
+    valor = saldo;
+    input.val(saldo.toFixed(2));
+  }
+
+  let totalOtros = 0;
+
+  $(".importe_aplicar_pago")
+    .not(input)
+    .each(function () {
+      totalOtros += parseFloat($(this).val() || 0);
+    });
+
+  let disponible = pago - totalOtros;
+
+  if (valor > disponible) {
+    valor = disponible > 0 ? disponible : 0;
+    input.val(valor.toFixed(2));
+
+    Swal.fire({
+      icon: "warning",
+      title: "Importe excedido",
+      text: "No podés aplicar más que el importe disponible del pago.",
+      timer: 1600,
+      showConfirmButton: false,
+    });
   }
 
   recalcularResumenAsignacion();
@@ -566,6 +598,21 @@ function obtenerAplicacionesAsignacion() {
 
 $("#btn_confirmar_asignacion_pago").click(function () {
   let aplicaciones = obtenerAplicacionesAsignacion();
+  let pago = parseFloat($("#asignar_importe_pago").val() || 0);
+  let aplicado = 0;
+
+  aplicaciones.forEach(function (a) {
+    aplicado += parseFloat(a.ImporteAplicado || 0);
+  });
+
+  if (aplicado > pago) {
+    Swal.fire({
+      icon: "warning",
+      title: "Importe excedido",
+      text: "El total aplicado no puede superar el importe del pago.",
+    });
+    return;
+  }
 
   if (aplicaciones.length === 0) {
     alert("No hay importes aplicados.");
