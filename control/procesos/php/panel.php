@@ -214,6 +214,7 @@ if (isset($_POST['VentasPendientesCliente'])) {
       AND V.Eliminado = 0
       AND V.EstadoPago <> 'PAGADA'
       AND V.Saldo > 0
+      AND V.EstadoPago != 'PAGADA'
     ORDER BY V.NumeroVenta DESC
 ";
 

@@ -646,10 +646,17 @@ $("#btn_confirmar_asignacion_pago").click(function () {
     },
     success: function (r) {
       if (r.success == 1) {
-        cargarVentasAplicadas($("#asignar_id_cobranza").val());
+        let idCobranza = $("#asignar_id_cobranza").val();
+        let numeroCliente = $("#asignar_numero_cliente").val();
+        let importePago = $("#asignar_importe_pago").val();
 
-        let tabla = $("#cobranzas_tabla").DataTable();
-        tabla.ajax.reload(null, false);
+        cargarVentasAplicadas(idCobranza);
+        cargarVentasPendientesAsignacion(numeroCliente, importePago);
+        recalcularResumenAsignacion();
+
+        if ($.fn.DataTable.isDataTable("#cobranzas_tabla")) {
+          $("#cobranzas_tabla").DataTable().ajax.reload(null, false);
+        }
 
         Swal.fire({
           icon: "success",
