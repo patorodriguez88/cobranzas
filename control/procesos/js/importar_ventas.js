@@ -45,19 +45,35 @@ function validarImportacionVentas(datos) {
       accion: "validar",
       datos: JSON.stringify(datos),
     },
+
     success: function (r) {
+      console.log("VALIDACION:", r);
+
       if (!r.success) {
         Swal.fire("Error", r.error || "No se pudo validar.", "error");
         return;
       }
 
       ventasImportacion = r.data || [];
+
       renderPreviewImportacionVentas();
 
-      $("#btn_confirmar_importacion_ventas").prop("disabled", ventasImportacion.length === 0);
+      let errores = ventasImportacion.filter((x) => x.estado !== "OK");
+
+      $("#btn_confirmar_importacion_ventas").prop("disabled", errores.length > 0 || ventasImportacion.length === 0);
+
+      if (errores.length > 0) {
+        Swal.fire({
+          icon: "warning",
+          title: "Clientes no encontrados",
+          text: "Hay registros sin coincidencia. Revisalos antes de importar.",
+        });
+      }
     },
+
     error: function (xhr) {
       console.log(xhr.responseText);
+
       Swal.fire("Error", "Error validando Excel.", "error");
     },
   });
@@ -67,39 +83,53 @@ function renderPreviewImportacionVentas() {
   let html = "";
 
   if (!ventasImportacion.length) {
-    html = `<tr><td colspan="6" class="text-center text-muted">Sin datos.</td></tr>`;
+    html = `
+      <tr>
+        <td colspan="6" class="text-center text-muted">
+          Sin datos.
+        </td>
+      </tr>
+    `;
   }
 
   ventasImportacion.forEach((row, i) => {
-    let opciones = `<option value="">Seleccionar cliente</option>`;
-
-    row.coincidencias.forEach((c) => {
-      const selected = parseInt(row.idCliente || 0) === parseInt(c.id) ? "selected" : "";
-      opciones += `<option value="${c.id}" ${selected}>[${c.Ncliente || ""}] ${c.RazonSocial}</option>`;
-    });
-
-    let estadoHtml = "";
+    let badge = "";
 
     if (row.estado === "OK") {
-      estadoHtml = `<span class="badge bg-success">OK</span>`;
-    } else if (row.estado === "DUDOSO") {
-      estadoHtml = `<span class="badge bg-warning">Revisar</span>`;
+      badge = `<span class="badge bg-success">OK</span>`;
     } else {
-      estadoHtml = `<span class="badge bg-danger">Sin coincidencia</span>`;
+      badge = `<span class="badge bg-danger">No encontrado</span>`;
     }
 
     html += `
       <tr>
+
         <td>${i + 1}</td>
-        <td>${escapeHtml(row.Cliente)}</td>
+
         <td>
-          <select class="form-select form-select-sm cliente_importacion" data-index="${i}">
-            ${opciones}
-          </select>
+          <b>${row.Ncliente}</b>
         </td>
-        <td class="text-end">${formatoNumero(row.Figuritas)}</td>
-        <td class="text-end">${formatoNumero(row.Album)}</td>
-        <td>${estadoHtml}</td>
+
+        <td>
+          ${
+            row.RazonSocial
+              ? `[${row.Ncliente}] ${row.RazonSocial}`
+              : '<span class="text-danger">Cliente inexistente</span>'
+          }
+        </td>
+
+        <td class="text-end">
+          ${formatoNumero(row.Figuritas)}
+        </td>
+
+        <td class="text-end">
+          ${formatoNumero(row.Album)}
+        </td>
+
+        <td>
+          ${badge}
+        </td>
+
       </tr>
     `;
   });

@@ -56,13 +56,16 @@ switch ($accion) {
     case 'validar':
 
         $datosJson = isset($_POST['datos']) ? $_POST['datos'] : '[]';
+
         $datos = json_decode($datosJson, true);
 
         if (!is_array($datos)) {
+
             echo json_encode(array(
                 "success" => 0,
                 "error" => "Datos inválidos."
             ));
+
             exit;
         }
 
@@ -70,99 +73,52 @@ switch ($accion) {
 
         foreach ($datos as $row) {
 
-            $clienteExcel = isset($row['Cliente']) ? trim($row['Cliente']) : '';
-            $figuritas = isset($row['Figuritas']) ? (int)$row['Figuritas'] : 0;
-            $album = isset($row['Album']) ? (int)$row['Album'] : 0;
+            $ncliente = isset($row['Ncliente'])
+                ? trim($row['Ncliente'])
+                : '';
 
-            if ($clienteExcel == '') {
+            $figuritas = isset($row['Figuritas'])
+                ? (int)$row['Figuritas']
+                : 0;
+
+            $album = isset($row['Album'])
+                ? (int)$row['Album']
+                : 0;
+
+            if ($ncliente == '') {
                 continue;
             }
 
-            $clienteNorm = normalizarTexto($clienteExcel);
-
-            $palabras = explode(' ', $clienteNorm);
-
-            $where = array();
-
-            foreach ($palabras as $p) {
-
-                $p = trim($p);
-
-                if (strlen($p) >= 3) {
-
-                    $p = $mysqli->real_escape_string($p);
-
-                    $where[] = "
-                    UPPER(
-                        REPLACE(
-                            REPLACE(
-                                REPLACE(RazonSocial,'.',''),
-                            ',',''),
-                        '-','')
-                    ) LIKE '%$p%'
-                ";
-                }
-            }
-
-            if (count($where) == 0) {
-
-                $like = $mysqli->real_escape_string($clienteNorm);
-
-                $where[] = "RazonSocial LIKE '%$like%'";
-            }
+            $nclienteEsc = $mysqli->real_escape_string($ncliente);
 
             $sql = "
             SELECT
                 id,
                 Ncliente,
                 RazonSocial,
-                Dni,
-                Celular,
                 Suspendido
             FROM Clientes
             WHERE Suspendido = 0
-              AND (
-                    " . implode(" OR ", $where) . "
-              )
-            ORDER BY RazonSocial ASC
-            LIMIT 20
+              AND Ncliente = '$nclienteEsc'
+            LIMIT 1
         ";
 
             $res = $mysqli->query($sql);
 
-            $coincidencias = array();
-            $idCliente = 0;
-            $estado = "SIN_COINCIDENCIA";
+            $cliente = null;
 
-            while ($c = $res->fetch_assoc()) {
+            if ($res && $res->num_rows > 0) {
 
-                $coincidencias[] = $c;
-
-                $razonNorm = normalizarTexto($c['RazonSocial']);
-
-                if ($razonNorm == $clienteNorm) {
-
-                    $idCliente = (int)$c['id'];
-                    $estado = "OK";
-                }
-            }
-
-            if ($idCliente == 0 && count($coincidencias) == 1) {
-
-                $idCliente = (int)$coincidencias[0]['id'];
-                $estado = "OK";
-            } elseif ($idCliente == 0 && count($coincidencias) > 1) {
-
-                $estado = "DUDOSO";
+                $cliente = $res->fetch_assoc();
             }
 
             $salida[] = array(
-                "Cliente" => $clienteExcel,
+                "Ncliente" => $ncliente,
+                "RazonSocial" => $cliente ? $cliente['RazonSocial'] : '',
+                "idCliente" => $cliente ? (int)$cliente['id'] : 0,
                 "Figuritas" => $figuritas,
                 "Album" => $album,
-                "idCliente" => $idCliente,
-                "estado" => $estado,
-                "coincidencias" => $coincidencias
+                "estado" => $cliente ? 'OK' : 'ERROR'
             );
         }
 
