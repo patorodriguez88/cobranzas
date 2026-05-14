@@ -600,6 +600,19 @@ function cargarListadoVentas() {
     },
     pageLength: 25,
     order: [[0, "desc"]],
+    autoWidth: false,
+    columnDefs: [
+      { width: "80px", targets: 0 },
+      { width: "85px", targets: 1 },
+      { width: "260px", targets: 2 },
+      { width: "80px", targets: 3 },
+      { width: "70px", targets: 4 },
+      { width: "110px", targets: 5 },
+      { width: "100px", targets: 6 },
+      { width: "110px", targets: 7 },
+      { width: "90px", targets: 8 },
+      { width: "80px", targets: 9 },
+    ],
     columns: [
       {
         data: "NumeroVenta",
@@ -623,7 +636,12 @@ function cargarListadoVentas() {
           return `<span style="display:none;">${data}</span>${data.split(" ")[0].split("-").reverse().join("/")}`;
         },
       },
-      { data: "Cliente" },
+      {
+        data: "Cliente",
+        render: function (data) {
+          return `<div class="col-cliente" title="${data || ""}">${data || ""}</div>`;
+        },
+      },
       {
         data: "Productos",
         render: function (data, type, row) {
@@ -703,16 +721,16 @@ function cargarListadoVentas() {
           return html;
         },
       },
-      // { data: "Observaciones" },
       {
         data: null,
         orderable: false,
+        className: "col-acciones",
         render: function (data) {
           return `
-            <i class="mdi mdi-eye mdi-18px text-info ms-2" style="cursor:pointer" onclick="abrirEstadoVenta(${data.id})"></i>
-            <i class="mdi mdi-cash-plus mdi-18px text-warning ms-2" style="cursor:pointer" title="Cargar ajuste de pago" onclick="abrirModalAjustePago(${data.id})"></i>
-            <i class="mdi mdi-delete mdi-18px text-danger ms-2" style="cursor:pointer" onclick="eliminarVenta(${data.id})"></i>
-          `;
+      <i class="mdi mdi-eye mdi-18px text-info me-1" style="cursor:pointer" onclick="abrirEstadoVenta(${data.id})"></i>
+      <i class="mdi mdi-cash-plus mdi-18px text-warning me-1" style="cursor:pointer" title="Cargar ajuste de pago" onclick="abrirModalAjustePago(${data.id})"></i>
+      <i class="mdi mdi-delete mdi-18px text-danger" style="cursor:pointer" onclick="eliminarVenta(${data.id})"></i>
+    `;
         },
       },
     ],

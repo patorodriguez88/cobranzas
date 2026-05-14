@@ -17,7 +17,37 @@
     <!-- <link href="saas/assets/css/vendor/select2.min.css" rel="stylesheet" type="text/css" /> -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
   </head>
+  <style>
+    #tabla_listado_ventas {
+      font-size: 11px;
+    }
 
+    #tabla_listado_ventas th,
+    #tabla_listado_ventas td {
+      padding: 6px 8px;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+
+    #tabla_listado_ventas input.cantidad-producto-venta {
+      width: 65px !important;
+      height: 26px !important;
+      font-size: 11px !important;
+      padding: 2px !important;
+    }
+
+    #tabla_listado_ventas .col-cliente {
+      max-width: 250px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    #tabla_listado_ventas .col-acciones {
+      width: 80px;
+      text-align: center;
+    }
+  </style>
   <body
     class="loading"
     data-layout-color="light"
