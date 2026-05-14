@@ -645,7 +645,6 @@ function cargarListadoVentas() {
 
         render: $.fn.dataTable.render.number(",", ".", 2, "$ "),
       },
-
       {
         data: "Saldo",
         render: function (data, type, row) {
