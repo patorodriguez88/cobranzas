@@ -727,10 +727,20 @@ function cargarListadoVentas() {
         className: "col-acciones",
         render: function (data) {
           return `
-      <i class="mdi mdi-eye mdi-18px text-info me-1" style="cursor:pointer" onclick="abrirEstadoVenta(${data.id})"></i>
-      <i class="mdi mdi-cash-plus mdi-18px text-warning me-1" style="cursor:pointer" title="Cargar ajuste de pago" onclick="abrirModalAjustePago(${data.id})"></i>
-      <i class="mdi mdi-delete mdi-18px text-danger" style="cursor:pointer" onclick="eliminarVenta(${data.id})"></i>
-    `;
+          <i class="mdi mdi-eye mdi-18px text-info ms-2" style="cursor:pointer" onclick="abrirEstadoVenta(${data.id})"></i>
+
+          <i class="mdi mdi-bank-plus mdi-18px text-success ms-2"
+            style="cursor:pointer"
+            title="Cargar depósito"
+            onclick="abrirModalDepositoVenta(${data.id})"></i>
+
+          <i class="mdi mdi-cash-plus mdi-18px text-warning ms-2"
+            style="cursor:pointer"
+            title="Cargar ajuste de pago"
+            onclick="abrirModalAjustePago(${data.id})"></i>
+
+          <i class="mdi mdi-delete mdi-18px text-danger ms-2" style="cursor:pointer" onclick="eliminarVenta(${data.id})"></i>
+        `;
         },
       },
     ],
@@ -1609,5 +1619,115 @@ function guardarAjustePago() {
     error: function () {
       alerta("Error", "Error de conexión al guardar el ajuste.", "error");
     },
+  });
+}
+function abrirModalDepositoVenta(idVenta) {
+  $.ajax({
+    url: URL_VENTAS,
+    type: "POST",
+    dataType: "json",
+    data: {
+      accion: "datos_venta_deposito",
+      idVenta: idVenta,
+    },
+    success: function (r) {
+      if (!r.success) {
+        alerta("Error", r.error || "No se pudo cargar la venta.", "error");
+        return;
+      }
+
+      let v = r.venta;
+
+      $("#deposito_idVenta").val(v.id);
+      $("#deposito_idCliente").val(v.idCliente);
+      $("#deposito_ncliente").val(v.Ncliente || "");
+      $("#deposito_cliente").val(v.RazonSocial || "");
+
+      let hoy = new Date().toISOString().slice(0, 10);
+
+      $("#deposito_fecha").val(hoy);
+      $("#deposito_tipo_operacion").val("");
+      $("#deposito_banco").val("");
+      $("#deposito_operacion").val("");
+      $("#deposito_importe").val(v.Saldo || "");
+      $("#deposito_observaciones").val("");
+
+      $("#modalDepositoVenta").modal("show");
+    },
+    error: function (xhr) {
+      console.log(xhr.responseText);
+      alerta("Error", "No se pudo abrir el depósito.", "error");
+    },
+  });
+}
+
+function guardarDepositoVenta() {
+  let idVenta = $("#deposito_idVenta").val();
+  let fecha = $("#deposito_fecha").val();
+  let tipoOperacion = $("#deposito_tipo_operacion").val();
+  let banco = $("#deposito_banco").val();
+  let operacion = $("#deposito_operacion").val().trim();
+  let importe = parseFloat($("#deposito_importe").val()) || 0;
+  let observaciones = $("#deposito_observaciones").val().trim();
+
+  if (!fecha || !tipoOperacion || !banco || !operacion || importe <= 0) {
+    alerta("Atención", "Completá fecha, tipo, banco, operación e importe.", "warning");
+    return;
+  }
+
+  Swal.fire({
+    icon: "question",
+    title: "Confirmar depósito",
+    html: `
+      <div class="text-start">
+        <b>Banco:</b> ${banco}<br>
+        <b>Operación:</b> ${operacion}<br>
+        <b>Importe:</b> ${formatoMoneda(importe)}
+      </div>
+    `,
+    showCancelButton: true,
+    confirmButtonText: "Confirmar",
+    cancelButtonText: "Cancelar",
+  }).then((result) => {
+    if (!result.isConfirmed) return;
+
+    $.ajax({
+      url: URL_VENTAS,
+      type: "POST",
+      dataType: "json",
+      data: {
+        accion: "guardar_deposito_venta",
+        idVenta: idVenta,
+        fecha: fecha,
+        tipoOperacion: tipoOperacion,
+        banco: banco,
+        operacion: operacion,
+        importe: importe,
+        observaciones: observaciones,
+      },
+      success: function (r) {
+        if (r.success) {
+          $("#modalDepositoVenta").modal("hide");
+
+          toast("Depósito cargado correctamente", "success");
+
+          if ($.fn.DataTable.isDataTable("#tabla_ventas")) {
+            $("#tabla_ventas").DataTable().ajax.reload(null, false);
+          }
+
+          if ($.fn.DataTable.isDataTable("#tabla_listado_ventas")) {
+            $("#tabla_listado_ventas").DataTable().ajax.reload(null, false);
+          }
+
+          cargarResumenVentas();
+        } else {
+          alerta("Error", r.error || "No se pudo guardar el depósito.", "error");
+        }
+      },
+      error: function (xhr) {
+        console.log(xhr.responseText);
+        alerta("Error", "Error guardando depósito.", "error");
+      },
+    });
   });
 }

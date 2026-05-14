@@ -605,6 +605,7 @@
               </div>
             </div>
           </div>
+
           <div class="modal fade" id="modalAjustePago" tabindex="-1">
             <div class="modal-dialog">
               <div class="modal-content">
@@ -643,6 +644,85 @@
                   </button>
                   <button class="btn btn-danger" data-dismiss="modal">
                     <i class="mdi mdi-close mdi-18px"></i> Cancelar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal fade" id="modalDepositoVenta" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+              <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                  <h5 class="modal-title"><i class="mdi mdi-bank-plus"></i> Cargar depósito</h5>
+                  <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                  <input type="hidden" id="deposito_idVenta" />
+                  <input type="hidden" id="deposito_idCliente" />
+
+                  <div class="row">
+                    <div class="col-md-3 mb-2">
+                      <label>N° Cliente</label>
+                      <input type="text" id="deposito_ncliente" class="form-control" readonly />
+                    </div>
+
+                    <div class="col-md-9 mb-2">
+                      <label>Cliente</label>
+                      <input type="text" id="deposito_cliente" class="form-control" readonly />
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <div class="col-md-4 mb-2">
+                      <label>Fecha depósito</label>
+                      <input type="date" id="deposito_fecha" class="form-control" />
+                    </div>
+
+                    <div class="col-md-4 mb-2">
+                      <label>Tipo operación</label>
+                      <select id="deposito_tipo_operacion" class="form-control">
+                        <option value="">Seleccionar</option>
+                        <option value="deposito">Depósito Bancario</option>
+                        <option value="transferencia">Transferencia</option>
+                      </select>
+                    </div>
+
+                    <div class="col-md-4 mb-2">
+                      <label>Banco destino</label>
+                      <select id="deposito_banco" class="form-control">
+                        <option value="">Seleccionar</option>
+                        <option value="Banco Macro">Banco Macro</option>
+                        <option value="Banco Córdoba">Banco Córdoba</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <div class="col-md-6 mb-2">
+                      <label>Número de operación</label>
+                      <input type="text" id="deposito_operacion" class="form-control" />
+                    </div>
+
+                    <div class="col-md-6 mb-2">
+                      <label>Importe</label>
+                      <input type="number" step="0.01" id="deposito_importe" class="form-control" />
+                    </div>
+                  </div>
+
+                  <div class="mb-2">
+                    <label>Observaciones internas</label>
+                    <textarea id="deposito_observaciones" class="form-control" rows="2"></textarea>
+                  </div>
+                </div>
+
+                <div class="modal-footer">
+                  <button class="btn btn-danger" data-bs-dismiss="modal">
+                    <i class="mdi mdi-close mdi-18px"></i> Cancelar
+                  </button>
+
+                  <button class="btn btn-success" onclick="guardarDepositoVenta()">
+                    <i class="mdi mdi-content-save mdi-18px"></i> Guardar depósito
                   </button>
                 </div>
               </div>

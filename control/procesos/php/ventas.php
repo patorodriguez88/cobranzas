@@ -1809,6 +1809,223 @@ VALUES
         echo json_encode(array("success" => true));
         exit;
 
+    case 'datos_venta_deposito':
+
+        $idVenta = isset($_POST['idVenta']) ? (int)$_POST['idVenta'] : 0;
+
+        if ($idVenta <= 0) {
+            echo json_encode(array(
+                "success" => 0,
+                "error" => "Venta inválida."
+            ));
+            exit;
+        }
+
+        $sql = "
+        SELECT 
+            V.id,
+            V.NumeroVenta,
+            V.idCliente,
+            V.Total,
+            V.TotalPagado,
+            V.Saldo,
+            C.Ncliente,
+            C.RazonSocial
+        FROM Ventas V
+        LEFT JOIN Clientes C ON C.id = V.idCliente
+        WHERE V.id = '$idVenta'
+          AND V.Eliminado = 0
+        LIMIT 1
+    ";
+
+        $res = $mysqli->query($sql);
+
+        if (!$res || $res->num_rows == 0) {
+            echo json_encode(array(
+                "success" => 0,
+                "error" => "Venta inexistente."
+            ));
+            exit;
+        }
+
+        echo json_encode(array(
+            "success" => 1,
+            "venta" => $res->fetch_assoc()
+        ));
+
+        break;
+    case 'guardar_deposito_venta':
+
+        $idVenta = isset($_POST['idVenta']) ? (int)$_POST['idVenta'] : 0;
+        $fecha = isset($_POST['fecha']) ? $mysqli->real_escape_string($_POST['fecha']) : '';
+        $tipoOperacion = isset($_POST['tipoOperacion']) ? $mysqli->real_escape_string($_POST['tipoOperacion']) : '';
+        $banco = isset($_POST['banco']) ? $mysqli->real_escape_string($_POST['banco']) : '';
+        $operacion = isset($_POST['operacion']) ? $mysqli->real_escape_string($_POST['operacion']) : '';
+        $importe = isset($_POST['importe']) ? (float)$_POST['importe'] : 0;
+        $observaciones = isset($_POST['observaciones']) ? $mysqli->real_escape_string($_POST['observaciones']) : '';
+
+        $usuario = isset($_SESSION['user_name']) && $_SESSION['user_name'] != ''
+            ? $mysqli->real_escape_string($_SESSION['user_name'])
+            : 'Sistema';
+
+        $hora = date("H:i:s");
+
+        if ($idVenta <= 0 || $fecha == '' || $tipoOperacion == '' || $banco == '' || $operacion == '' || $importe <= 0) {
+            echo json_encode(array(
+                "success" => 0,
+                "error" => "Datos incompletos."
+            ));
+            exit;
+        }
+
+        $sqlVenta = "
+        SELECT 
+            V.id,
+            V.NumeroVenta,
+            V.idCliente,
+            V.Total,
+            V.TotalPagado,
+            V.Saldo,
+            C.Ncliente,
+            C.RazonSocial
+        FROM Ventas V
+        LEFT JOIN Clientes C ON C.id = V.idCliente
+        WHERE V.id = '$idVenta'
+          AND V.Eliminado = 0
+        LIMIT 1
+        FOR UPDATE
+    ";
+
+        $mysqli->begin_transaction();
+
+        try {
+
+            $resVenta = $mysqli->query($sqlVenta);
+
+            if (!$resVenta || $resVenta->num_rows == 0) {
+                throw new Exception("Venta inexistente.");
+            }
+
+            $venta = $resVenta->fetch_assoc();
+
+            $ncliente = $mysqli->real_escape_string($venta['Ncliente']);
+            $nombreCliente = $mysqli->real_escape_string($venta['RazonSocial']);
+
+            $sqlDuplicado = "
+            SELECT id 
+            FROM Cobranza 
+            WHERE Fecha = '$fecha'
+              AND Operacion = '$operacion'
+              AND Banco = '$banco'
+              AND Importe = '$importe'
+            LIMIT 1
+        ";
+
+            $resDuplicado = $mysqli->query($sqlDuplicado);
+            $alertaDuplicidad = ($resDuplicado && $resDuplicado->num_rows > 0) ? 1 : 0;
+
+            $observacionFinal = $mysqli->real_escape_string(
+                "Carga operador desde Ventas. Venta #" . $venta['NumeroVenta'] . ". " . $observaciones
+            );
+
+            $sqlCobranza = "
+            INSERT INTO Cobranza
+            (
+                NombreCliente,
+                NumeroCliente,
+                Fecha,
+                Hora,
+                Banco,
+                Operacion,
+                Importe,
+                AlertaDuplicidad,
+                TipoOperacion,
+                Observaciones,
+                Usuario
+            )
+            VALUES
+            (
+                '$nombreCliente',
+                '$ncliente',
+                '$fecha',
+                '$hora',
+                '$banco',
+                '$operacion',
+                '$importe',
+                '$alertaDuplicidad',
+                '$tipoOperacion',
+                '$observacionFinal',
+                '$usuario'
+            )
+        ";
+
+            if (!$mysqli->query($sqlCobranza)) {
+                throw new Exception($mysqli->error);
+            }
+
+            $idCobranza = $mysqli->insert_id;
+
+            $sqlAplicacion = "
+            INSERT INTO CobranzasVentas
+            (
+                idCobranza,
+                idVenta,
+                ImporteAplicado,
+                Fecha,
+                Usuario,
+                Eliminado
+            )
+            VALUES
+            (
+                '$idCobranza',
+                '$idVenta',
+                '$importe',
+                NOW(),
+                '$usuario',
+                0
+            )
+        ";
+
+            if (!$mysqli->query($sqlAplicacion)) {
+                throw new Exception($mysqli->error);
+            }
+
+            $sqlUpdateVenta = "
+            UPDATE Ventas
+            SET 
+                TotalPagado = IFNULL(TotalPagado,0) + '$importe',
+                Saldo = Total - (IFNULL(TotalPagado,0) + '$importe'),
+                EstadoPago = CASE
+                    WHEN Total - (IFNULL(TotalPagado,0) + '$importe') <= 0 THEN 'PAGADA'
+                    WHEN (IFNULL(TotalPagado,0) + '$importe') > 0 THEN 'PARCIAL'
+                    ELSE 'PENDIENTE'
+                END
+            WHERE id = '$idVenta'
+            LIMIT 1
+        ";
+
+            if (!$mysqli->query($sqlUpdateVenta)) {
+                throw new Exception($mysqli->error);
+            }
+
+            $mysqli->commit();
+
+            echo json_encode(array(
+                "success" => 1,
+                "idCobranza" => $idCobranza,
+                "duplicado" => $alertaDuplicidad
+            ));
+        } catch (Exception $e) {
+
+            $mysqli->rollback();
+
+            echo json_encode(array(
+                "success" => 0,
+                "error" => $e->getMessage()
+            ));
+        }
+
+        break;
     default:
 
         echo json_encode(array(
