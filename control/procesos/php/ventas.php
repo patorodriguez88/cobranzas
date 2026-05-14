@@ -759,9 +759,26 @@ VALUES
             SEPARATOR '||'
         ) AS Productos,
 
-        V.EstadoPago,
+       V.EstadoPago,
         V.TotalPagado,
-        V.Saldo,        
+
+        IFNULL((
+            SELECT SUM(AP.importe)
+            FROM Ventas_Ajustes_Pago AP
+            WHERE AP.idVenta = V.id
+            AND AP.eliminado = 0
+        ), 0) AS Ajustes,
+
+        (
+            V.Total 
+            - IFNULL(V.TotalPagado,0)
+            - IFNULL((
+                SELECT SUM(AP.importe)
+                FROM Ventas_Ajustes_Pago AP
+                WHERE AP.idVenta = V.id
+                AND AP.eliminado = 0
+            ), 0)
+        ) AS Saldo,       
             (
             SELECT CONCAT(
                 DATE_FORMAT(TR.FechaTurno, '%d/%m/%Y'),
@@ -856,6 +873,7 @@ VALUES
                 "Observaciones"     => $row["Observaciones"],
                 "EstadoPago"        => $row["EstadoPago"],
                 "TotalPagado"       => $row["TotalPagado"],
+                "Ajustes"           => $row["Ajustes"],
                 "Saldo"             => $row["Saldo"],
                 "Usuario"           => $row["Usuario"],
                 "TurnoRetiro"       => $row["TurnoRetiro"],
@@ -879,7 +897,24 @@ VALUES
             V.Fecha,
             V.Total,
             V.TotalPagado,
-            V.Saldo,
+            IFNULL((
+                SELECT SUM(AP.importe)
+                FROM Ventas_Ajustes_Pago AP
+                WHERE AP.idVenta = V.id
+                AND AP.eliminado = 0
+            ), 0) AS Ajustes,
+
+            (
+                V.Total 
+                - IFNULL(V.TotalPagado,0)
+                - IFNULL((
+                    SELECT SUM(AP.importe)
+                    FROM Ventas_Ajustes_Pago AP
+                    WHERE AP.idVenta = V.id
+                    AND AP.eliminado = 0
+                ), 0)
+            ) AS Saldo,
+
             V.EstadoPago,
             V.Observaciones,
             C.RazonSocial,
@@ -1692,7 +1727,87 @@ VALUES
         }
 
         break;
+    case 'guardar_ajuste_pago':
 
+        $idVenta = isset($_POST['idVenta']) ? intval($_POST['idVenta']) : 0;
+        $importe = isset($_POST['importe']) ? floatval($_POST['importe']) : 0;
+        $tipo = isset($_POST['tipo']) ? trim($_POST['tipo']) : 'AJUSTE_MANUAL';
+        $observaciones = isset($_POST['observaciones']) ? trim($_POST['observaciones']) : '';
+
+        $usuario = isset($_SESSION['user_name']) && $_SESSION['user_name'] != ''
+            ? $mysqli->real_escape_string($_SESSION['user_name'])
+            : 'Sistema';
+        $fechaHora = date('Y-m-d H:i:s');
+
+        if ($idVenta <= 0) {
+            echo json_encode(array("success" => false, "error" => "Venta inválida."));
+            exit;
+        }
+
+        if ($importe <= 0) {
+            echo json_encode(array("success" => false, "error" => "Importe inválido."));
+            exit;
+        }
+
+        if ($observaciones == '') {
+            echo json_encode(array("success" => false, "error" => "Debe ingresar observaciones."));
+            exit;
+        }
+
+        $stmt = $mysqli->prepare("
+        INSERT INTO Ventas_Ajustes_Pago
+        (idVenta, importe, tipo, observaciones, usuario, fecha_hora)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ");
+
+        $stmt->bind_param(
+            "idssss",
+            $idVenta,
+            $importe,
+            $tipo,
+            $observaciones,
+            $usuario,
+            $fechaHora
+        );
+
+        if (!$stmt->execute()) {
+            echo json_encode(array("success" => false, "error" => $stmt->error));
+            exit;
+        }
+        $sqlUpdateVenta = "UPDATE Ventas
+            SET 
+                Saldo = Total 
+                    - IFNULL(TotalPagado,0)
+                    - IFNULL((
+                            SELECT SUM(AP.importe)
+                            FROM Ventas_Ajustes_Pago AP
+                            WHERE AP.idVenta = Ventas.id
+                            AND AP.eliminado = 0
+                        ),0),
+                EstadoPago = CASE
+                    WHEN (
+                        Total 
+                        - IFNULL(TotalPagado,0)
+                        - IFNULL((
+                            SELECT SUM(AP.importe)
+                            FROM Ventas_Ajustes_Pago AP
+                            WHERE AP.idVenta = Ventas.id
+                            AND AP.eliminado = 0
+                        ),0)
+                    ) <= 0 THEN 'PAGADA'
+                    WHEN IFNULL(TotalPagado,0) > 0 THEN 'PARCIAL'
+                    ELSE 'PENDIENTE'
+                END
+            WHERE id = '$idVenta'
+            LIMIT 1
+        ";
+
+        if (!$mysqli->query($sqlUpdateVenta)) {
+            echo json_encode(array("success" => false, "error" => $mysqli->error));
+            exit;
+        }
+        echo json_encode(array("success" => true));
+        exit;
 
     default:
 

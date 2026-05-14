@@ -247,9 +247,10 @@ function cargarVentas() {
         orderable: false,
         render: function (data) {
           return `
-            <i class="mdi mdi-eye mdi-18px text-info ms-2" style="cursor:pointer" onclick="abrirEstadoVenta(${data.id})"></i>
-            <i class="mdi mdi-delete mdi-18px text-danger ms-2" style="cursor:pointer" onclick="eliminarVenta(${data.id})"></i>
-          `;
+        <i class="mdi mdi-eye mdi-18px text-info ms-2" style="cursor:pointer" onclick="abrirEstadoVenta(${data.id})"></i>
+        <i class="mdi mdi-cash-plus mdi-18px text-warning ms-2" style="cursor:pointer" title="Cargar ajuste de pago" onclick="abrirModalAjustePago(${data.id})"></i>
+        <i class="mdi mdi-delete mdi-18px text-danger ms-2" style="cursor:pointer" onclick="eliminarVenta(${data.id})"></i>
+      `;
         },
       },
     ],
@@ -647,8 +648,20 @@ function cargarListadoVentas() {
 
       {
         data: "Saldo",
+        render: function (data, type, row) {
+          let html = `<b>$ ${formatear(data)}</b>`;
 
-        render: $.fn.dataTable.render.number(",", ".", 2, "$ "),
+          if (parseFloat(row.Ajustes) > 0) {
+            html += `
+        <br>
+        <small class="text-warning">
+          Ajustes: $ ${formatear(row.Ajustes)}
+        </small>
+      `;
+          }
+
+          return html;
+        },
       },
 
       {
@@ -698,6 +711,7 @@ function cargarListadoVentas() {
         render: function (data) {
           return `
             <i class="mdi mdi-eye mdi-18px text-info ms-2" style="cursor:pointer" onclick="abrirEstadoVenta(${data.id})"></i>
+            <i class="mdi mdi-cash-plus mdi-18px text-warning ms-2" style="cursor:pointer" title="Cargar ajuste de pago" onclick="abrirModalAjustePago(${data.id})"></i>
             <i class="mdi mdi-delete mdi-18px text-danger ms-2" style="cursor:pointer" onclick="eliminarVenta(${data.id})"></i>
           `;
         },
@@ -1517,3 +1531,66 @@ $(document).on("click", "#btn_guardar_observaciones_venta", function () {
     },
   });
 });
+
+function abrirModalAjustePago(idVenta) {
+  $("#ajuste_idVenta").val(idVenta);
+  $("#ajuste_importe").val("");
+  $("#ajuste_tipo").val("SALDO_A_FAVOR");
+  $("#ajuste_observaciones").val("");
+  $("#modalAjustePago").modal("show");
+}
+
+function guardarAjustePago() {
+  let idVenta = $("#ajuste_idVenta").val();
+  let importe = parseFloat($("#ajuste_importe").val()) || 0;
+  let tipo = $("#ajuste_tipo").val();
+  let observaciones = $("#ajuste_observaciones").val().trim();
+
+  if (importe <= 0) {
+    alerta("Atención", "El importe del ajuste debe ser mayor a cero.", "warning");
+    return;
+  }
+
+  if (observaciones === "") {
+    alerta("Atención", "Debe ingresar una observación.", "warning");
+    return;
+  }
+
+  $.ajax({
+    url: "control/procesos/php/ventas.php",
+    type: "POST",
+    dataType: "json",
+    data: {
+      accion: "guardar_ajuste_pago",
+      idVenta: idVenta,
+      importe: importe,
+      tipo: tipo,
+      observaciones: observaciones,
+    },
+    success: function (res) {
+      if (res.success) {
+        $("#modalAjustePago").modal("hide");
+        toast("Ajuste cargado correctamente", "success");
+
+        if ($.fn.DataTable.isDataTable("#tabla_ventas")) {
+          $("#tabla_ventas").DataTable().ajax.reload(null, false);
+        }
+
+        if ($.fn.DataTable.isDataTable("#tabla_listado_ventas")) {
+          $("#tabla_listado_ventas").DataTable().ajax.reload(null, false);
+        }
+
+        cargarResumenVentas();
+
+        if (ventaActualOffcanvas && parseInt(ventaActualOffcanvas) === parseInt(idVenta)) {
+          abrirEstadoVenta(idVenta);
+        }
+      } else {
+        alerta("Error", res.error || "No se pudo guardar el ajuste.", "error");
+      }
+    },
+    error: function () {
+      alerta("Error", "Error de conexión al guardar el ajuste.", "error");
+    },
+  });
+}
