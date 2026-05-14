@@ -649,13 +649,13 @@ function cargarListadoVentas() {
       {
         data: "Saldo",
         render: function (data, type, row) {
-          let html = `<b>$ ${formatear(data)}</b>`;
+          let html = `<b>${formatoMoneda(data)}</b>`;
 
-          if (parseFloat(row.Ajustes) > 0) {
+          if (parseFloat(row.Ajustes || 0) > 0) {
             html += `
         <br>
         <small class="text-warning">
-          Ajustes: $ ${formatear(row.Ajustes)}
+          Ajustes: ${formatoMoneda(row.Ajustes)}
         </small>
       `;
           }
