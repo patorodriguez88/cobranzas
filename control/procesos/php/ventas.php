@@ -1822,22 +1822,49 @@ VALUES
             exit;
         }
 
-        $sql = "
-        SELECT 
-            V.id,
-            V.NumeroVenta,
-            V.idCliente,
-            V.Total,
-            V.TotalPagado,
-            V.Saldo,
+        $sql = "SELECT 
+        V.id,
+        V.NumeroVenta,
+        V.idCliente,
+        V.Total,
+
+        IFNULL((
+            SELECT SUM(CV.ImporteAplicado)
+            FROM CobranzasVentas CV
+            WHERE CV.idVenta = V.id
+              AND CV.Eliminado = 0
+        ),0) AS TotalPagado,
+
+        IFNULL((
+            SELECT SUM(AP.importe)
+            FROM Ventas_Ajustes_Pago AP
+            WHERE AP.idVenta = V.id
+              AND AP.eliminado = 0
+        ),0) AS Ajustes,
+
+        (
+            V.Total
+            - IFNULL((
+                SELECT SUM(CV.ImporteAplicado)
+                FROM CobranzasVentas CV
+                WHERE CV.idVenta = V.id
+                  AND CV.Eliminado = 0
+            ),0)
+            - IFNULL((
+                SELECT SUM(AP.importe)
+                FROM Ventas_Ajustes_Pago AP
+                WHERE AP.idVenta = V.id
+                  AND AP.eliminado = 0
+            ),0)
+            ) AS Saldo,
             C.Ncliente,
             C.RazonSocial
-        FROM Ventas V
-        LEFT JOIN Clientes C ON C.id = V.idCliente
-        WHERE V.id = '$idVenta'
-          AND V.Eliminado = 0
-        LIMIT 1
-    ";
+            FROM Ventas V
+            LEFT JOIN Clientes C ON C.id = V.idCliente
+            WHERE V.id = '$idVenta'
+            AND V.Eliminado = 0
+            LIMIT 1
+        ";
 
         $res = $mysqli->query($sql);
 
