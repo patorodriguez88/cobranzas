@@ -183,9 +183,17 @@ if (empty($detalle)) {
     exit;
 }
 
-$numeroVenta = isset($venta['NumeroVenta']) ? trim($venta['NumeroVenta']) : $idVenta;
-$ncliente = isset($venta['Ncliente']) ? trim($venta['Ncliente']) : '';
-$usuarioCarga = isset($venta['Usuario']) ? trim($venta['Usuario']) : '';
+$numeroVenta = isset($venta['NumeroVenta'])
+    ? trim($venta['NumeroVenta'])
+    : $idVenta;
+
+$ncliente = isset($venta['Ncliente'])
+    ? trim($venta['Ncliente'])
+    : '';
+
+$usuarioActual = isset($_SESSION['Usuario'])
+    ? trim($_SESSION['Usuario'])
+    : 'Sistema';
 
 $referencia = "Venta #" . $numeroVenta;
 
@@ -193,11 +201,11 @@ if ($ncliente != '') {
     $referencia .= " | Cliente " . $ncliente;
 }
 
-if ($usuarioCarga != '') {
-    $referencia .= " | Usuario " . $usuarioCarga;
-}
+$referencia .= " | Usuario " . $usuarioActual;
 
-$notas = isset($venta['Observaciones']) ? trim($venta['Observaciones']) : '';
+$notas = isset($venta['Observaciones'])
+    ? trim($venta['Observaciones'])
+    : '';
 
 $payload = [
     "no_referencia" => $referencia,
