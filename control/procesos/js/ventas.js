@@ -219,18 +219,20 @@ function cargarVentas() {
           }
           if (row.TurnoRetiro) {
             html += `
-
-    <div class="mt-0">
-
-      <span class="badge bg-success">
-
-        <i class="mdi mdi-calendar-clock"></i> ${row.TurnoRetiro}
-
-      </span>
-
-    </div>
-
-  `;
+            <div class="mt-1">
+              <span class="badge bg-success">
+                <i class="mdi mdi-calendar-clock"></i> ${row.TurnoRetiro}
+              </span>
+            </div>
+          `;
+          } else {
+            html += `
+            <div class="mt-1">
+              <span class="badge bg-secondary">
+                <i class="mdi mdi-calendar-remove"></i> Sin turno
+              </span>
+            </div>
+          `;
           }
 
           return html;
@@ -721,17 +723,11 @@ function cargarListadoVentas() {
     `;
           }
           if (row.TurnoRetiro) {
-            html += `
-
-    <div class="mt-0">
-
-      <span class="badge bg-success">
-
-        <i class="mdi mdi-calendar-clock"></i> ${row.TurnoRetiro}
-
-      </span>
-
-    </div>
+            html += `<div class="mt-0">
+                      <span class="badge bg-success">
+                      <i class="mdi mdi-calendar-clock"></i> ${row.TurnoRetiro}
+                      </span>
+                      </div>
 
   `;
           }
@@ -1221,12 +1217,12 @@ $(document).on("click", "#btn_guardar_turno_retiro", function () {
 
         if (r.whatsapp_url && r.whatsapp_url !== "") {
           htmlWp = `
-    <a href="${r.whatsapp_url}" 
-       target="_blank" 
-       class="btn btn-success mt-2">
-      <i class="mdi mdi-whatsapp"></i> Enviar WhatsApp
-    </a>
-  `;
+  <button type="button"
+          class="btn btn-success mt-2"
+          onclick="abrirWhatsappUnico('${r.whatsapp_url}')">
+    <i class="mdi mdi-whatsapp"></i> Enviar WhatsApp
+  </button>
+`;
         } else {
           htmlWp = `
     <div class="alert alert-warning mt-2 mb-0">
@@ -1247,6 +1243,15 @@ $(document).on("click", "#btn_guardar_turno_retiro", function () {
         });
 
         abrirEstadoVenta($("#turno_id_venta").val());
+        if ($.fn.DataTable.isDataTable("#tabla_ventas")) {
+          $("#tabla_ventas").DataTable().ajax.reload(null, false);
+        }
+
+        if ($.fn.DataTable.isDataTable("#tabla_listado_ventas")) {
+          $("#tabla_listado_ventas").DataTable().ajax.reload(null, false);
+        }
+
+        cargarResumenVentas();
       } else {
         Swal.fire("Error", r.error || "No se pudo guardar el turno.", "error");
       }
@@ -1774,15 +1779,17 @@ function eliminarAjustePago(idVenta) {
         if (r.success) {
           toast("Ajuste eliminado correctamente", "success");
 
-          if ($.fn.DataTable.isDataTable("#tabla_listado_ventas")) {
-            $("#tabla_listado_ventas").DataTable().ajax.reload(null, false);
-          }
-
           if ($.fn.DataTable.isDataTable("#tabla_ventas")) {
             $("#tabla_ventas").DataTable().ajax.reload(null, false);
           }
 
+          if ($.fn.DataTable.isDataTable("#tabla_listado_ventas")) {
+            $("#tabla_listado_ventas").DataTable().ajax.reload(null, false);
+          }
+
           cargarResumenVentas();
+
+          cargarResumenProductosVentas();
 
           if (ventaActualOffcanvas && parseInt(ventaActualOffcanvas) === parseInt(idVenta)) {
             abrirEstadoVenta(idVenta);
@@ -1797,4 +1804,7 @@ function eliminarAjustePago(idVenta) {
       },
     });
   });
+}
+function abrirWhatsappUnico(url) {
+  window.open(url, "whatsapp_web_dinter");
 }
