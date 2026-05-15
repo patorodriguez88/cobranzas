@@ -220,7 +220,7 @@ function cargarVentas() {
           if (row.TurnoRetiro) {
             html += `
             <div class="mt-1">
-              <span class="badge bg-success">
+              <span class="badge bg-primary">
                 <i class="mdi mdi-calendar-clock"></i> ${row.TurnoRetiro}
               </span>
             </div>
@@ -228,7 +228,7 @@ function cargarVentas() {
           } else {
             html += `
             <div class="mt-1">
-              <span class="badge bg-secondary">
+              <span class="badge bg-warning">
                 <i class="mdi mdi-calendar-remove"></i> Sin turno
               </span>
             </div>
