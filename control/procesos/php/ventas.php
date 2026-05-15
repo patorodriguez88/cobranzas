@@ -953,6 +953,7 @@ VALUES
             FROM CobranzasVentas CV
             LEFT JOIN Cobranza CB ON CB.id = CV.idCobranza
             WHERE CV.idVenta = '$idVenta'
+              AND CV.Eliminado = 0
             ORDER BY CV.id DESC
         ";
 
