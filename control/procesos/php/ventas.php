@@ -351,13 +351,13 @@ VALUES
                 if (!$mysqli->query($sqlDetalle)) {
                     throw new Exception($mysqli->error);
                 }
-                $sqlStock = "UPDATE Productos SET Stock = Stock - '$Cantidad'
-                WHERE id = '$idProducto' LIMIT 1";
+                // $sqlStock = "UPDATE Productos SET Stock = Stock - '$Cantidad'
+                // WHERE id = '$idProducto' LIMIT 1";
 
-                if (!$mysqli->query($sqlStock)) {
+                // if (!$mysqli->query($sqlStock)) {
 
-                    throw new Exception($mysqli->error);
-                }
+                //     throw new Exception($mysqli->error);
+                // }
             }
 
             $mysqli->commit();
@@ -484,73 +484,6 @@ VALUES
 
                 if ($idProducto <= 0 || $cantidad <= 0) {
                     continue;
-                }
-
-                $sqlProducto = "
-                SELECT Stock
-                FROM Productos
-                WHERE id = '$idProducto'
-                LIMIT 1
-                FOR UPDATE
-            ";
-
-                $resProducto = $mysqli->query($sqlProducto);
-
-                if (!$resProducto) {
-                    throw new Exception($mysqli->error);
-                }
-
-                $producto = $resProducto->fetch_assoc();
-
-                if (!$producto) {
-                    throw new Exception("Producto inexistente: " . $idProducto);
-                }
-
-                $stockAnterior = (int)$producto['Stock'];
-                $stockNuevo = $stockAnterior + $cantidad;
-
-                $sqlUpdateStock = "
-                UPDATE Productos
-                SET Stock = '$stockNuevo'
-                WHERE id = '$idProducto'
-                LIMIT 1
-            ";
-
-                if (!$mysqli->query($sqlUpdateStock)) {
-                    throw new Exception($mysqli->error);
-                }
-
-                $observacionMovimiento = $mysqli->real_escape_string(
-                    "Devolución por eliminación de venta #" . $id . " - " . $productoNombre
-                );
-
-                $sqlMovimiento = "
-                INSERT INTO MovimientosStock
-                (
-                    idProducto,
-                    Tipo,
-                    Cantidad,
-                    StockAnterior,
-                    StockNuevo,
-                    Observaciones,
-                    Usuario,
-                    Fecha
-                )
-                VALUES
-                (
-                    '$idProducto',
-                    'DEVOLUCION_VENTA_ELIMINADA',
-                    '$cantidad',
-                    '$stockAnterior',
-                    '$stockNuevo',
-                    '$observacionMovimiento',
-                    '$usuario',
-                    NOW()
-                )
-            ";
-
-                if (!$mysqli->query($sqlMovimiento)) {
-                    throw new Exception($mysqli->error);
                 }
             }
 
@@ -794,42 +727,59 @@ VALUES
 
        (
 
-    SELECT IFNULL(P.Stock,0)
-
-    FROM Productos P
-
-    WHERE P.Eliminado = 0
-
-      AND P.Activo = 1
-
-      AND P.Codigo = '1'
-
-    LIMIT 1
+    IFNULL((
+        SELECT SUM(OCD.Cantidad)
+        FROM OrdenesCompraDetalle OCD
+        INNER JOIN OrdenesCompra OC 
+            ON OC.id = OCD.idOrdenCompra
+        WHERE OCD.idProducto = 1
+          AND IFNULL(OC.Eliminado,0) = 0
+          AND IFNULL(OCD.Eliminado,0) = 0
+    ),0)
+    -
+    IFNULL((
+        SELECT SUM(VD2.Cantidad)
+        FROM VentasDetalle VD2
+        INNER JOIN Ventas V2 
+            ON V2.id = VD2.idVenta
+        WHERE VD2.idProducto = 1
+          AND VD2.Eliminado = 0
+          AND V2.Eliminado = 0
+    ),0)
 
 ) AS StockFiguritas,
 
-       (
-    SELECT IFNULL(P.Stock,0)
-    FROM Productos P
-    WHERE P.Eliminado = 0
-      AND P.Activo = 1
-      AND P.Codigo = '2'
-    LIMIT 1
-) AS StockAlbum
+     (
+    IFNULL((
+        SELECT SUM(OCD.Cantidad)
+        FROM OrdenesCompraDetalle OCD
+        INNER JOIN OrdenesCompra OC 
+            ON OC.id = OCD.idOrdenCompra
+        WHERE OCD.idProducto = 2
+          AND IFNULL(OC.Eliminado,0) = 0
+          AND IFNULL(OCD.Eliminado,0) = 0
+    ),0)
 
+    -
+
+    IFNULL((
+        SELECT SUM(VD2.Cantidad)
+        FROM VentasDetalle VD2
+        INNER JOIN Ventas V2 
+            ON V2.id = VD2.idVenta
+        WHERE VD2.idProducto = 2
+          AND VD2.Eliminado = 0
+          AND V2.Eliminado = 0
+            ),0)
+            ) AS StockAlbum
             FROM Ventas V
-
             LEFT JOIN Clientes C 
                 ON C.id = V.idCliente
-
             LEFT JOIN VentasDetalle VD 
                 ON VD.idVenta = V.id 
                 AND VD.Eliminado = 0
-
             WHERE V.Eliminado = 0
-
             GROUP BY V.id
-
             ORDER BY V.NumeroVenta DESC
             ";
 
@@ -1495,27 +1445,50 @@ VALUES
                 );
             }
         }
-        $sqlStock = "SELECT Codigo,Stock FROM Productos
-        WHERE Eliminado = 0 AND Activo = 1";
+        $sqlStockReal = "SELECT
+        P.id,
+        IFNULL((
+            SELECT SUM(OCD.Cantidad)
+            FROM OrdenesCompraDetalle OCD
+            INNER JOIN OrdenesCompra OC 
+                ON OC.id = OCD.idOrdenCompra
+            WHERE OCD.idProducto = P.id
+              AND IFNULL(OC.Eliminado,0) = 0
+              AND IFNULL(OCD.Eliminado,0) = 0
+        ),0) AS TotalIngresado,
 
-        $resStock = $mysqli->query($sqlStock);
+        IFNULL((
+            SELECT SUM(VD.Cantidad)
+            FROM VentasDetalle VD
+            INNER JOIN Ventas V 
+                ON V.id = VD.idVenta
+            WHERE VD.idProducto = P.id
+              AND VD.Eliminado = 0
+              AND V.Eliminado = 0
+        ),0) AS TotalVendido
 
-        while ($row = $resStock->fetch_assoc()) {
+            FROM Productos P
+            WHERE P.Eliminado = 0
+            AND P.Activo = 1
+        ";
 
-            $codigo = trim($row['Codigo']);
+        $resStockReal = $mysqli->query($sqlStockReal);
 
-            $stock = (int)$row['Stock'];
+        while ($row = $resStockReal->fetch_assoc()) {
 
-            if ($codigo == '1') {
+            $stockReal = (float)$row['TotalIngresado'] - (float)$row['TotalVendido'];
 
-                $data["FIGURITAS"]["stock"] += $stock;
+            // FIGURITAS
+            if ((int)$row['id'] === 1) {
+                $data["FIGURITAS"]["stock"] += $stockReal;
             }
 
-            if ($codigo == '2') {
-
-                $data["ALBUM"]["stock"] += $stock;
+            // ALBUM
+            if ((int)$row['id'] === 2) {
+                $data["ALBUM"]["stock"] += $stockReal;
             }
         }
+
         echo json_encode($data);
         break;
 
