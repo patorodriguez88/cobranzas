@@ -638,8 +638,22 @@ function cargarListadoVentas() {
       },
       {
         data: "Cliente",
-        render: function (data) {
-          return `<div class="col-cliente" title="${data || ""}">${data || ""}</div>`;
+        render: function (data, type, row) {
+          let html = `
+      <div class="col-cliente fw-bold" title="${data || ""}">
+        ${data || ""}
+      </div>
+    `;
+
+          if (row.Observaciones && row.Observaciones.trim() !== "") {
+            html += `
+        <div class="text-muted small mt-1" style="font-size:11px; line-height:14px;">
+          ${row.Observaciones}
+        </div>
+      `;
+          }
+
+          return html;
         },
       },
       {
@@ -673,6 +687,10 @@ function cargarListadoVentas() {
         <br>
         <small class="text-warning">
           Ajustes: ${formatoMoneda(row.Ajustes)}
+          <i class="mdi mdi-delete mdi-18px text-danger ms-1"
+             style="cursor:pointer;"
+             title="Eliminar ajuste"
+             onclick="eliminarAjustePago(${row.id})"></i>
         </small>
       `;
           }
@@ -1727,6 +1745,55 @@ function guardarDepositoVenta() {
       error: function (xhr) {
         console.log(xhr.responseText);
         alerta("Error", "Error guardando depósito.", "error");
+      },
+    });
+  });
+}
+function eliminarAjustePago(idVenta) {
+  Swal.fire({
+    title: "¿Eliminar ajuste?",
+    text: "Se eliminará el ajuste aplicado a esta venta.",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Sí, eliminar",
+    cancelButtonText: "Cancelar",
+    confirmButtonColor: "#fa5c7c",
+    cancelButtonColor: "#6c757d",
+  }).then((result) => {
+    if (!result.isConfirmed) return;
+
+    $.ajax({
+      url: URL_VENTAS,
+      type: "POST",
+      dataType: "json",
+      data: {
+        accion: "eliminar_ajuste_pago",
+        idVenta: idVenta,
+      },
+      success: function (r) {
+        if (r.success) {
+          toast("Ajuste eliminado correctamente", "success");
+
+          if ($.fn.DataTable.isDataTable("#tabla_listado_ventas")) {
+            $("#tabla_listado_ventas").DataTable().ajax.reload(null, false);
+          }
+
+          if ($.fn.DataTable.isDataTable("#tabla_ventas")) {
+            $("#tabla_ventas").DataTable().ajax.reload(null, false);
+          }
+
+          cargarResumenVentas();
+
+          if (ventaActualOffcanvas && parseInt(ventaActualOffcanvas) === parseInt(idVenta)) {
+            abrirEstadoVenta(idVenta);
+          }
+        } else {
+          alerta("Error", r.error || "No se pudo eliminar el ajuste.", "error");
+        }
+      },
+      error: function (xhr) {
+        console.log(xhr.responseText);
+        alerta("Error", "Error eliminando ajuste.", "error");
       },
     });
   });
