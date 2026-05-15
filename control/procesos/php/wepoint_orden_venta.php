@@ -191,8 +191,8 @@ $ncliente = isset($venta['Ncliente'])
     ? trim($venta['Ncliente'])
     : '';
 
-$usuarioActual = isset($_SESSION['Usuario'])
-    ? trim($_SESSION['Usuario'])
+$usuarioActual = isset($_SESSION['user-name'])
+    ? trim($_SESSION['user-name'])
     : 'Sistema';
 
 $referencia = "Venta #" . $numeroVenta;
