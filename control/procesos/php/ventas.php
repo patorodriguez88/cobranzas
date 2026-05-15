@@ -2027,6 +2027,86 @@ VALUES
         }
 
         break;
+
+
+    case 'eliminar_ajuste_pago':
+
+        $idVenta = isset($_POST['idVenta']) ? (int)$_POST['idVenta'] : 0;
+
+        if ($idVenta <= 0) {
+            echo json_encode(array(
+                "success" => false,
+                "error" => "Venta inválida."
+            ));
+            exit;
+        }
+
+        $mysqli->begin_transaction();
+
+        try {
+
+            $sqlAjuste = "
+            UPDATE Ventas_Ajustes_Pago
+            SET eliminado = 1
+            WHERE idVenta = '$idVenta'
+              AND eliminado = 0
+        ";
+
+            if (!$mysqli->query($sqlAjuste)) {
+                throw new Exception($mysqli->error);
+            }
+
+            $sqlUpdateVenta = "
+            UPDATE Ventas
+            SET 
+                Saldo = Total 
+                    - IFNULL(TotalPagado,0)
+                    - IFNULL((
+                        SELECT SUM(AP.importe)
+                        FROM Ventas_Ajustes_Pago AP
+                        WHERE AP.idVenta = Ventas.id
+                          AND AP.eliminado = 0
+                    ),0),
+                EstadoPago = CASE
+                    WHEN (
+                        Total 
+                        - IFNULL(TotalPagado,0)
+                        - IFNULL((
+                            SELECT SUM(AP.importe)
+                            FROM Ventas_Ajustes_Pago AP
+                            WHERE AP.idVenta = Ventas.id
+                              AND AP.eliminado = 0
+                        ),0)
+                    ) <= 0 THEN 'PAGADA'
+                    WHEN IFNULL(TotalPagado,0) > 0 THEN 'PARCIAL'
+                    ELSE 'PENDIENTE'
+                END
+            WHERE id = '$idVenta'
+            LIMIT 1
+        ";
+
+            if (!$mysqli->query($sqlUpdateVenta)) {
+                throw new Exception($mysqli->error);
+            }
+
+            $mysqli->commit();
+
+            echo json_encode(array(
+                "success" => true
+            ));
+        } catch (Exception $e) {
+
+            $mysqli->rollback();
+
+            echo json_encode(array(
+                "success" => false,
+                "error" => $e->getMessage()
+            ));
+        }
+
+        break;
+
+
     default:
 
         echo json_encode(array(
