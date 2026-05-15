@@ -62,7 +62,8 @@ $sqlVenta = "
         C.RazonSocial,
         C.Celular,        
         C.Direccion,
-        C.Ciudad        
+        C.Ciudad,    
+        C.Ncliente    
     FROM Ventas V
     LEFT JOIN Clientes C ON C.id = V.idCliente
     WHERE V.id = ?
@@ -182,10 +183,26 @@ if (empty($detalle)) {
     exit;
 }
 
+$numeroVenta = isset($venta['NumeroVenta']) ? trim($venta['NumeroVenta']) : $idVenta;
+$ncliente = isset($venta['Ncliente']) ? trim($venta['Ncliente']) : '';
+$usuarioCarga = isset($venta['Usuario']) ? trim($venta['Usuario']) : '';
+
+$referencia = "Venta #" . $numeroVenta;
+
+if ($ncliente != '') {
+    $referencia .= " | Cliente " . $ncliente;
+}
+
+if ($usuarioCarga != '') {
+    $referencia .= " | Usuario " . $usuarioCarga;
+}
+
+$notas = isset($venta['Observaciones']) ? trim($venta['Observaciones']) : '';
+
 $payload = [
-    "no_referencia" => (string)$venta['NumeroVenta'],
+    "no_referencia" => $referencia,
     "fecha" => date('Y-m-d'),
-    "notas" => isset($venta['Observaciones']) ? $venta['Observaciones'] : '',
+    "notas" => $notas,
     "id_transportista" => (string)$idTransportista,
     "id_cliente" => "219",
     "destinatario" => [
