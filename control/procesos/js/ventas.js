@@ -961,7 +961,19 @@ function abrirEstadoVenta(idVenta) {
     <tr>
       <td>${p.Fecha || ""}<br><small class="text-muted">${p.Hora || ""}</small></td>
       <td>${p.Banco || ""}</td>
-      <td>${p.Operacion || ""}</td>
+      <td>
+  <div>${p.Operacion || ""}</div>
+
+  ${
+    p.Observaciones && p.Observaciones.trim() !== ""
+      ? `
+        <small class="text-muted">
+          ${p.Observaciones}
+        </small>
+      `
+      : ""
+  }
+</td>
       <td>${formatoMoneda(p.ImporteAplicado)}</td>
       <td class="text-center">${iconoImagen}</td>
     </tr>

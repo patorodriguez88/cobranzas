@@ -911,6 +911,7 @@ VALUES
         CB.Hora,
         CB.Banco,
         CB.Operacion,
+        CB.Observaciones,
         CB.Importe
     FROM CobranzasVentas CV
     LEFT JOIN Cobranza CB ON CB.id = CV.idCobranza
