@@ -942,17 +942,30 @@ function abrirEstadoVenta(idVenta) {
         `;
       } else {
         r.pagos.forEach(function (p) {
-          htmlPagos += `
-            <tr>
-              <td>${p.Fecha || ""}<br><small class="text-muted">${p.Hora || ""}</small></td>
-              <td>${p.Banco || ""}</td>
-              <td>${p.Operacion || ""}</td>
-              <td>${formatoMoneda(p.ImporteAplicado)}</td>
-            </tr>
-          `;
+          let iconoImagen = "";
+
           if (p.Imagen && p.Imagen !== "") {
-            imagenPago = p.Imagen;
+            iconoImagen = `
+      <i class="mdi mdi-image-search mdi-24px text-primary"
+         style="cursor:pointer;"
+         title="Ver comprobante"
+         onclick="verComprobantePago('${p.Imagen}')"></i>
+    `;
+          } else {
+            iconoImagen = `
+      <span class="text-muted small">-</span>
+    `;
           }
+
+          htmlPagos += `
+    <tr>
+      <td>${p.Fecha || ""}<br><small class="text-muted">${p.Hora || ""}</small></td>
+      <td>${p.Banco || ""}</td>
+      <td>${p.Operacion || ""}</td>
+      <td>${formatoMoneda(p.ImporteAplicado)}</td>
+      <td class="text-center">${iconoImagen}</td>
+    </tr>
+  `;
         });
       }
 
@@ -1892,3 +1905,12 @@ $(document).ready(function () {
     });
   }
 });
+function verComprobantePago(imagen) {
+  Swal.fire({
+    title: "Comprobante de pago",
+    imageUrl: imagen,
+    imageAlt: "Comprobante",
+    width: 700,
+    confirmButtonText: "Cerrar",
+  });
+}
