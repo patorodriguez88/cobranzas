@@ -48,6 +48,29 @@
       width: 80px;
       text-align: center;
     }
+    .dropzone-compact {
+      min-height: 58px !important;
+      padding: 10px 14px !important;
+      border: 1px dashed #cfd8dc !important;
+      border-radius: 8px !important;
+      background: #f8f9fa !important;
+    }
+
+    .dropzone-compact .dz-message {
+      margin: 0 !important;
+      font-size: 14px;
+      color: #6c757d;
+    }
+
+    .dropzone-compact .mdi {
+      font-size: 22px;
+      vertical-align: middle;
+    }
+
+    .dropzone-compact .dz-preview {
+      margin: 6px !important;
+      min-height: auto !important;
+    }
   </style>
   <body
     class="loading"
@@ -717,17 +740,21 @@
                   </div>
                 </div>
                 <div class="mb-2">
-                  <label>Comprobante</label>
+                  <label class="form-label mb-1">Comprobante</label>
 
-                  <form action="procesos/php/upload.php" class="dropzone" id="dropzoneComprobanteDeposito">
-                    <div class="dz-message needsclick">
-                      <i class="mdi mdi-cloud-upload display-5 text-muted"></i>
-                      <h5 class="mt-2">Arrastrá una imagen o hacé click</h5>
-                      <span class="text-muted">JPG, PNG o GIF</span>
+                  <form
+                    action="procesos/php/upload.php"
+                    class="dropzone dropzone-compact"
+                    id="dropzoneComprobanteDeposito"
+                  >
+                    <div class="dz-message needsclick m-0">
+                      <i class="mdi mdi-cloud-upload-outline me-1"></i>
+                      <span>Adjuntar comprobante</span>
+                      <small class="text-muted ms-2">JPG, PNG o GIF</small>
                     </div>
                   </form>
 
-                  <small class="text-muted"> Opcional. Se subirá después de guardar el depósito. </small>
+                  <small class="text-muted">Opcional. Se subirá después de guardar el depósito.</small>
                 </div>
                 <div class="modal-footer">
                   <button class="btn btn-danger" data-bs-dismiss="modal">
