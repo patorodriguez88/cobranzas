@@ -27,6 +27,12 @@ if (isset($_GET['accion']) && $_GET['accion'] === 'exportar_ventas_excel') {
             SUM(CASE WHEN UPPER(VD.ProductoNombre) LIKE '%ALBUM%' THEN VD.Cantidad ELSE 0 END) AS Album,
             V.Total,
             V.TotalPagado,
+            IFNULL((
+            SELECT SUM(AP.importe)
+            FROM Ventas_Ajustes_Pago AP
+            WHERE AP.idVenta = V.id
+            AND AP.eliminado = 0
+            ), 0) AS Ajustes,
             V.Saldo,
             V.EstadoPago
         FROM Ventas V
@@ -53,6 +59,7 @@ if (isset($_GET['accion']) && $_GET['accion'] === 'exportar_ventas_excel') {
             <th>Álbum</th>
             <th>Total</th>
             <th>Pagado</th>
+            <th>Ajustes</th>
             <th>Saldo</th>
             <th>Estado</th>
         </tr>
@@ -71,6 +78,7 @@ if (isset($_GET['accion']) && $_GET['accion'] === 'exportar_ventas_excel') {
         echo "<td>{$row['Album']}</td>";
         echo "<td>{$row['Total']}</td>";
         echo "<td>{$row['TotalPagado']}</td>";
+        echo "<td>{$row['Ajustes']}</td>";
         echo "<td>{$row['Saldo']}</td>";
         echo "<td>{$row['EstadoPago']}</td>";
         echo "</tr>";
@@ -79,11 +87,6 @@ if (isset($_GET['accion']) && $_GET['accion'] === 'exportar_ventas_excel') {
     echo "</table>";
     exit;
 }
-
-
-
-
-
 
 
 header('Content-Type: application/json; charset=utf-8');

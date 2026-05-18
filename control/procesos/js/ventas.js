@@ -1839,17 +1839,7 @@ function eliminarAjustePago(idVenta) {
         if (r.success) {
           toast("Ajuste eliminado correctamente", "success");
 
-          if ($.fn.DataTable.isDataTable("#tabla_ventas")) {
-            $("#tabla_ventas").DataTable().ajax.reload(null, false);
-          }
-
-          if ($.fn.DataTable.isDataTable("#tabla_listado_ventas")) {
-            $("#tabla_listado_ventas").DataTable().ajax.reload(null, false);
-          }
-
-          cargarResumenVentas();
-
-          cargarResumenProductosVentas();
+          recargarListadoVentas();
 
           if (ventaActualOffcanvas && parseInt(ventaActualOffcanvas) === parseInt(idVenta)) {
             abrirEstadoVenta(idVenta);
@@ -1858,8 +1848,10 @@ function eliminarAjustePago(idVenta) {
           alerta("Error", r.error || "No se pudo eliminar el ajuste.", "error");
         }
       },
+
       error: function (xhr) {
         console.log(xhr.responseText);
+
         alerta("Error", "Error eliminando ajuste.", "error");
       },
     });
