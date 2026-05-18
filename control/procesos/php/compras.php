@@ -111,7 +111,7 @@ switch ($accion) {
 
     case 'ver':
 
-        $idOrden = isset($_POST['idOrden']) ? (int)$_POST['idOrden'] : 0;
+        $idOrden = isset($_POST['id']) ? (int)$_POST['id'] : 0;
 
         if ($idOrden <= 0) {
             responder([
