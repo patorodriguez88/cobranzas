@@ -968,14 +968,14 @@ function abrirEstadoVenta(idVenta) {
           : `<span class="badge bg-warning mt-1">Sin conciliar</span>`
       }
       </td>
-      <td>
+<td>
   <div>${p.Operacion || ""}</div>
 
   ${
-    p.Observaciones && p.Observaciones.trim() !== ""
+    p.Usuario_obs && p.Usuario_obs.trim() !== ""
       ? `
-        <small class="text-muted">
-          ${p.Observaciones}
+        <small class="text-muted d-block">
+          ${p.Usuario_obs}
         </small>
       `
       : ""
