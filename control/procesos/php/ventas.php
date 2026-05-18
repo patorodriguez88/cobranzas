@@ -1966,6 +1966,8 @@ VALUES
 
             $idCobranza = $mysqli->insert_id;
 
+            $_SESSION['NComprobante'] = $idCobranza;
+
             $sqlAplicacion = "
             INSERT INTO CobranzasVentas
             (

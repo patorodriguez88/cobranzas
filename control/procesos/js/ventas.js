@@ -1730,10 +1730,16 @@ function guardarDepositoVenta() {
       },
       success: function (r) {
         if (r.success) {
+          // $("#modalDepositoVenta").modal("hide");
+
+          // toast("Depósito cargado correctamente", "success");
           $("#modalDepositoVenta").modal("hide");
 
-          toast("Depósito cargado correctamente", "success");
-
+          if (r.idCobranza) {
+            $("#modalComprobanteDeposito").modal("show");
+          } else {
+            toast("Depósito cargado correctamente", "success");
+          }
           if ($.fn.DataTable.isDataTable("#tabla_ventas")) {
             $("#tabla_ventas").DataTable().ajax.reload(null, false);
           }
@@ -1808,3 +1814,18 @@ function eliminarAjustePago(idVenta) {
 function abrirWhatsappUnico(url) {
   window.open(url, "whatsapp_web_dinter");
 }
+Dropzone.autoDiscover = false;
+
+let dropzoneDeposito = new Dropzone("#dropzoneComprobanteDeposito", {
+  url: "procesos/php/upload.php",
+  maxFiles: 1,
+  acceptedFiles: "image/*",
+  addRemoveLinks: true,
+  dictDefaultMessage: "Subir comprobante",
+  success: function () {
+    toast("Comprobante subido correctamente", "success");
+  },
+  error: function () {
+    alerta("Error", "No se pudo subir el comprobante.", "error");
+  },
+});
