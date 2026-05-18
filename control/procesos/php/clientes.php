@@ -265,3 +265,32 @@ if (isset($_POST['Celular'])) {
     ]);
     exit;
 }
+// DISTRIBUIDORA
+if (isset($_POST['Distribuidora_search'])) {
+    $id = (int)$_POST['id'];
+
+    $sql = $mysqli->query("SELECT Distribuidora FROM Clientes WHERE id='$id'");
+    $row = $sql->fetch_array(MYSQLI_ASSOC);
+
+    echo json_encode([
+        'success' => 1,
+        'Dato' => $row['Distribuidora'] ?? 'Dinter'
+    ]);
+    exit;
+}
+
+if (isset($_POST['Distribuidora_update'])) {
+    $id = (int)$_POST['id'];
+    $distribuidora = trim($_POST['Distribuidora_text'] ?? 'Dinter');
+
+    if ($distribuidora != 'Dinter' && $distribuidora != 'Misas') {
+        $distribuidora = 'Dinter';
+    }
+
+    $distribuidora = $mysqli->real_escape_string($distribuidora);
+
+    $mysqli->query("UPDATE Clientes SET Distribuidora='$distribuidora' WHERE id='$id'");
+
+    echo json_encode(['success' => 1]);
+    exit;
+}

@@ -235,12 +235,17 @@ $(document).ready(function () {
       },
       {
         data: "Distribuidora",
-        render: function (data) {
-          if (data === "Misas") {
-            return `<span class="badge bg-info">${data}</span>`;
-          }
+        render: function (data, type, row) {
+          let distribuidora = data || "Dinter";
+          let clase = distribuidora === "Misas" ? "bg-info" : "bg-primary";
 
-          return `<span class="badge bg-primary">${data || "Dinter"}</span>`;
+          return `
+      <span class="badge ${clase}"
+            style="cursor:pointer"
+            onclick="editarDistribuidoraCliente(${row.id}, '${distribuidora}')">
+        ${distribuidora}
+      </span>
+    `;
         },
       },
       {
@@ -566,4 +571,43 @@ Dinter S.A.`;
   $("#btn_enviar_whatsapp_cliente").attr("href", whatsappURL);
 
   $("#modal_whatsapp_cliente").modal("show");
+}
+function editarDistribuidoraCliente(idCliente, distribuidora) {
+  $("#distribuidora_id_cliente").val(idCliente);
+  $("#distribuidora_cliente").val(distribuidora || "Dinter");
+  $("#modalDistribuidoraCliente").modal("show");
+}
+
+function guardarDistribuidoraCliente() {
+  let idCliente = $("#distribuidora_id_cliente").val();
+  let distribuidora = $("#distribuidora_cliente").val();
+
+  $.ajax({
+    url: "control/procesos/php/clientes.php",
+    type: "POST",
+    dataType: "json",
+    data: {
+      Distribuidora_update: 1,
+      id: idCliente,
+      Distribuidora_text: distribuidora,
+    },
+    success: function (r) {
+      if (r.success == 1) {
+        $("#modalDistribuidoraCliente").modal("hide");
+
+        toast("Distribuidora actualizada", "success");
+
+        if ($.fn.DataTable.isDataTable("#tabla_clientes")) {
+          $("#tabla_clientes").DataTable().ajax.reload(null, false);
+        }
+      } else {
+        alerta("Error", r.error || "No se pudo actualizar.", "error");
+      }
+    },
+    error: function (xhr) {
+      console.log(xhr.responseText);
+
+      alerta("Error", "Error actualizando distribuidora.", "error");
+    },
+  });
 }

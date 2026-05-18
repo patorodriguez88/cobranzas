@@ -17,6 +17,33 @@
     <link href="saas/assets/css/icons.min.css" rel="stylesheet" type="text/css" />
     <link href="saas/assets/css/app.min.css" rel="stylesheet" type="text/css" id="app-style" />
   </head>
+  <!-- MODAL EDITAR DISTRIBUIDORA -->
+  <div class="modal fade" id="modalDistribuidoraCliente" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Editar distribuidora</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+          <input type="hidden" id="distribuidora_id_cliente" />
+
+          <label class="form-label">Distribuidora</label>
+          <select id="distribuidora_cliente" class="form-control">
+            <option value="Dinter">Dinter</option>
+            <option value="Misas">Misas</option>
+          </select>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn btn-success" onclick="guardarDistribuidoraCliente()">Guardar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL ENVIAR ACCESO A CLIENTES -->
   <div class="modal fade" id="modal_whatsapp_cliente" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
