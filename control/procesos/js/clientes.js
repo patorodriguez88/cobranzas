@@ -595,10 +595,20 @@ function guardarDistribuidoraCliente() {
       if (r.success == 1) {
         $("#modalDistribuidoraCliente").modal("hide");
 
-        toast("Distribuidora actualizada", "success");
+        Swal.fire({
+          icon: "success",
 
-        if ($.fn.DataTable.isDataTable("#tabla_clientes")) {
-          $("#tabla_clientes").DataTable().ajax.reload(null, false);
+          title: "OK",
+
+          text: "Distribuidora actualizada",
+
+          timer: 1200,
+
+          showConfirmButton: false,
+        });
+
+        if ($.fn.DataTable.isDataTable("#clientes_tabla")) {
+          $("#clientes_tabla").DataTable().ajax.reload(null, false);
         }
       } else {
         alerta("Error", r.error || "No se pudo actualizar.", "error");
