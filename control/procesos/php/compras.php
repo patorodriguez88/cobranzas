@@ -196,13 +196,21 @@ switch ($accion) {
     case 'guardar':
 
         $idOrdenEditar = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+
         $usuario = usuarioActual($mysqli);
-        $observaciones = isset($_POST['Observaciones']) ? $mysqli->real_escape_string($_POST['Observaciones']) : '';
-        $detalleJson = isset($_POST['detalle']) ? $_POST['detalle'] : '[]';
+
+        $observaciones = isset($_POST['Observaciones'])
+            ? $mysqli->real_escape_string($_POST['Observaciones'])
+            : '';
+
+        $detalleJson = isset($_POST['detalle'])
+            ? $_POST['detalle']
+            : '[]';
 
         $detalle = json_decode($detalleJson, true);
 
         if (!is_array($detalle) || count($detalle) == 0) {
+
             responder([
                 "success" => 0,
                 "error" => "La orden no tiene productos."
@@ -213,16 +221,22 @@ switch ($accion) {
 
         try {
 
+            /*
+        =====================================================
+        EDICIÓN
+        =====================================================
+        */
+
             if ($idOrdenEditar > 0) {
 
                 $sqlOrdenExiste = "
-                    SELECT id, NumeroOrden
-                    FROM OrdenesCompra
-                    WHERE id = '$idOrdenEditar'
-                      AND IFNULL(Eliminado, 0) = 0
-                    LIMIT 1
-                    FOR UPDATE
-                ";
+                SELECT id
+                FROM OrdenesCompra
+                WHERE id = '$idOrdenEditar'
+                AND IFNULL(Eliminado,0)=0
+                LIMIT 1
+                FOR UPDATE
+            ";
 
                 $resOrdenExiste = $mysqli->query($sqlOrdenExiste);
 
@@ -231,107 +245,380 @@ switch ($accion) {
                 }
 
                 if ($resOrdenExiste->num_rows == 0) {
-                    throw new Exception("La orden que intentás editar no existe o está anulada.");
+                    throw new Exception("La orden no existe.");
                 }
 
-                /*
-                    Validación importante:
-                    No dejamos editar una orden si ya fue consumida por ventas.
-                    Después podemos hacer edición parcial, pero por ahora esto evita romper trazabilidad.
-                */
-                $sqlConsumo = "
-                    SELECT COUNT(*) AS Total
-                    FROM VentasConsumoStock VCS
-                    INNER JOIN OrdenesCompraDetalle OCD 
-                        ON OCD.id = VCS.idOrdenCompraDetalle
-                    WHERE OCD.idOrdenCompra = '$idOrdenEditar'
-                      AND IFNULL(VCS.Eliminado, 0) = 0
-                      AND IFNULL(OCD.Eliminado, 0) = 0
-                ";
+                $totalItems = 0;
 
-                $resConsumo = $mysqli->query($sqlConsumo);
+                $productosEditados = [];
 
-                if (!$resConsumo) {
-                    throw new Exception($mysqli->error);
-                }
+                foreach ($detalle as $item) {
 
-                $rowConsumo = $resConsumo->fetch_assoc();
+                    $idProducto = (int)$item['idProducto'];
+                    $cantidadNueva = (float)$item['Cantidad'];
 
-                if ((int)$rowConsumo['Total'] > 0) {
-                    throw new Exception("No se puede editar esta orden porque ya tiene stock consumido por ventas. Primero hay que analizar/revertir esas ventas.");
-                }
+                    if ($idProducto <= 0 || $cantidadNueva < 0) {
 
-                $sqlDetalleViejo = "
-                    SELECT 
-                        idProducto,
-                        ProductoNombre,
-                        Cantidad
-                    FROM OrdenesCompraDetalle
-                    WHERE idOrdenCompra = '$idOrdenEditar'
-                      AND IFNULL(Eliminado, 0) = 0
-                    FOR UPDATE
-                ";
-
-                $resDetalleViejo = $mysqli->query($sqlDetalleViejo);
-
-                if (!$resDetalleViejo) {
-                    throw new Exception($mysqli->error);
-                }
-
-                while ($itemViejo = $resDetalleViejo->fetch_assoc()) {
-
-                    $idProductoViejo = (int)$itemViejo['idProducto'];
-                    $cantidadVieja = (float)$itemViejo['Cantidad'];
-                    $productoNombreViejo = $mysqli->real_escape_string($itemViejo['ProductoNombre']);
-
-                    if ($idProductoViejo <= 0 || $cantidadVieja <= 0) {
                         continue;
                     }
 
-                    $sqlProductoViejo = "
-                        SELECT Stock
+                    $productosEditados[] = $idProducto;
+
+                    /*
+                ============================================
+                BUSCAR DETALLE ACTUAL
+                ============================================
+                */
+
+                    $sqlDetalleActual = "
+                    SELECT 
+                        OCD.id,
+                        OCD.Cantidad,
+                        OCD.ProductoNombre,
+                        P.Stock
+                    FROM OrdenesCompraDetalle OCD
+                    INNER JOIN Productos P 
+                        ON P.id = OCD.idProducto
+                    WHERE OCD.idOrdenCompra = '$idOrdenEditar'
+                    AND OCD.idProducto = '$idProducto'
+                    AND IFNULL(OCD.Eliminado,0)=0
+                    LIMIT 1
+                    FOR UPDATE
+                ";
+
+                    $resDetalleActual = $mysqli->query($sqlDetalleActual);
+
+                    if (!$resDetalleActual) {
+                        throw new Exception($mysqli->error);
+                    }
+
+                    /*
+                ============================================
+                PRODUCTO NUEVO EN LA OI
+                ============================================
+                */
+
+                    if ($resDetalleActual->num_rows == 0) {
+
+                        $stmtNuevo = $mysqli->prepare("
+                        SELECT Nombre, Stock
                         FROM Productos
-                        WHERE id = '$idProductoViejo'
+                        WHERE id = ?
                         LIMIT 1
                         FOR UPDATE
+                    ");
+
+                        $stmtNuevo->bind_param("i", $idProducto);
+                        $stmtNuevo->execute();
+
+                        $resNuevo = $stmtNuevo->get_result();
+
+                        if ($resNuevo->num_rows == 0) {
+                            throw new Exception("Producto inexistente.");
+                        }
+
+                        $productoNuevo = $resNuevo->fetch_assoc();
+
+                        $productoNombre = $mysqli->real_escape_string($productoNuevo['Nombre']);
+
+                        $stockAnterior = (float)$productoNuevo['Stock'];
+
+                        $stockNuevo = $stockAnterior + $cantidadNueva;
+
+                        $sqlInsertDetalle = "
+                        INSERT INTO OrdenesCompraDetalle
+                        (
+                            idOrdenCompra,
+                            idProducto,
+                            ProductoNombre,
+                            Cantidad,
+                            StockAnterior,
+                            StockNuevo,
+                            Eliminado
+                        )
+                        VALUES
+                        (
+                            '$idOrdenEditar',
+                            '$idProducto',
+                            '$productoNombre',
+                            '$cantidadNueva',
+                            '$stockAnterior',
+                            '$stockNuevo',
+                            0
+                        )
                     ";
 
-                    $resProductoViejo = $mysqli->query($sqlProductoViejo);
+                        if (!$mysqli->query($sqlInsertDetalle)) {
+                            throw new Exception($mysqli->error);
+                        }
+                        $obsMov = $mysqli->real_escape_string(
+                            "Nuevo producto agregado en edición OI #{$idOrdenEditar}"
+                        );
 
-                    if (!$resProductoViejo) {
-                        throw new Exception($mysqli->error);
-                    }
+                        $sqlMov = "INSERT INTO MovimientosStock
+                            (
+                                idProducto,
+                                Tipo,
+                                idReferencia,
+                                Cantidad,
+                                StockAnterior,
+                                StockNuevo,
+                                Usuario,
+                                Observaciones,
+                                Fecha
+                            )
+                            VALUES
+                            (
+                                '$idProducto',
+                                'NUEVO_PRODUCTO_OI',
+                                '$idOrdenEditar',
+                                '$cantidadNueva',
+                                '$stockAnterior',
+                                '$stockNuevo',
+                                '$usuario',
+                                '$obsMov',
+                                NOW()
+                            )
+                        ";
 
-                    $productoViejo = $resProductoViejo->fetch_assoc();
-
-                    if (!$productoViejo) {
-                        throw new Exception("Producto inexistente al revertir stock: " . $idProductoViejo);
-                    }
-
-                    $stockAnterior = (float)$productoViejo['Stock'];
-                    $stockNuevo = $stockAnterior - $cantidadVieja;
-
-                    if ($stockNuevo < 0) {
-                        throw new Exception("No se puede revertir la orden porque el stock de {$productoNombreViejo} quedaría negativo.");
-                    }
-
-                    $sqlRevertirStock = "
+                        if (!$mysqli->query($sqlMov)) {
+                            throw new Exception($mysqli->error);
+                        }
+                        $sqlUpdateStock = "
                         UPDATE Productos
                         SET Stock = '$stockNuevo'
-                        WHERE id = '$idProductoViejo'
+                        WHERE id = '$idProducto'
                         LIMIT 1
                     ";
 
-                    if (!$mysqli->query($sqlRevertirStock)) {
+                        if (!$mysqli->query($sqlUpdateStock)) {
+                            throw new Exception($mysqli->error);
+                        }
+
+                        $totalItems += $cantidadNueva;
+
+                        continue;
+                    }
+
+                    /*
+                ============================================
+                PRODUCTO EXISTENTE
+                ============================================
+                */
+
+                    $detalleActual = $resDetalleActual->fetch_assoc();
+
+                    $idDetalle = (int)$detalleActual['id'];
+
+                    $cantidadVieja = (float)$detalleActual['Cantidad'];
+
+                    $productoNombre = $mysqli->real_escape_string($detalleActual['ProductoNombre']);
+
+                    $stockActualProducto = (float)$detalleActual['Stock'];
+
+                    /*
+                CONSUMIDO
+                */
+
+                    $sqlConsumido = "
+                    SELECT IFNULL(SUM(Cantidad),0) AS Consumido
+                    FROM VentasConsumoStock
+                    WHERE idOrdenCompraDetalle = '$idDetalle'
+                    AND IFNULL(Eliminado,0)=0
+                ";
+
+                    $resConsumido = $mysqli->query($sqlConsumido);
+
+                    if (!$resConsumido) {
                         throw new Exception($mysqli->error);
                     }
 
+                    $consumido = (float)$resConsumido->fetch_assoc()['Consumido'];
+
+                    if ($cantidadNueva < $consumido) {
+
+                        throw new Exception(
+                            "No podés dejar {$productoNombre} en {$cantidadNueva}. Ya hay {$consumido} consumidos."
+                        );
+                    }
+
+                    /*
+                DIFERENCIA
+                */
+
+                    $diferencia = $cantidadNueva - $cantidadVieja;
+
+                    $nuevoStockProducto = $stockActualProducto + $diferencia;
+
+                    if ($nuevoStockProducto < 0) {
+
+                        throw new Exception(
+                            "El stock quedaría negativo para {$productoNombre}"
+                        );
+                    }
+
+                    /*
+                UPDATE DETALLE
+                */
+
+                    $sqlUpdateDetalle = "
+                    UPDATE OrdenesCompraDetalle
+                    SET Cantidad = '$cantidadNueva'
+                    WHERE id = '$idDetalle'
+                    LIMIT 1
+                ";
+
+                    if (!$mysqli->query($sqlUpdateDetalle)) {
+                        throw new Exception($mysqli->error);
+                    }
+
+                    /*
+                UPDATE STOCK
+                */
+
+                    $sqlUpdateProducto = "
+                    UPDATE Productos
+                    SET Stock = '$nuevoStockProducto'
+                    WHERE id = '$idProducto'
+                    LIMIT 1
+                ";
+
+                    if (!$mysqli->query($sqlUpdateProducto)) {
+                        throw new Exception($mysqli->error);
+                    }
+                    if ($diferencia != 0) {
+
+                        $obsMov = $mysqli->real_escape_string(
+                            "Edición OI #{$idOrdenEditar} - {$productoNombre}"
+                        );
+
+                        $tipoMov = $diferencia > 0
+                            ? 'AJUSTE_POSITIVO_OI'
+                            : 'AJUSTE_NEGATIVO_OI';
+
+                        $sqlMov = "INSERT INTO MovimientosStock
+                            (
+                                idProducto,
+                                Tipo,
+                                idReferencia,
+                                Cantidad,
+                                StockAnterior,
+                                StockNuevo,
+                                Usuario,
+                                Observaciones,
+                                Fecha
+                            )
+                            VALUES
+                            (
+                                '$idProducto',
+                                '$tipoMov',
+                                '$idOrdenEditar',
+                                '" . abs($diferencia) . "',
+                                '$stockActualProducto',
+                                '$nuevoStockProducto',
+                                '$usuario',
+                                '$obsMov',
+                                NOW()
+                            )
+                        ";
+
+                        if (!$mysqli->query($sqlMov)) {
+                            throw new Exception($mysqli->error);
+                        }
+                    }
+                    $totalItems += $cantidadNueva;
+                }
+
+                /*
+            ============================================
+            PRODUCTOS ELIMINADOS DE LA OI
+            ============================================
+            */
+
+                $sqlViejos = "SELECT 
+                    OCD.id,
+                    OCD.idProducto,
+                    OCD.ProductoNombre,
+                    OCD.Cantidad,
+                    P.Stock
+                FROM OrdenesCompraDetalle OCD
+                INNER JOIN Productos P 
+                    ON P.id = OCD.idProducto
+                WHERE OCD.idOrdenCompra = '$idOrdenEditar'
+                AND IFNULL(OCD.Eliminado,0)=0
+            ";
+
+                $resViejos = $mysqli->query($sqlViejos);
+
+                while ($viejo = $resViejos->fetch_assoc()) {
+
+                    $idProductoViejo = (int)$viejo['idProducto'];
+
+                    if (in_array($idProductoViejo, $productosEditados)) {
+                        continue;
+                    }
+
+                    $idDetalleViejo = (int)$viejo['id'];
+
+                    $cantidadVieja = (float)$viejo['Cantidad'];
+
+                    $stockActual = (float)$viejo['Stock'];
+
+                    /*
+                VALIDAR CONSUMIDO
+                */
+
+                    $sqlConsumido = "SELECT IFNULL(SUM(Cantidad),0) AS Consumido
+                    FROM VentasConsumoStock
+                    WHERE idOrdenCompraDetalle = '$idDetalleViejo'
+                    AND IFNULL(Eliminado,0)=0
+                ";
+
+                    $resConsumido = $mysqli->query($sqlConsumido);
+
+                    $consumido = (float)$resConsumido->fetch_assoc()['Consumido'];
+
+                    if ($consumido > 0) {
+
+                        throw new Exception(
+                            "No podés eliminar productos ya consumidos."
+                        );
+                    }
+
+                    /*
+                ELIMINAR DETALLE
+                */
+
+                    $sqlEliminarDetalle = " UPDATE OrdenesCompraDetalle
+                    SET Eliminado = 1
+                    WHERE id = '$idDetalleViejo'
+                    LIMIT 1
+                ";
+
+                    if (!$mysqli->query($sqlEliminarDetalle)) {
+                        throw new Exception($mysqli->error);
+                    }
+
+                    /*
+                REVERTIR STOCK
+                */
+
+                    $nuevoStock = $stockActual - $cantidadVieja;
+
+                    $sqlStock = "UPDATE Productos
+                    SET Stock = '$nuevoStock'
+                    WHERE id = '$idProductoViejo'
+                    LIMIT 1
+                ";
+
+                    if (!$mysqli->query($sqlStock)) {
+                        throw new Exception($mysqli->error);
+                    }
                     $obsMov = $mysqli->real_escape_string(
-                        "Reversión por edición de orden de ingreso #" . $idOrdenEditar . " - " . $productoNombreViejo
+                        "Producto eliminado en edición OI #{$idOrdenEditar}"
                     );
 
-                    $sqlMovReversa = "
-                        INSERT INTO MovimientosStock
+                    $sqlMov = "INSERT INTO MovimientosStock
                         (
                             idProducto,
                             Tipo,
@@ -346,154 +633,169 @@ switch ($accion) {
                         VALUES
                         (
                             '$idProductoViejo',
-                            'REVERSA_EDICION_INGRESO_COMPRA',
+                            'ELIMINACION_PRODUCTO_OI',
                             '$idOrdenEditar',
                             '$cantidadVieja',
-                            '$stockAnterior',
-                            '$stockNuevo',
+                            '$stockActual',
+                            '$nuevoStock',
                             '$usuario',
                             '$obsMov',
                             NOW()
                         )
                     ";
 
-                    if (!$mysqli->query($sqlMovReversa)) {
+                    if (!$mysqli->query($sqlMov)) {
                         throw new Exception($mysqli->error);
                     }
                 }
 
-                $sqlEliminarDetalleViejo = "
-                    UPDATE OrdenesCompraDetalle
-                    SET Eliminado = 1
-                    WHERE idOrdenCompra = '$idOrdenEditar'
-                ";
 
-                if (!$mysqli->query($sqlEliminarDetalleViejo)) {
+                /*
+            UPDATE OI
+            */
+
+                $sqlActualizarOrden = "
+                UPDATE OrdenesCompra
+                SET 
+                    Observaciones = '$observaciones',
+                    TotalItems = '$totalItems'
+                WHERE id = '$idOrdenEditar'
+                LIMIT 1
+            ";
+
+                if (!$mysqli->query($sqlActualizarOrden)) {
                     throw new Exception($mysqli->error);
                 }
 
-                $idOrden = $idOrdenEditar;
-            } else {
+                $mysqli->commit();
 
-                $sqlOrden = "
-                    INSERT INTO OrdenesCompra
-                    (
-                        Fecha,
-                        Usuario,
-                        Observaciones,
-                        TotalItems,
-                        Eliminado
-                    )
-                    VALUES
-                    (
-                        NOW(),
-                        '$usuario',
-                        '$observaciones',
-                        0,
-                        0
-                    )
-                ";
+                responder([
+                    "success" => 1,
+                    "editada" => 1,
+                    "NumeroOrden" => $idOrdenEditar
+                ]);
+            }
 
-                if (!$mysqli->query($sqlOrden)) {
-                    throw new Exception($mysqli->error);
-                }
+            /*
+        =====================================================
+        NUEVA OI
+        =====================================================
+        */
 
-                $idOrden = $mysqli->insert_id;
+            $sqlOrden = "
+            INSERT INTO OrdenesCompra
+            (
+                Fecha,
+                Usuario,
+                Observaciones,
+                TotalItems,
+                Eliminado
+            )
+            VALUES
+            (
+                NOW(),
+                '$usuario',
+                '$observaciones',
+                0,
+                0
+            )
+        ";
 
-                $sqlNumero = "
-                    UPDATE OrdenesCompra
-                    SET NumeroOrden = '$idOrden'
-                    WHERE id = '$idOrden'
-                    LIMIT 1
-                ";
+            if (!$mysqli->query($sqlOrden)) {
+                throw new Exception($mysqli->error);
+            }
 
-                if (!$mysqli->query($sqlNumero)) {
-                    throw new Exception($mysqli->error);
-                }
+            $idOrden = $mysqli->insert_id;
+
+            $sqlNumero = "
+            UPDATE OrdenesCompra
+            SET NumeroOrden = '$idOrden'
+            WHERE id = '$idOrden'
+            LIMIT 1
+        ";
+
+            if (!$mysqli->query($sqlNumero)) {
+                throw new Exception($mysqli->error);
             }
 
             $totalItems = 0;
 
             foreach ($detalle as $item) {
 
-                $idProducto = isset($item['idProducto']) ? (int)$item['idProducto'] : 0;
-                $cantidad = isset($item['Cantidad']) ? (float)$item['Cantidad'] : 0;
+                $idProducto = (int)$item['idProducto'];
+                $cantidad = (float)$item['Cantidad'];
 
                 if ($idProducto <= 0 || $cantidad <= 0) {
                     continue;
                 }
 
                 $stmt = $mysqli->prepare("
-                    SELECT Nombre, Stock
-                    FROM Productos
-                    WHERE id = ?
-                      AND IFNULL(Eliminado, 0) = 0
-                    LIMIT 1
-                    FOR UPDATE
-                ");
-
-                if (!$stmt) {
-                    throw new Exception($mysqli->error);
-                }
+                SELECT Nombre, Stock
+                FROM Productos
+                WHERE id = ?
+                LIMIT 1
+                FOR UPDATE
+            ");
 
                 $stmt->bind_param("i", $idProducto);
                 $stmt->execute();
 
                 $resProducto = $stmt->get_result();
+
                 $producto = $resProducto->fetch_assoc();
 
                 if (!$producto) {
-                    throw new Exception("Producto inexistente: " . $idProducto);
+                    throw new Exception("Producto inexistente.");
                 }
 
                 $productoNombre = $mysqli->real_escape_string($producto['Nombre']);
+
                 $stockAnterior = (float)$producto['Stock'];
+
                 $stockNuevo = $stockAnterior + $cantidad;
 
                 $sqlDetalle = "
-                    INSERT INTO OrdenesCompraDetalle
-                    (
-                        idOrdenCompra,
-                        idProducto,
-                        ProductoNombre,
-                        Cantidad,
-                        StockAnterior,
-                        StockNuevo,
-                        Eliminado
-                    )
-                    VALUES
-                    (
-                        '$idOrden',
-                        '$idProducto',
-                        '$productoNombre',
-                        '$cantidad',
-                        '$stockAnterior',
-                        '$stockNuevo',
-                        0
-                    )
-                ";
+                INSERT INTO OrdenesCompraDetalle
+                (
+                    idOrdenCompra,
+                    idProducto,
+                    ProductoNombre,
+                    Cantidad,
+                    StockAnterior,
+                    StockNuevo,
+                    Eliminado
+                )
+                VALUES
+                (
+                    '$idOrden',
+                    '$idProducto',
+                    '$productoNombre',
+                    '$cantidad',
+                    '$stockAnterior',
+                    '$stockNuevo',
+                    0
+                )
+            ";
 
                 if (!$mysqli->query($sqlDetalle)) {
                     throw new Exception($mysqli->error);
                 }
 
                 $sqlStock = "
-                    UPDATE Productos
-                    SET Stock = '$stockNuevo'
-                    WHERE id = '$idProducto'
-                    LIMIT 1
-                ";
+                UPDATE Productos
+                SET Stock = '$stockNuevo'
+                WHERE id = '$idProducto'
+                LIMIT 1
+            ";
 
                 if (!$mysqli->query($sqlStock)) {
                     throw new Exception($mysqli->error);
                 }
-
                 $obsMov = $mysqli->real_escape_string(
-                    ($idOrdenEditar > 0 ? "Reaplicación por edición de orden de ingreso #" : "Ingreso por orden de ingreso #") . $idOrden
+                    "Ingreso por orden de ingreso #{$idOrden}"
                 );
 
-                $sqlMov = "
-                    INSERT INTO MovimientosStock
+                $sqlMov = "INSERT INTO MovimientosStock
                     (
                         idProducto,
                         Tipo,
@@ -522,23 +824,15 @@ switch ($accion) {
                 if (!$mysqli->query($sqlMov)) {
                     throw new Exception($mysqli->error);
                 }
-
                 $totalItems += $cantidad;
             }
 
-            if ($totalItems <= 0) {
-                throw new Exception("No hay cantidades válidas para guardar.");
-            }
-
             $sqlActualizarOrden = "
-                UPDATE OrdenesCompra
-                SET 
-                    Usuario = '$usuario',
-                    Observaciones = '$observaciones',
-                    TotalItems = '$totalItems'
-                WHERE id = '$idOrden'
-                LIMIT 1
-            ";
+            UPDATE OrdenesCompra
+            SET TotalItems = '$totalItems'
+            WHERE id = '$idOrden'
+            LIMIT 1
+        ";
 
             if (!$mysqli->query($sqlActualizarOrden)) {
                 throw new Exception($mysqli->error);
@@ -549,8 +843,7 @@ switch ($accion) {
             responder([
                 "success" => 1,
                 "idOrden" => $idOrden,
-                "NumeroOrden" => $idOrden,
-                "editada" => $idOrdenEditar > 0 ? 1 : 0
+                "NumeroOrden" => $idOrden
             ]);
         } catch (Exception $e) {
 
