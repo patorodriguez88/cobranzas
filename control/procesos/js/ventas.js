@@ -1835,7 +1835,31 @@ $(document).ready(function () {
       addRemoveLinks: true,
       dictRemoveFile: "Quitar",
       dictDefaultMessage: "Arrastrá una imagen o hacé click",
+      previewTemplate: `
+      <div class="dz-preview dz-file-preview">
+        <div class="dz-image">
+          <img data-dz-thumbnail />
+        </div>
+
+        <div class="dz-details">
+          <div class="dz-filename">
+            <span data-dz-name></span>
+          </div>
+
+          <div class="dz-size" data-dz-size></div>
+
+          <a class="dz-remove" href="javascript:undefined;" data-dz-remove>
+            Quitar
+          </a>
+        </div>
+      </div>
+      `,
       init: function () {
+        this.on("maxfilesexceeded", function (file) {
+          this.removeAllFiles(true);
+
+          this.addFile(file);
+        });
         this.on("sending", function (file, xhr, formData) {
           formData.append("idCobranza", idCobranzaPendienteComprobante);
         });
