@@ -1435,18 +1435,25 @@ function cargarResumenProductosVentas() {
     type: "POST",
     dataType: "json",
     data: {
-      accion: "resumen_productos_ventas",
+      accion: "stock_por_orden_ingreso",
     },
     success: function (r) {
-      $("#figus_stock").text(parseInt(r.FIGURITAS.stock || 0).toLocaleString("es-AR"));
-      $("#figus_total").text(parseInt(r.FIGURITAS.total || 0).toLocaleString("es-AR"));
-      $("#figus_pendiente").text(parseInt(r.FIGURITAS.pendiente || 0).toLocaleString("es-AR"));
+      if (!r.success) {
+        console.log(r.error);
+        return;
+      }
 
-      $("#album_stock").text(parseInt(r.ALBUM.stock || 0).toLocaleString("es-AR"));
-      $("#album_total").text(parseInt(r.ALBUM.total || 0).toLocaleString("es-AR"));
-      $("#album_pendiente").text(parseInt(r.ALBUM.pendiente || 0).toLocaleString("es-AR"));
-      $("#figus_vendedores").html(renderVendedoresResumen(r.FIGURITAS.vendedores));
-      $("#album_vendedores").html(renderVendedoresResumen(r.ALBUM.vendedores));
+      $("#figus_vendedores").html(renderStockPorOI(r.data.FIGURITAS));
+      $("#album_vendedores").html(renderStockPorOI(r.data.ALBUM));
+
+      $("#figus_stock").text(totalDisponibleOI(r.data.FIGURITAS));
+      $("#album_stock").text(totalDisponibleOI(r.data.ALBUM));
+
+      $("#figus_total").text(totalAsignadoOI(r.data.FIGURITAS));
+      $("#album_total").text(totalAsignadoOI(r.data.ALBUM));
+
+      $("#figus_pendiente").text(totalDisponibleOI(r.data.FIGURITAS));
+      $("#album_pendiente").text(totalDisponibleOI(r.data.ALBUM));
     },
   });
 }
@@ -1939,4 +1946,84 @@ function verComprobantePago(imagen) {
       popup: "p-2",
     },
   });
+}
+function totalDisponibleOI(items) {
+  let total = 0;
+
+  (items || []).forEach(function (x) {
+    total += parseFloat(x.StockDisponible || 0);
+  });
+
+  return total.toLocaleString("es-AR");
+}
+
+function totalAsignadoOI(items) {
+  let total = 0;
+
+  (items || []).forEach(function (x) {
+    total += parseFloat(x.StockAsignado || 0);
+  });
+
+  return total.toLocaleString("es-AR");
+}
+
+function renderStockPorOI(items) {
+  if (!items || items.length === 0) {
+    return `<div class="text-muted small">Sin órdenes de ingreso.</div>`;
+  }
+
+  let html = `
+    <div class="table-responsive mt-2">
+      <table class="table table-sm table-bordered mb-0" style="font-size:11px;">
+        <thead class="table-light">
+          <tr>
+            <th>Concepto</th>
+  `;
+
+  items.forEach(function (x) {
+    html += `<th class="text-end">OI #${x.NumeroOrden}</th>`;
+  });
+
+  html += `<th class="text-end bg-light">Total</th></tr></thead><tbody>`;
+
+  html += renderFilaStockOI("Stock", items, "StockIngresado");
+  html += renderFilaStockOI("Asignado", items, "StockAsignado");
+  html += renderFilaStockOI("Disponible", items, "StockDisponible", true);
+
+  html += `
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  return html;
+}
+
+function renderFilaStockOI(label, items, campo, destacar) {
+  let total = 0;
+
+  let html = `
+    <tr ${destacar ? 'class="table-success fw-bold"' : ""}>
+      <td>${label}</td>
+  `;
+
+  items.forEach(function (x) {
+    let valor = parseFloat(x[campo] || 0);
+    total += valor;
+
+    html += `
+      <td class="text-end">
+        ${valor.toLocaleString("es-AR")}
+      </td>
+    `;
+  });
+
+  html += `
+      <td class="text-end bg-light">
+        ${total.toLocaleString("es-AR")}
+      </td>
+    </tr>
+  `;
+
+  return html;
 }

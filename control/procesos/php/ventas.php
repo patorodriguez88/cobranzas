@@ -2225,6 +2225,81 @@ VALUES
 
         break;
 
+    case 'stock_por_orden_ingreso':
+
+        $sql = "
+        SELECT
+            P.id AS idProducto,
+            P.Nombre AS Producto,
+            OC.id AS idOrdenCompra,
+            OC.NumeroOrden,
+            OCD.Cantidad AS StockIngresado,
+
+            IFNULL((
+                SELECT SUM(VCS.Cantidad)
+                FROM VentasConsumoStock VCS
+                INNER JOIN Ventas V ON V.id = VCS.idVenta
+                WHERE VCS.idOrdenCompraDetalle = OCD.id
+                  AND IFNULL(VCS.Eliminado,0) = 0
+                  AND IFNULL(V.Eliminado,0) = 0
+            ),0) AS StockAsignado,
+
+            (
+                OCD.Cantidad
+                - IFNULL((
+                    SELECT SUM(VCS.Cantidad)
+                    FROM VentasConsumoStock VCS
+                    INNER JOIN Ventas V ON V.id = VCS.idVenta
+                    WHERE VCS.idOrdenCompraDetalle = OCD.id
+                      AND IFNULL(VCS.Eliminado,0) = 0
+                      AND IFNULL(V.Eliminado,0) = 0
+                ),0)
+            ) AS StockDisponible
+
+        FROM OrdenesCompraDetalle OCD
+        INNER JOIN OrdenesCompra OC ON OC.id = OCD.idOrdenCompra
+        INNER JOIN Productos P ON P.id = OCD.idProducto
+        WHERE IFNULL(OCD.Eliminado,0) = 0
+          AND IFNULL(OC.Eliminado,0) = 0
+          AND P.id IN (1,2)
+        ORDER BY P.id ASC, OC.NumeroOrden ASC
+    ";
+
+        $res = $mysqli->query($sql);
+
+        if (!$res) {
+            echo json_encode([
+                "success" => 0,
+                "error" => $mysqli->error
+            ]);
+            exit;
+        }
+
+        $data = [
+            "FIGURITAS" => [],
+            "ALBUM" => []
+        ];
+
+        while ($row = $res->fetch_assoc()) {
+            $tipo = ((int)$row['idProducto'] === 1) ? "FIGURITAS" : "ALBUM";
+
+            $data[$tipo][] = [
+                "idOrdenCompra" => $row["idOrdenCompra"],
+                "NumeroOrden" => $row["NumeroOrden"],
+                "StockIngresado" => (float)$row["StockIngresado"],
+                "StockAsignado" => (float)$row["StockAsignado"],
+                "StockDisponible" => (float)$row["StockDisponible"]
+            ];
+        }
+
+        echo json_encode([
+            "success" => 1,
+            "data" => $data
+        ]);
+
+        break;
+
+
     default:
 
         echo json_encode(array(
