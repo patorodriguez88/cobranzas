@@ -1786,6 +1786,7 @@ function eliminarAjustePago(idVenta) {
         accion: "eliminar_ajuste_pago",
         idVenta: idVenta,
       },
+
       success: function (r) {
         if (r.success) {
           toast("Ajuste eliminado correctamente", "success");
@@ -1832,8 +1833,6 @@ $(document).ready(function () {
       autoProcessQueue: false,
       maxFiles: 1,
       acceptedFiles: "image/jpeg,image/png,image/gif",
-      addRemoveLinks: true,
-      dictRemoveFile: "Quitar",
       dictDefaultMessage: "Arrastrá una imagen o hacé click",
       previewTemplate: `
       <div class="dz-preview dz-file-preview">
