@@ -738,23 +738,24 @@
                     <label>Observaciones internas</label>
                     <textarea id="deposito_observaciones" class="form-control" rows="2"></textarea>
                   </div>
-                </div>
-                <div class="mb-2">
-                  <label class="form-label mb-1">Comprobante</label>
 
-                  <form
-                    action="procesos/php/upload.php"
-                    class="dropzone dropzone-compact"
-                    id="dropzoneComprobanteDeposito"
-                  >
-                    <div class="dz-message needsclick m-0">
-                      <i class="mdi mdi-cloud-upload-outline me-1"></i>
-                      <span>Adjuntar comprobante</span>
-                      <small class="text-muted ms-2">JPG, PNG o GIF</small>
-                    </div>
-                  </form>
+                  <div class="mb-2">
+                    <label class="form-label mb-1">Comprobante</label>
 
-                  <small class="text-muted">Opcional. Se subirá después de guardar el depósito.</small>
+                    <form
+                      action="procesos/php/upload.php"
+                      class="dropzone dropzone-compact"
+                      id="dropzoneComprobanteDeposito"
+                    >
+                      <div class="dz-message needsclick m-0">
+                        <i class="mdi mdi-cloud-upload-outline me-1"></i>
+                        <span>Adjuntar comprobante</span>
+                        <small class="text-muted ms-2">JPG, PNG o GIF</small>
+                      </div>
+                    </form>
+
+                    <small class="text-muted">Opcional. Se subirá después de guardar el depósito.</small>
+                  </div>
                 </div>
                 <div class="modal-footer">
                   <button class="btn btn-danger" data-bs-dismiss="modal">
