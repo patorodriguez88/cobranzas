@@ -252,7 +252,7 @@ function editarCompra(idOrden) {
     dataType: "json",
     data: {
       accion: "ver",
-      idOrden: idOrden,
+      id: idOrden,
     },
     success: function (r) {
       if (r.success != 1) {
@@ -269,11 +269,10 @@ function editarCompra(idOrden) {
 
         let fila = $("#tabla_detalle_compra tbody tr").last();
 
-        fila.find(".producto_compra").val(item.idProducto);
-        fila.find(".stock_actual_compra").val(item.StockActual);
-        fila.find(".cantidad_compra").val(item.Cantidad);
-
-        calcularFilaCompra(fila);
+        fila.find(".producto_compra").val(item.idProducto).trigger("change");
+        fila.find(".stock_actual_compra").val(item.StockAnterior || item.StockActual || 0);
+        fila.find(".cantidad_compra").val(item.Cantidad || 0);
+        fila.find(".stock_nuevo_compra").val(item.StockNuevo || 0);
       });
 
       $("html, body").animate({ scrollTop: 0 }, 300);

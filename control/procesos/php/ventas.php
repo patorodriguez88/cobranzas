@@ -354,13 +354,87 @@ VALUES
                 if (!$mysqli->query($sqlDetalle)) {
                     throw new Exception($mysqli->error);
                 }
-                // $sqlStock = "UPDATE Productos SET Stock = Stock - '$Cantidad'
-                // WHERE id = '$idProducto' LIMIT 1";
+                $idVentaDetalle = $mysqli->insert_id;
+                $cantidadPendiente = $Cantidad;
 
-                // if (!$mysqli->query($sqlStock)) {
+                $sqlStockOrdenes = "
+    SELECT 
+        OCD.id AS idOrdenCompraDetalle,
+        OCD.idOrdenCompra,
+        OCD.idProducto,
+        OCD.Cantidad AS CantidadIngresada,
 
-                //     throw new Exception($mysqli->error);
-                // }
+        (
+            OCD.Cantidad 
+            - IFNULL((
+                SELECT SUM(VCS.Cantidad)
+                FROM VentasConsumoStock VCS
+                WHERE VCS.idOrdenCompraDetalle = OCD.id
+                  AND VCS.Eliminado = 0
+            ),0)
+        ) AS Disponible
+
+    FROM OrdenesCompraDetalle OCD
+    INNER JOIN OrdenesCompra OC 
+        ON OC.id = OCD.idOrdenCompra
+    WHERE OCD.idProducto = '$idProducto'
+      AND IFNULL(OCD.Eliminado,0) = 0
+      AND IFNULL(OC.Eliminado,0) = 0
+    HAVING Disponible > 0
+    ORDER BY OC.Fecha ASC, OCD.id ASC
+";
+
+                $resStockOrdenes = $mysqli->query($sqlStockOrdenes);
+
+                if (!$resStockOrdenes) {
+                    throw new Exception($mysqli->error);
+                }
+
+                while ($cantidadPendiente > 0 && $stockRow = $resStockOrdenes->fetch_assoc()) {
+
+                    $disponible = (float)$stockRow['Disponible'];
+
+                    if ($disponible <= 0) {
+                        continue;
+                    }
+
+                    $cantidadConsumir = min($cantidadPendiente, $disponible);
+
+                    $idOrdenCompra = (int)$stockRow['idOrdenCompra'];
+                    $idOrdenCompraDetalle = (int)$stockRow['idOrdenCompraDetalle'];
+
+                    $sqlConsumo = "INSERT INTO VentasConsumoStock
+                        (
+                            idVenta,
+                            idVentaDetalle,
+                            idOrdenCompra,
+                            idOrdenCompraDetalle,
+                            idProducto,
+                            Cantidad,
+                            Eliminado
+                        )
+                        VALUES
+                        (
+                            '$idVenta',
+                            '$idVentaDetalle',
+                            '$idOrdenCompra',
+                            '$idOrdenCompraDetalle',
+                            '$idProducto',
+                            '$cantidadConsumir',
+                            0
+                        )
+                    ";
+
+                    if (!$mysqli->query($sqlConsumo)) {
+                        throw new Exception($mysqli->error);
+                    }
+
+                    $cantidadPendiente -= $cantidadConsumir;
+                }
+
+                if ($cantidadPendiente > 0) {
+                    throw new Exception("Stock insuficiente por orden de ingreso para el producto: " . $ProductoNombre);
+                }
             }
 
             $mysqli->commit();
