@@ -946,7 +946,7 @@ function abrirEstadoVenta(idVenta) {
 
           if (p.Imagen && p.Imagen !== "") {
             iconoImagen = `
-      <i class="mdi mdi-image-search mdi-24px text-primary"
+      <i class="mdi mdi-image-search mdi-18px text-primary"
          style="cursor:pointer;"
          title="Ver comprobante"
          onclick="verComprobantePago('${p.Imagen}')"></i>
