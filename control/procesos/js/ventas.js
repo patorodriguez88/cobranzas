@@ -1908,9 +1908,24 @@ $(document).ready(function () {
 function verComprobantePago(imagen) {
   Swal.fire({
     title: "Comprobante de pago",
-    imageUrl: imagen,
-    imageAlt: "Comprobante",
-    width: 700,
+    html: `
+      <div class="text-center">
+        <img 
+          src="${imagen}" 
+          class="img-fluid rounded border"
+          style="
+            max-height:75vh;
+            width:auto;
+            object-fit:contain;
+          "
+        >
+      </div>
+    `,
+    width: "80%",
+    maxWidth: "900px",
     confirmButtonText: "Cerrar",
+    customClass: {
+      popup: "p-2",
+    },
   });
 }
