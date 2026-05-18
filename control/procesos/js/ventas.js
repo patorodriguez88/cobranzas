@@ -990,7 +990,18 @@ function formatoMoneda(valor) {
     })
   );
 }
-
+function recargarListadoVentas() {
+  if ($.fn.DataTable.isDataTable("#tabla_listado_ventas")) {
+    $("#tabla_listado_ventas")
+      .DataTable()
+      .ajax.reload(function () {
+        cargarResumenVentas();
+      }, false);
+  } else if (window.location.hash === "#listado_ventas") {
+    cargarListadoVentas();
+    cargarResumenVentas();
+  }
+}
 function badgeEstadoPago(estado) {
   let clase = "warning";
 
@@ -1745,15 +1756,7 @@ function guardarDepositoVenta() {
             }
           }, 1000);
 
-          if ($.fn.DataTable.isDataTable("#tabla_ventas")) {
-            $("#tabla_ventas").DataTable().ajax.reload(null, false);
-          }
-
-          if ($.fn.DataTable.isDataTable("#tabla_listado_ventas")) {
-            $("#tabla_listado_ventas").DataTable().ajax.reload(null, false);
-          }
-
-          cargarResumenVentas();
+          recargarListadoVentas();
         } else {
           alerta("Error", r.error || "No se pudo guardar el depósito.", "error");
         }
