@@ -812,8 +812,7 @@ function abrirEstadoVenta(idVenta) {
       $("#offcanvas_venta_titulo").text("Venta #" + v.NumeroVenta);
 
       $("#venta_estado_cuenta").html(`
-
-<div class="d-flex flex-wrap align-items-center gap-3 small mb-2">
+        <div class="d-flex flex-wrap align-items-center gap-3 small mb-2">
 
     <div>
         <span class="text-muted">Total:</span>
@@ -931,6 +930,7 @@ function abrirEstadoVenta(idVenta) {
           validarOrdenAntesDeTurno(v.id);
         });
       let htmlPagos = "";
+      let imagenPago = "";
 
       if (!r.pagos || r.pagos.length === 0) {
         htmlPagos = `
@@ -950,11 +950,24 @@ function abrirEstadoVenta(idVenta) {
               <td>${formatoMoneda(p.ImporteAplicado)}</td>
             </tr>
           `;
+          if (p.Imagen && p.Imagen !== "") {
+            imagenPago = p.Imagen;
+          }
         });
       }
 
       $("#tabla_pagos_venta").html(htmlPagos);
-
+      if (imagenPago !== "") {
+        $("#btn_ver_comprobante_pago")
+          .show()
+          .off("click")
+          .on("click", function () {
+            $("#imagen_pago_modal").attr("src", imagenPago);
+            $("#modalImagenPago").modal("show");
+          });
+      } else {
+        $("#btn_ver_comprobante_pago").hide();
+      }
       const offcanvasElement = document.getElementById("offcanvas_venta");
 
       let offcanvas = bootstrap.Offcanvas.getInstance(offcanvasElement) || new bootstrap.Offcanvas(offcanvasElement);

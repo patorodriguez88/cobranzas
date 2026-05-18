@@ -842,57 +842,69 @@ VALUES
         $idVenta = isset($_POST['idVenta']) ? (int)$_POST['idVenta'] : 0;
 
         $sqlVenta = "SELECT 
-            V.id,
-            V.NumeroVenta,
-            V.Fecha,
-            V.Total,
-            V.TotalPagado,
-            IFNULL((
+        V.id,
+        V.NumeroVenta,
+        V.Fecha,
+        V.Total,
+        V.TotalPagado,
+
+        IFNULL((
+            SELECT SUM(AP.importe)
+            FROM Ventas_Ajustes_Pago AP
+            WHERE AP.idVenta = V.id
+              AND AP.eliminado = 0
+        ), 0) AS Ajustes,
+
+        (
+            V.Total 
+            - IFNULL(V.TotalPagado,0)
+            - IFNULL((
                 SELECT SUM(AP.importe)
                 FROM Ventas_Ajustes_Pago AP
                 WHERE AP.idVenta = V.id
-                AND AP.eliminado = 0
-            ), 0) AS Ajustes,
+                  AND AP.eliminado = 0
+            ), 0)
+        ) AS Saldo,
 
-            (
-                V.Total 
-                - IFNULL(V.TotalPagado,0)
-                - IFNULL((
-                    SELECT SUM(AP.importe)
-                    FROM Ventas_Ajustes_Pago AP
-                    WHERE AP.idVenta = V.id
-                    AND AP.eliminado = 0
-                ), 0)
-            ) AS Saldo,
+        V.EstadoPago,
+        V.Observaciones,
+        C.RazonSocial,
+        V.NumeroOrdenVenta,
 
-            V.EstadoPago,
-            V.Observaciones,
-            C.RazonSocial,
-            V.NumeroOrdenVenta,
+        (
+            SELECT CONCAT(
+                DATE_FORMAT(TR.FechaTurno, '%d/%m/%Y'),
+                ' ',
+                LEFT(TR.HoraTurno, 5),
+                ' hs'
+            )
+            FROM TurnosRetiro TR
+            WHERE TR.idVenta = V.id
+              AND TR.Eliminado = 0
+            ORDER BY TR.FechaTurno DESC, TR.HoraTurno DESC
+            LIMIT 1
+        ) AS TurnoRetiro
 
-            (
-                SELECT CONCAT(
-                    DATE_FORMAT(TR.FechaTurno, '%d/%m/%Y'),
-                    ' ',
-                    LEFT(TR.HoraTurno, 5),
-                    ' hs'
-                )
-                FROM TurnosRetiro TR
-                WHERE TR.idVenta = V.id
-                AND TR.Eliminado = 0
-                ORDER BY TR.FechaTurno DESC, TR.HoraTurno DESC
-                LIMIT 1
-            ) AS TurnoRetiro
-
-        FROM Ventas V
-        LEFT JOIN Clientes C ON C.id = V.idCliente
-        WHERE V.id = '$idVenta'
-        LIMIT 1";
+    FROM Ventas V
+    LEFT JOIN Clientes C ON C.id = V.idCliente
+    WHERE V.id = '$idVenta'
+      AND V.Eliminado = 0
+    LIMIT 1";
 
         $resVenta = $mysqli->query($sqlVenta);
+
+        if (!$resVenta || $resVenta->num_rows == 0) {
+            echo json_encode(array(
+                "success" => 0,
+                "error" => "Venta inexistente."
+            ));
+            exit;
+        }
+
         $venta = $resVenta->fetch_assoc();
 
         $sqlPagos = "SELECT 
+        CV.idCobranza,
         CV.ImporteAplicado,
         CV.Fecha AS FechaAplicacion,
         CB.Fecha,
@@ -900,29 +912,52 @@ VALUES
         CB.Banco,
         CB.Operacion,
         CB.Importe
-            FROM CobranzasVentas CV
-            LEFT JOIN Cobranza CB ON CB.id = CV.idCobranza
-            WHERE CV.idVenta = '$idVenta'
-              AND CV.Eliminado = 0
-            ORDER BY CV.id DESC
-        ";
+    FROM CobranzasVentas CV
+    LEFT JOIN Cobranza CB ON CB.id = CV.idCobranza
+    WHERE CV.idVenta = '$idVenta'
+      AND CV.Eliminado = 0
+    ORDER BY CV.id DESC";
 
         $resPagos = $mysqli->query($sqlPagos);
 
         $pagos = array();
 
         while ($row = $resPagos->fetch_assoc()) {
+
+            $imagen = "";
+            $idCobranza = isset($row['idCobranza']) ? (int)$row['idCobranza'] : 0;
+
+            if ($idCobranza > 0) {
+
+                $carpetaFisica = __DIR__ . "/../../../images/depositos/";
+                $carpetaWeb = "images/depositos/";
+                $extensiones = array("jpg", "jpeg", "png", "gif");
+
+                foreach ($extensiones as $ext) {
+                    $archivoFisico = $carpetaFisica . $idCobranza . "." . $ext;
+
+                    if (file_exists($archivoFisico)) {
+                        $imagen = $carpetaWeb . $idCobranza . "." . $ext;
+                        break;
+                    }
+                }
+            }
+
+            $row['Imagen'] = $imagen;
             $pagos[] = $row;
         }
+
         if (count($pagos) == 0 && isset($venta['TotalPagado']) && (float)$venta['TotalPagado'] > 0) {
             $pagos[] = array(
+                "idCobranza" => 0,
                 "ImporteAplicado" => $venta['TotalPagado'],
                 "FechaAplicacion" => $venta['Fecha'],
                 "Fecha" => $venta['Fecha'],
                 "Hora" => "",
                 "Banco" => "Pago registrado",
                 "Operacion" => "Sin detalle vinculado",
-                "Importe" => $venta['TotalPagado']
+                "Importe" => $venta['TotalPagado'],
+                "Imagen" => ""
             );
         }
 
@@ -931,11 +966,10 @@ VALUES
         VD.Cantidad,
         VD.PrecioUnitario,
         VD.Subtotal
-        FROM VentasDetalle VD
-        WHERE VD.idVenta = '$idVenta'
-        AND VD.Eliminado = 0
-        ORDER BY VD.id ASC
-    ";
+    FROM VentasDetalle VD
+    WHERE VD.idVenta = '$idVenta'
+      AND VD.Eliminado = 0
+    ORDER BY VD.id ASC";
 
         $resDetalle = $mysqli->query($sqlDetalle);
 
@@ -944,7 +978,6 @@ VALUES
         while ($row = $resDetalle->fetch_assoc()) {
             $detalle[] = $row;
         }
-
 
         echo json_encode(array(
             "success" => 1,
