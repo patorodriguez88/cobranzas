@@ -2036,10 +2036,10 @@ VALUES
         $idVenta = isset($_POST['idVenta']) ? (int)$_POST['idVenta'] : 0;
 
         if ($idVenta <= 0) {
-            echo json_encode(array(
+            echo json_encode([
                 "success" => false,
                 "error" => "Venta inválida."
-            ));
+            ]);
             exit;
         }
 
@@ -2047,14 +2047,14 @@ VALUES
 
         try {
 
-            $sqlAjuste = "
+            $sql = "
             UPDATE Ventas_Ajustes_Pago
             SET eliminado = 1
             WHERE idVenta = '$idVenta'
               AND eliminado = 0
         ";
 
-            if (!$mysqli->query($sqlAjuste)) {
+            if (!$mysqli->query($sql)) {
                 throw new Exception($mysqli->error);
             }
 
@@ -2069,6 +2069,7 @@ VALUES
                         WHERE AP.idVenta = Ventas.id
                           AND AP.eliminado = 0
                     ),0),
+
                 EstadoPago = CASE
                     WHEN (
                         Total 
@@ -2080,7 +2081,9 @@ VALUES
                               AND AP.eliminado = 0
                         ),0)
                     ) <= 0 THEN 'PAGADA'
+
                     WHEN IFNULL(TotalPagado,0) > 0 THEN 'PARCIAL'
+
                     ELSE 'PENDIENTE'
                 END
             WHERE id = '$idVenta'
@@ -2093,21 +2096,20 @@ VALUES
 
             $mysqli->commit();
 
-            echo json_encode(array(
-                "success" => true
-            ));
+            echo json_encode(["success" => true]);
+            exit;
         } catch (Exception $e) {
 
             $mysqli->rollback();
 
-            echo json_encode(array(
+            echo json_encode([
                 "success" => false,
                 "error" => $e->getMessage()
-            ));
+            ]);
+            exit;
         }
 
         break;
-
 
     default:
 
