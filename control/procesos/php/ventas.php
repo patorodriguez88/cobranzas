@@ -911,7 +911,8 @@ VALUES
         CB.Hora,
         CB.Banco,
         CB.Operacion,
-        CB.Observaciones,
+        CB.Usuario_obs,
+        CB.Conciliado,
         CB.Importe
     FROM CobranzasVentas CV
     LEFT JOIN Cobranza CB ON CB.id = CV.idCobranza
@@ -1897,7 +1898,7 @@ VALUES
         $banco = isset($_POST['banco']) ? $mysqli->real_escape_string($_POST['banco']) : '';
         $operacion = isset($_POST['operacion']) ? $mysqli->real_escape_string($_POST['operacion']) : '';
         $importe = isset($_POST['importe']) ? (float)$_POST['importe'] : 0;
-        $observaciones = isset($_POST['observaciones']) ? $mysqli->real_escape_string($_POST['observaciones']) : '';
+        $usuario_obs = isset($_POST['Usuario_obs']) ? $mysqli->real_escape_string($_POST['Usuario_obs']) : '';
 
         $usuario = isset($_SESSION['user_name']) && $_SESSION['user_name'] != ''
             ? $mysqli->real_escape_string($_SESSION['user_name'])
@@ -1960,7 +1961,7 @@ VALUES
             $alertaDuplicidad = ($resDuplicado && $resDuplicado->num_rows > 0) ? 1 : 0;
 
             $observacionFinal = $mysqli->real_escape_string(
-                "Carga operador desde Ventas. Venta #" . $venta['NumeroVenta'] . ". " . $observaciones
+                "Carga operador desde Ventas. Venta #" . $venta['NumeroVenta'] . ". "
             );
 
             $sqlCobranza = "
@@ -1976,6 +1977,7 @@ VALUES
                 AlertaDuplicidad,
                 TipoOperacion,
                 Observaciones,
+                Usuario_obs,
                 Usuario
             )
             VALUES
@@ -1990,6 +1992,7 @@ VALUES
                 '$alertaDuplicidad',
                 '$tipoOperacion',
                 '$observacionFinal',
+                '$usuario_obs',
                 '$usuario'
             )
         ";

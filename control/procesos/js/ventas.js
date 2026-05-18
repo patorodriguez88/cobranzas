@@ -960,7 +960,14 @@ function abrirEstadoVenta(idVenta) {
           htmlPagos += `
     <tr>
       <td>${p.Fecha || ""}<br><small class="text-muted">${p.Hora || ""}</small></td>
-      <td>${p.Banco || ""}</td>
+      <td>
+      <div>${p.Banco || ""}</div>
+      ${
+        parseInt(p.Conciliado || 0) === 1
+          ? `<span class="badge bg-success mt-1">Conciliado</span>`
+          : `<span class="badge bg-warning mt-1">Sin conciliar</span>`
+      }
+      </td>
       <td>
   <div>${p.Operacion || ""}</div>
 
@@ -1775,7 +1782,7 @@ function guardarDepositoVenta() {
         banco: banco,
         operacion: operacion,
         importe: importe,
-        observaciones: observaciones,
+        Usuario_obs: observaciones,
       },
       success: function (r) {
         if (r.success) {
