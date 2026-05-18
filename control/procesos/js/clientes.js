@@ -234,6 +234,16 @@ $(document).ready(function () {
         },
       },
       {
+        data: "Distribuidora",
+        render: function (data) {
+          if (data === "Misas") {
+            return `<span class="badge bg-info">${data}</span>`;
+          }
+
+          return `<span class="badge bg-primary">${data || "Dinter"}</span>`;
+        },
+      },
+      {
         data: null,
         render: function (data, type, row) {
           const susp = parseInt(row.Suspendido) === 1;
