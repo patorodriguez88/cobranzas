@@ -16,6 +16,7 @@
     <link href="saas/assets/css/app.min.css" rel="stylesheet" id="app-style" />
     <!-- <link href="saas/assets/css/vendor/select2.min.css" rel="stylesheet" type="text/css" /> -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="saas/assets/css/vendor/dropzone.css" rel="stylesheet" />
   </head>
   <style>
     #tabla_listado_ventas {
@@ -715,7 +716,19 @@
                     <textarea id="deposito_observaciones" class="form-control" rows="2"></textarea>
                   </div>
                 </div>
+                <div class="mb-2">
+                  <label>Comprobante</label>
 
+                  <form action="procesos/php/upload.php" class="dropzone" id="dropzoneComprobanteDeposito">
+                    <div class="dz-message needsclick">
+                      <i class="mdi mdi-cloud-upload display-5 text-muted"></i>
+                      <h5 class="mt-2">Arrastrá una imagen o hacé click</h5>
+                      <span class="text-muted">JPG, PNG o GIF</span>
+                    </div>
+                  </form>
+
+                  <small class="text-muted"> Opcional. Se subirá después de guardar el depósito. </small>
+                </div>
                 <div class="modal-footer">
                   <button class="btn btn-danger" data-bs-dismiss="modal">
                     <i class="mdi mdi-close mdi-18px"></i> Cancelar
@@ -723,39 +736,6 @@
 
                   <button class="btn btn-success" onclick="guardarDepositoVenta()">
                     <i class="mdi mdi-content-save mdi-18px"></i> Guardar depósito
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="modal fade" id="modalComprobanteDeposito" tabindex="-1">
-            <div class="modal-dialog modal-dialog-centered">
-              <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                  <h5 class="modal-title">
-                    <i class="mdi mdi-image"></i>
-                    Comprobante del depósito
-                  </h5>
-
-                  <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-
-                <div class="modal-body">
-                  <form action="procesos/php/upload.php" class="dropzone" id="dropzoneComprobanteDeposito">
-                    <div class="dz-message needsclick">
-                      <i class="mdi mdi-cloud-upload display-4 text-muted"></i>
-
-                      <h4 class="mt-2">Arrastrá una imagen o hacé click</h4>
-
-                      <span class="text-muted"> JPG, PNG o GIF </span>
-                    </div>
-                  </form>
-                </div>
-
-                <div class="modal-footer">
-                  <button class="btn btn-success" data-bs-dismiss="modal">
-                    <i class="mdi mdi-check"></i>
-                    Finalizar
                   </button>
                 </div>
               </div>

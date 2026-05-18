@@ -1730,16 +1730,21 @@ function guardarDepositoVenta() {
       },
       success: function (r) {
         if (r.success) {
-          // $("#modalDepositoVenta").modal("hide");
+          idCobranzaPendienteComprobante = r.idCobranza || 0;
 
-          // toast("Depósito cargado correctamente", "success");
-          $("#modalDepositoVenta").modal("hide");
-
-          if (r.idCobranza) {
-            $("#modalComprobanteDeposito").modal("show");
-          } else {
-            toast("Depósito cargado correctamente", "success");
+          if (dropzoneDeposito && dropzoneDeposito.getQueuedFiles().length > 0) {
+            dropzoneDeposito.processQueue();
           }
+
+          $("#modalDepositoVenta").modal("hide");
+          toast("Depósito cargado correctamente", "success");
+
+          setTimeout(function () {
+            if (dropzoneDeposito) {
+              dropzoneDeposito.removeAllFiles(true);
+            }
+          }, 1000);
+
           if ($.fn.DataTable.isDataTable("#tabla_ventas")) {
             $("#tabla_ventas").DataTable().ajax.reload(null, false);
           }
@@ -1814,18 +1819,37 @@ function eliminarAjustePago(idVenta) {
 function abrirWhatsappUnico(url) {
   window.open(url, "whatsapp_web_dinter");
 }
+
+let dropzoneDeposito = null;
+let idCobranzaPendienteComprobante = 0;
+
 Dropzone.autoDiscover = false;
 
-let dropzoneDeposito = new Dropzone("#dropzoneComprobanteDeposito", {
-  url: "procesos/php/upload.php",
-  maxFiles: 1,
-  acceptedFiles: "image/*",
-  addRemoveLinks: true,
-  dictDefaultMessage: "Subir comprobante",
-  success: function () {
-    toast("Comprobante subido correctamente", "success");
-  },
-  error: function () {
-    alerta("Error", "No se pudo subir el comprobante.", "error");
-  },
+$(document).ready(function () {
+  if ($("#dropzoneComprobanteDeposito").length) {
+    dropzoneDeposito = new Dropzone("#dropzoneComprobanteDeposito", {
+      url: "procesos/php/upload.php",
+      autoProcessQueue: false,
+      maxFiles: 1,
+      acceptedFiles: "image/jpeg,image/png,image/gif",
+      addRemoveLinks: true,
+      dictRemoveFile: "Quitar",
+      dictDefaultMessage: "Arrastrá una imagen o hacé click",
+      init: function () {
+        this.on("sending", function (file, xhr, formData) {
+          formData.append("idCobranza", idCobranzaPendienteComprobante);
+        });
+
+        this.on("success", function () {
+          toast("Comprobante subido correctamente", "success");
+          idCobranzaPendienteComprobante = 0;
+        });
+
+        this.on("error", function (file, errorMessage) {
+          console.log(errorMessage);
+          alerta("Error", "No se pudo subir el comprobante.", "error");
+        });
+      },
+    });
+  }
 });
