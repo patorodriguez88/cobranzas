@@ -151,10 +151,8 @@ if (isset($_POST['Datos'])) {
 
     $id = (int)$_POST['id'];
 
-    $sql = $mysqli->query("
-        SELECT 
+    $sql = $mysqli->query("SELECT 
             C.*,
-
             CASE
                 WHEN CC.Importe IS NOT NULL THEN CC.Importe
                 ELSE C.Importe
@@ -164,19 +162,22 @@ if (isset($_POST['Datos'])) {
                 WHEN CC.Importe IS NOT NULL THEN 1
                 ELSE 0
             END AS TieneConciliacion
-
-        FROM Cobranza C
-
-        LEFT JOIN (
+            FROM Cobranza C
+            LEFT JOIN (
             SELECT 
-                id_cobranza,
-                MAX(Importe) AS Importe
+            CC1.id_cobranza,
+            CC1.Importe,
+            CC1.Estado
+            FROM Cobranza_conciliacion CC1
+            INNER JOIN (
+            SELECT id_cobranza, MAX(id) AS UltimoId
             FROM Cobranza_conciliacion
             GROUP BY id_cobranza
-        ) CC ON CC.id_cobranza = C.id
+            ) ULT ON ULT.UltimoId = CC1.id
+            ) CC ON CC.id_cobranza = C.id
 
-        WHERE C.id = '$id'
-        LIMIT 1
+            WHERE C.id = '$id'
+            LIMIT 1
     ");
 
     $rows = array();
@@ -403,15 +404,20 @@ if (isset($_POST['AsignarPagoVenta'])) {
 }
 function recalcularVentasCobranza($mysqli, $idCobranza)
 {
+    $idCobranza = (int)$idCobranza;
 
     $sqlVentas = "
         SELECT DISTINCT idVenta
         FROM CobranzasVentas
         WHERE idCobranza = '$idCobranza'
-          AND IFNULL(Eliminado,0)=0
+          AND IFNULL(Eliminado,0) = 0
     ";
 
     $resVentas = $mysqli->query($sqlVentas);
+
+    if (!$resVentas) {
+        return;
+    }
 
     while ($v = $resVentas->fetch_assoc()) {
 
@@ -421,32 +427,37 @@ function recalcularVentasCobranza($mysqli, $idCobranza)
             SELECT 
                 IFNULL(SUM(
                     CASE
+                        WHEN CC.Estado = 'Rechazado' THEN 0
                         WHEN CC.Importe IS NOT NULL THEN CC.Importe
                         ELSE CV.ImporteAplicado
                     END
                 ),0) AS TotalPagado
-
             FROM CobranzasVentas CV
 
             LEFT JOIN (
-
                 SELECT 
-                    idCobranza,
-                    MAX(Importe) AS Importe
-                FROM Cobranza_conciliacion
-                WHERE IFNULL(Eliminado,0)=0
-                GROUP BY idCobranza
-
-            ) CC ON CC.idCobranza = CV.idCobranza
+                    CC1.id_cobranza,
+                    CC1.Importe,
+                    CC1.Estado
+                FROM Cobranza_conciliacion CC1
+                INNER JOIN (
+                    SELECT id_cobranza, MAX(id) AS UltimoId
+                    FROM Cobranza_conciliacion
+                    GROUP BY id_cobranza
+                ) ULT ON ULT.UltimoId = CC1.id
+            ) CC ON CC.id_cobranza = CV.idCobranza
 
             WHERE CV.idVenta = '$idVenta'
-              AND IFNULL(CV.Eliminado,0)=0
+              AND IFNULL(CV.Eliminado,0) = 0
         ";
 
         $resTotal = $mysqli->query($sqlTotalPagado);
 
-        $rowTotal = $resTotal->fetch_assoc();
+        if (!$resTotal) {
+            continue;
+        }
 
+        $rowTotal = $resTotal->fetch_assoc();
         $totalPagado = (float)$rowTotal['TotalPagado'];
 
         $sqlVenta = "
@@ -458,23 +469,21 @@ function recalcularVentasCobranza($mysqli, $idCobranza)
 
         $resVenta = $mysqli->query($sqlVenta);
 
+        if (!$resVenta || $resVenta->num_rows == 0) {
+            continue;
+        }
+
         $venta = $resVenta->fetch_assoc();
 
         $totalVenta = (float)$venta['Total'];
-
         $saldo = $totalVenta - $totalPagado;
 
         if ($saldo <= 0.01) {
-
             $saldo = 0;
             $estado = 'PAGADA';
-
         } elseif ($totalPagado > 0) {
-
             $estado = 'PARCIAL';
-
         } else {
-
             $estado = 'PENDIENTE';
         }
 
