@@ -2152,3 +2152,162 @@ function renderFilaStockOI(label, items, campo, destacar) {
 
   return html;
 }
+function renderVendedoresResumen(vendedores) {
+  if (!vendedores || vendedores.length === 0) {
+    return `<div class="text-muted small">Sin ventas por usuario.</div>`;
+  }
+
+  /*
+  ==========================================
+  OBTENER OI ÚNICAS
+  ==========================================
+  */
+
+  let ois = [];
+
+  vendedores.forEach((v) => {
+    if (!ois.includes(v.NumeroOrden)) {
+      ois.push(v.NumeroOrden);
+    }
+  });
+
+  ois.sort((a, b) => a - b);
+
+  /*
+  ==========================================
+  AGRUPAR POR USUARIO
+  ==========================================
+  */
+
+  let usuarios = {};
+
+  vendedores.forEach((v) => {
+    let usuario = v.Usuario || "Sin usuario";
+    let oi = "OI_" + v.NumeroOrden;
+    let total = parseFloat(v.Total || 0);
+
+    if (!usuarios[usuario]) {
+      usuarios[usuario] = {
+        TOTAL: 0,
+      };
+    }
+
+    if (!usuarios[usuario][oi]) {
+      usuarios[usuario][oi] = 0;
+    }
+
+    usuarios[usuario][oi] += total;
+    usuarios[usuario].TOTAL += total;
+  });
+
+  /*
+  ==========================================
+  ORDENAR USUARIOS POR TOTAL
+  ==========================================
+  */
+
+  let usuariosOrdenados = Object.entries(usuarios).sort((a, b) => {
+    return b[1].TOTAL - a[1].TOTAL;
+  });
+
+  /*
+  ==========================================
+  HEADER
+  ==========================================
+  */
+
+  let html = `
+    <div class="table-responsive mt-2">
+      <table class="table table-sm table-bordered mb-0" style="font-size:11px;">
+        <thead class="table-light">
+          <tr>
+            <th>Usuario</th>
+  `;
+
+  ois.forEach((oi) => {
+    html += `<th class="text-end">OI #${oi}</th>`;
+  });
+
+  html += `
+            <th class="text-end">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
+
+  /*
+  ==========================================
+  FILAS USUARIOS
+  ==========================================
+  */
+
+  let totalesOI = {};
+
+  ois.forEach((oi) => {
+    totalesOI[oi] = 0;
+  });
+
+  let totalGeneral = 0;
+
+  usuariosOrdenados.forEach(([usuario, data]) => {
+    html += `<tr>`;
+
+    html += `<td>${usuario}</td>`;
+
+    ois.forEach((oi) => {
+      let valor = data["OI_" + oi] || 0;
+
+      totalesOI[oi] += valor;
+
+      html += `
+        <td class="text-end">
+          ${valor > 0 ? valor.toLocaleString("es-AR") : "-"}
+        </td>
+      `;
+    });
+
+    totalGeneral += data.TOTAL;
+
+    html += `
+      <td class="text-end fw-bold">
+        ${data.TOTAL.toLocaleString("es-AR")}
+      </td>
+    `;
+
+    html += `</tr>`;
+  });
+
+  /*
+  ==========================================
+  FILA TOTAL
+  ==========================================
+  */
+
+  html += `
+    <tr class="table-success fw-bold">
+      <td>TOTAL</td>
+  `;
+
+  ois.forEach((oi) => {
+    html += `
+      <td class="text-end">
+        ${totalesOI[oi].toLocaleString("es-AR")}
+      </td>
+    `;
+  });
+
+  html += `
+      <td class="text-end">
+        ${totalGeneral.toLocaleString("es-AR")}
+      </td>
+    </tr>
+  `;
+
+  html += `
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  return html;
+}
