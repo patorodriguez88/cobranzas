@@ -4,7 +4,81 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 session_start();
 include_once __DIR__ . "/../../../conexion/conexioni.php";
+function eliminarOrdenVentaWepoint($mysqli, $idVenta)
+{
+    $token = '1383|1w3olMBz6851a6JdfbA1GH0jdF5QdUnwUtAfehSL0f00e3a5';
 
+    $sql = "
+        SELECT 
+            wepoint_id_orden_venta,
+            NumeroOrdenVenta
+        FROM Ventas
+        WHERE id = '$idVenta'
+        LIMIT 1
+    ";
+
+    $res = $mysqli->query($sql);
+
+    if (!$res) {
+        throw new Exception($mysqli->error);
+    }
+
+    $venta = $res->fetch_assoc();
+
+    if (!$venta) {
+        throw new Exception("Venta inexistente.");
+    }
+
+    $idOrdenWepoint = isset($venta['wepoint_id_orden_venta'])
+        ? (int)$venta['wepoint_id_orden_venta']
+        : 0;
+
+    if ($idOrdenWepoint <= 0) {
+        return;
+    }
+
+    $curl = curl_init();
+
+    curl_setopt_array($curl, [
+        CURLOPT_URL => 'https://sistema.wepoint.ar/api/v2/egresos/productos/' . $idOrdenWepoint,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 30,
+        CURLOPT_CUSTOMREQUEST => 'DELETE',
+        CURLOPT_HTTPHEADER => [
+            'Accept: application/json',
+            'Authorization: Bearer ' . $token
+        ],
+    ]);
+
+    $response = curl_exec($curl);
+    $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+    $error = curl_error($curl);
+
+    curl_close($curl);
+
+    if ($error) {
+        throw new Exception("Error eliminando OV en Wepoint: " . $error);
+    }
+
+    if ($httpCode < 200 || $httpCode >= 300) {
+        throw new Exception("Wepoint rechazó la eliminación de la OV. HTTP: " . $httpCode . " - " . $response);
+    }
+
+    $responseSql = $mysqli->real_escape_string($response);
+
+    $sqlUpdate = "
+        UPDATE Ventas
+        SET 
+            wepoint_deleted_at = NOW(),
+            wepoint_delete_response = '$responseSql'
+        WHERE id = '$idVenta'
+        LIMIT 1
+    ";
+
+    if (!$mysqli->query($sqlUpdate)) {
+        throw new Exception("OV eliminada en Wepoint, pero no se pudo guardar auditoría local: " . $mysqli->error);
+    }
+}
 if (isset($_GET['accion']) && $_GET['accion'] === 'exportar_ventas_excel') {
 
     header("Content-Type: application/vnd.ms-excel; charset=utf-8");
@@ -533,12 +607,23 @@ VALUES
             ));
             exit;
         }
+
+        try {
+            eliminarOrdenVentaWepoint($mysqli, $id);
+        } catch (Exception $e) {
+            echo json_encode(array(
+                "success" => 0,
+                "error" => $e->getMessage()
+            ));
+            exit;
+        }
+
+
         $mysqli->begin_transaction();
 
         try {
 
-            $sqlDetalle = "
-            SELECT 
+            $sqlDetalle = "SELECT 
                 idProducto,
                 ProductoNombre,
                 Cantidad
