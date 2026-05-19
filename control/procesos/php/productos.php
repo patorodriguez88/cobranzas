@@ -1,6 +1,5 @@
 <?php
 ini_set('display_errors', 1);
-
 ini_set('display_startup_errors', 1);
 
 error_reporting(E_ALL);
@@ -14,17 +13,36 @@ $accion = $_POST['accion'] ?? '';
 switch ($accion) {
 
     case 'listar':
-        $sql = "SELECT * FROM Productos WHERE Eliminado = 0 ORDER BY id DESC";
-        $res = $mysqli->query($sql);
 
-        $data = [];
-        while ($row = $res->fetch_assoc()) {
-            $data[] = $row;
-        }
+    $sql = "SELECT 
+            P.*,
 
-        echo json_encode($data);
-        break;
+            (
+                IFNULL((
+                    SELECT SUM(OCD.Cantidad)
+                    FROM OrdenesCompraDetalle OCD
+                    INNER JOIN OrdenesCompra OC 
+                        ON OC.id = OCD.idOrdenCompra
+                    WHERE OCD.idProducto = P.id
+                      AND IFNULL(OCD.Eliminado,0) = 0
+                      AND IFNULL(OC.Eliminado,0) = 0
+                ),0)
+                -
+                IFNULL((
+                    SELECT SUM(VCS.Cantidad)
+                    FROM VentasConsumoStock VCS
+                    INNER JOIN Ventas V 
+                        ON V.id = VCS.idVenta
+                    WHERE VCS.idProducto = P.id
+                      AND IFNULL(VCS.Eliminado,0) = 0
+                      AND IFNULL(V.Eliminado,0) = 0
+                ),0)
+            ) AS StockReal
 
+        FROM Productos P
+        WHERE P.Eliminado = 0
+        ORDER BY P.id DESC
+    ";
 
     case 'guardar':
 
@@ -52,7 +70,6 @@ switch ($accion) {
                 Categoria='$Categoria',
                 PrecioCosto='$PrecioCosto',
                 PrecioVenta='$PrecioVenta',
-                Stock='$Stock',
                 Descripcion='$Descripcion',
                 FechaModificacion=NOW()
                 WHERE id='$id' LIMIT 1";

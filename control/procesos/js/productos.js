@@ -37,19 +37,22 @@ function cargarProductos() {
         render: $.fn.dataTable.render.number(",", ".", 2, "$ "),
       },
       {
-        data: "Stock",
+        data: "StockReal",
         render: function (data, type, row) {
+          let stock = parseFloat(row.StockReal || 0);
+          let minimo = parseFloat(row.StockMinimo || 0);
+
           let clase = "success";
 
-          if (parseInt(row.Stock) <= parseInt(row.StockMinimo)) {
+          if (stock <= minimo) {
             clase = "danger";
           }
 
           return `
             <span class="badge bg-${clase}">
-                ${row.Stock}
+              ${stock.toLocaleString("es-AR")}
             </span>
-        `;
+          `;
         },
       },
       {
@@ -74,6 +77,7 @@ function cargarProductos() {
 }
 
 function guardarProducto() {
+
   let datos = {
     accion: "guardar",
     id: $("#producto_id").val() || 0,
@@ -121,7 +125,7 @@ function editarProducto(id) {
       $("#producto_categoria").val(r.Categoria);
       $("#producto_costo").val(r.PrecioCosto);
       $("#producto_venta").val(r.PrecioVenta);
-      $("#producto_stock").val(r.Stock);
+      $("#producto_stock").val(r.StockReal || 0);
       $("#producto_descripcion").val(r.Descripcion);
     },
     error: function (xhr) {
