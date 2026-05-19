@@ -67,9 +67,12 @@ if (isset($_POST['Conciliar'])) {
     if ($mysqli->query($sql)) {
 
         $mysqli->query("UPDATE Cobranza SET Conciliado=1 WHERE id='$_POST[id_cobranza]'");
+        
+        recalcularVentasCobranza($mysqli, $_POST['id_cobranza']);
 
         echo json_encode(array('success' => 1, 'bloque' => 'Conciliar'));
-    } else {
+    
+        } else {
 
         echo json_encode(array('success' => 0));
     }
@@ -82,6 +85,8 @@ if (isset($_POST['Vuelve'])) {
     if ($mysqli->query($sql)) {
 
         $mysqli->query("DELETE FROM `Cobranza_conciliacion` WHERE id_cobranza='$_POST[id_cobranza]'");
+        
+        recalcularVentasCobranza($mysqli, $_POST['id_cobranza']);
 
         echo json_encode(array('success' => 1, 'bloque' => 'Vuelve'));
     } else {
@@ -98,6 +103,8 @@ if (isset($_POST['Rechazar'])) {
     if ($mysqli->query($sql)) {
 
         $mysqli->query("UPDATE Cobranza SET Conciliado=1 WHERE id='$_POST[id_cobranza]'");
+        
+        recalcularVentasCobranza($mysqli, $_POST['id_cobranza']);
 
         echo json_encode(array('success' => 1, 'bloque' => 'Rechazar'));
     } else {
@@ -119,6 +126,8 @@ if (isset($_POST['Conciliar_quik'])) {
     if ($mysqli->query($sql)) {
 
         $mysqli->query("UPDATE Cobranza SET Conciliado=1 WHERE id='$_POST[id_cobranza]'");
+        
+        recalcularVentasCobranza($mysqli, $_POST['id_cobranza']);
 
         echo json_encode(array('success' => 1, 'bloque' => 'Conciliar_quik'));
     } else {
@@ -131,6 +140,9 @@ if (isset($_POST['Conciliar_quik_cancel'])) {
 
     $mysqli->query("UPDATE Cobranza SET Conciliado=0 WHERE id='$_POST[id_cobranza]'");
     $mysqli->query("DELETE FROM Cobranza_conciliacion WHERE id_cobranza='$_POST[id_cobranza]'");
+    
+    recalcularVentasCobranza($mysqli, $_POST['id_cobranza']);
+
     echo json_encode(array('success' => 1, 'bloque' => 'Conciliar_quik_cancel'));
 }
 
@@ -360,5 +372,95 @@ if (isset($_POST['AsignarPagoVenta'])) {
             "error" => $e->getMessage()
         ));
         exit;
+    }
+}
+function recalcularVentasCobranza($mysqli, $idCobranza)
+{
+
+    $sqlVentas = "
+        SELECT DISTINCT idVenta
+        FROM CobranzasVentas
+        WHERE idCobranza = '$idCobranza'
+          AND IFNULL(Eliminado,0)=0
+    ";
+
+    $resVentas = $mysqli->query($sqlVentas);
+
+    while ($v = $resVentas->fetch_assoc()) {
+
+        $idVenta = (int)$v['idVenta'];
+
+        $sqlTotalPagado = "
+            SELECT 
+                IFNULL(SUM(
+                    CASE
+                        WHEN CC.Importe IS NOT NULL THEN CC.Importe
+                        ELSE CV.ImporteAplicado
+                    END
+                ),0) AS TotalPagado
+
+            FROM CobranzasVentas CV
+
+            LEFT JOIN (
+
+                SELECT 
+                    idCobranza,
+                    MAX(Importe) AS Importe
+                FROM Cobranza_conciliacion
+                WHERE IFNULL(Eliminado,0)=0
+                GROUP BY idCobranza
+
+            ) CC ON CC.idCobranza = CV.idCobranza
+
+            WHERE CV.idVenta = '$idVenta'
+              AND IFNULL(CV.Eliminado,0)=0
+        ";
+
+        $resTotal = $mysqli->query($sqlTotalPagado);
+
+        $rowTotal = $resTotal->fetch_assoc();
+
+        $totalPagado = (float)$rowTotal['TotalPagado'];
+
+        $sqlVenta = "
+            SELECT Total
+            FROM Ventas
+            WHERE id = '$idVenta'
+            LIMIT 1
+        ";
+
+        $resVenta = $mysqli->query($sqlVenta);
+
+        $venta = $resVenta->fetch_assoc();
+
+        $totalVenta = (float)$venta['Total'];
+
+        $saldo = $totalVenta - $totalPagado;
+
+        if ($saldo <= 0.01) {
+
+            $saldo = 0;
+            $estado = 'PAGADA';
+
+        } elseif ($totalPagado > 0) {
+
+            $estado = 'PARCIAL';
+
+        } else {
+
+            $estado = 'PENDIENTE';
+        }
+
+        $sqlUpdate = "
+            UPDATE Ventas
+            SET
+                TotalPagado = '$totalPagado',
+                Saldo = '$saldo',
+                EstadoPago = '$estado'
+            WHERE id = '$idVenta'
+            LIMIT 1
+        ";
+
+        $mysqli->query($sqlUpdate);
     }
 }

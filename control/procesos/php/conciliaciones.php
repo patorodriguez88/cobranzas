@@ -17,28 +17,73 @@ switch ($accion) {
 
         $idCobranza = isset($_POST['idCobranza']) ? (int)$_POST['idCobranza'] : 0;
 
-        $sql = "
-            SELECT 
-                CV.id AS id,
-                CV.idCobranza,
-                CV.idVenta,
-                CV.ImporteAplicado,
-                CV.Fecha AS FechaAplicacion,
-                V.NumeroVenta,
-                V.NumeroOrdenVenta,
-                V.Fecha,
-                V.Total,
-                V.TotalPagado,
-                V.Saldo,
-                V.EstadoPago
-            FROM CobranzasVentas CV
-            INNER JOIN Ventas V ON V.id = CV.idVenta
-            WHERE CV.idCobranza = '$idCobranza'
-              AND IFNULL(CV.Eliminado,0) = 0
-              AND V.Eliminado = 0
-            ORDER BY CV.id DESC
-        ";
+        // $sql = "
+        //     SELECT 
+        //         CV.id AS id,
+        //         CV.idCobranza,
+        //         CV.idVenta,
+        //         CV.ImporteAplicado,
+        //         CV.Fecha AS FechaAplicacion,
+        //         V.NumeroVenta,
+        //         V.NumeroOrdenVenta,
+        //         V.Fecha,
+        //         V.Total,
+        //         V.TotalPagado,
+        //         V.Saldo,
+        //         V.EstadoPago
+        //     FROM CobranzasVentas CV
+        //     INNER JOIN Ventas V ON V.id = CV.idVenta
+        //     WHERE CV.idCobranza = '$idCobranza'
+        //       AND IFNULL(CV.Eliminado,0) = 0
+        //       AND V.Eliminado = 0
+        //     ORDER BY CV.id DESC
+        // ";
+$sql = "
+    SELECT 
+        CV.id AS id,
+        CV.idCobranza,
+        CV.idVenta,
 
+        CASE
+            WHEN CC.Importe IS NOT NULL THEN CC.Importe
+            ELSE CV.ImporteAplicado
+        END AS ImporteAplicado,
+
+        CV.Fecha AS FechaAplicacion,
+
+        V.NumeroVenta,
+        V.NumeroOrdenVenta,
+        V.Fecha,
+        V.Total,
+        V.TotalPagado,
+        V.Saldo,
+        V.EstadoPago,
+
+        CASE
+            WHEN CC.Importe IS NOT NULL THEN 1
+            ELSE 0
+        END AS Conciliado
+
+    FROM CobranzasVentas CV
+
+    INNER JOIN Ventas V 
+        ON V.id = CV.idVenta
+
+    LEFT JOIN (
+    SELECT 
+        idCobranza,
+        MAX(Importe) AS Importe
+    FROM Cobranza_conciliacion
+    WHERE IFNULL(Eliminado,0)=0
+    GROUP BY idCobranza
+) CC ON CC.idCobranza = CV.idCobranza
+
+    WHERE CV.idCobranza = '$idCobranza'
+      AND IFNULL(CV.Eliminado,0) = 0
+      AND V.Eliminado = 0
+
+    ORDER BY CV.id DESC
+";
         $res = $mysqli->query($sql);
 
         if (!$res) {
@@ -118,13 +163,41 @@ switch ($accion) {
                 throw new Exception($mysqli->error);
             }
 
-            $sqlTotalPagado = "
-                SELECT IFNULL(SUM(ImporteAplicado),0) AS TotalPagado
-                FROM CobranzasVentas
-                WHERE idVenta = '$idVenta'
-                  AND IFNULL(Eliminado,0) = 0
-            ";
+            // $sqlTotalPagado = "
+            //     SELECT IFNULL(SUM(ImporteAplicado),0) AS TotalPagado
+            //     FROM CobranzasVentas
+            //     WHERE idVenta = '$idVenta'
+            //       AND IFNULL(Eliminado,0) = 0
+            // ";
+$sqlTotalPagado = "
+    SELECT 
+        IFNULL(SUM(
+            CASE
+                WHEN CC.Importe IS NOT NULL THEN CC.Importe
+                ELSE CV.ImporteAplicado
+            END
+        ),0) AS TotalPagado
+    FROM CobranzasVentas CV
 
+    LEFT JOIN (
+
+    SELECT 
+
+        idCobranza,
+
+        MAX(Importe) AS Importe
+
+    FROM Cobranza_conciliacion
+
+    WHERE IFNULL(Eliminado,0) = 0
+
+    GROUP BY idCobranza
+
+) CC ON CC.idCobranza = CV.idCobranza
+
+    WHERE CV.idVenta = '$idVenta'
+      AND IFNULL(CV.Eliminado,0) = 0
+";
             $resTotalPagado = $mysqli->query($sqlTotalPagado);
 
             if (!$resTotalPagado) {

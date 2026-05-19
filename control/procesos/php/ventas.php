@@ -4,6 +4,80 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 session_start();
 include_once __DIR__ . "/../../../conexion/conexioni.php";
+
+
+function recalcularEstadoVenta($mysqli, $idVenta)
+{
+    $idVenta = (int)$idVenta;
+
+    $sql = "
+        SELECT 
+            V.Total,
+
+            IFNULL((
+                SELECT SUM(
+                    CASE 
+                        WHEN CC.id IS NOT NULL THEN CC.Importe
+                        ELSE CV.ImporteAplicado
+                    END
+                )
+                FROM CobranzasVentas CV
+                LEFT JOIN Cobranza_conciliacion CC 
+                    ON CC.idCobranza = CV.idCobranza
+                    AND IFNULL(CC.Eliminado,0) = 0
+                WHERE CV.idVenta = '$idVenta'
+                  AND IFNULL(CV.Eliminado,0) = 0
+            ),0) AS TotalPagadoReal,
+
+            IFNULL((
+                SELECT SUM(AP.importe)
+                FROM Ventas_Ajustes_Pago AP
+                WHERE AP.idVenta = V.id
+                  AND AP.eliminado = 0
+            ),0) AS Ajustes
+
+        FROM Ventas V
+        WHERE V.id = '$idVenta'
+        LIMIT 1
+    ";
+
+    $res = $mysqli->query($sql);
+
+    if (!$res || $res->num_rows == 0) {
+        throw new Exception("Venta inexistente para recalcular.");
+    }
+
+    $row = $res->fetch_assoc();
+
+    $total = (float)$row['Total'];
+    $totalPagadoReal = (float)$row['TotalPagadoReal'];
+    $ajustes = (float)$row['Ajustes'];
+
+    $saldo = $total - $totalPagadoReal - $ajustes;
+
+    if ($saldo <= 0) {
+        $estado = 'PAGADA';
+    } elseif ($totalPagadoReal > 0) {
+        $estado = 'PARCIAL';
+    } else {
+        $estado = 'PENDIENTE';
+    }
+
+    $sqlUpdate = "
+        UPDATE Ventas
+        SET 
+            TotalPagado = '$totalPagadoReal',
+            Saldo = '$saldo',
+            EstadoPago = '$estado'
+        WHERE id = '$idVenta'
+        LIMIT 1
+    ";
+
+    if (!$mysqli->query($sqlUpdate)) {
+        throw new Exception($mysqli->error);
+    }
+}
+
 function eliminarOrdenVentaWepoint($mysqli, $idVenta)
 {
     $token = '1383|1w3olMBz6851a6JdfbA1GH0jdF5QdUnwUtAfehSL0f00e3a5';
@@ -1201,21 +1275,30 @@ switch ($accion) {
         $venta = $resVenta->fetch_assoc();
 
         $sqlPagos = "SELECT 
-        CV.idCobranza,
-        CV.ImporteAplicado,
-        CV.Fecha AS FechaAplicacion,
-        CB.Fecha,
-        CB.Hora,
-        CB.Banco,
-        CB.Operacion,
-        CB.Usuario_obs,
-        CB.Conciliado,
-        CB.Importe
-    FROM CobranzasVentas CV
-    LEFT JOIN Cobranza CB ON CB.id = CV.idCobranza
-    WHERE CV.idVenta = '$idVenta'
-      AND CV.Eliminado = 0
-    ORDER BY CV.id DESC";
+            CV.idCobranza,
+            CV.ImporteAplicado,
+
+            CASE 
+                WHEN CC.id IS NOT NULL THEN CC.Importe
+                ELSE CV.ImporteAplicado
+            END AS ImporteAplicadoReal,
+
+            CV.Fecha AS FechaAplicacion,
+            CB.Fecha,
+            CB.Hora,
+            CB.Banco,
+            CB.Operacion,
+            CB.Usuario_obs,
+            CB.Conciliado,
+            CB.Importe
+        FROM CobranzasVentas CV
+        LEFT JOIN Cobranza CB ON CB.id = CV.idCobranza
+        LEFT JOIN Cobranza_conciliacion CC 
+            ON CC.idCobranza = CV.idCobranza
+            AND IFNULL(CC.Eliminado,0) = 0
+        WHERE CV.idVenta = '$idVenta'
+        AND CV.Eliminado = 0
+        ORDER BY CV.id DESC";
 
         $resPagos = $mysqli->query($sqlPagos);
 

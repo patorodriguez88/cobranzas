@@ -1009,7 +1009,7 @@ function abrirEstadoVenta(idVenta) {
       : ""
   }
   </td>
-      <td>${formatoMoneda(p.ImporteAplicado)}</td>
+      <td>${formatoMoneda(p.ImporteAplicadoReal || p.ImporteAplicado)}</td>
       <td class="text-center">${iconoImagen}</td>
     </tr>
   `;
