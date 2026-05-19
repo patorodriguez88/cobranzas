@@ -15,6 +15,213 @@ function responder($data)
     echo json_encode($data, JSON_UNESCAPED_UNICODE);
     exit;
 }
+function obtenerCredencialesCaddy($distribuidora = 'Dinter')
+{
+    $distribuidora = strtoupper(trim($distribuidora));
+
+    if ($distribuidora === 'MISAS') {
+        return [
+            "empresa" => "Misas",
+            "base_url" => "https://api.caddy.com.ar/api",
+            "usuario" => "bsosa@momentosinolvidables.com.ar",
+            "password" => "momentos2023"
+        ];
+    }
+
+    return [
+        "empresa" => "Dinter",
+        "base_url" => "https://api.caddy.com.ar/api",
+        "usuario" => "cobranza@dintersa.com.ar",
+        "password" => "dinter_123"
+    ];
+}
+function obtenerTokenCaddy($credenciales)
+{
+    $curl = curl_init();
+
+    curl_setopt_array($curl, [
+        CURLOPT_URL => $credenciales["base_url"] . "/auth",
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 30,
+        CURLOPT_CUSTOMREQUEST => "POST",
+        CURLOPT_POSTFIELDS => json_encode([
+            "user" => $credenciales["usuario"],
+            "password" => $credenciales["password"]
+        ], JSON_UNESCAPED_UNICODE),
+        CURLOPT_HTTPHEADER => [
+            "Accept: application/json",
+            "Content-Type: application/json"
+        ],
+    ]);
+
+    $response = curl_exec($curl);
+    $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+    $error = curl_error($curl);
+
+    curl_close($curl);
+
+    if ($error) {
+        throw new Exception("Error auth Caddy: " . $error);
+    }
+
+    $data = json_decode($response, true);
+
+    if ($httpCode < 200 || $httpCode >= 300) {
+        throw new Exception("Caddy rechazó auth: " . $response);
+    }
+
+    $token = $data["token"] ?? $data["result"]["token"] ?? "";
+
+    if ($token == "") {
+        throw new Exception("Caddy autenticó pero no devolvió token: " . $response);
+    }
+
+    return $token;
+}
+function crearServicioCaddy($mysqli, $venta, $detalle, $idVenta, $nroOrdenVenta)
+{
+    $distribuidora = $venta["Distribuidora"] ?? "Dinter";
+    $credenciales = obtenerCredencialesCaddy($distribuidora);
+
+    $token = obtenerTokenCaddy($credenciales);
+
+    $payload = [
+        "token" => $token,
+        "NombreCompleto" => $venta["RazonSocial"] ?? "",
+        "Direccion" => $venta["Direccion"] ?? "",
+        "Ciudad" => $venta["Ciudad"] ?? "Cordoba",
+        "CodigoPostal" => "5000",
+        "Dni" => "",
+        "Telefono" => $venta["Celular"] ?? "",
+        "Mail" => "",
+        "Servicio" => 1,
+        "Cantidad" => 1,
+        "ValorDeclarado" => (float)($venta["Total"] ?? 0),
+        "Cobranza" => 0,
+        "Observaciones" => "OV Wepoint #" . $nroOrdenVenta,
+        "EnviarMail" => false,
+        "idProveedor" => "VENTA-" . $idVenta,
+        "WebHook" => "",
+        "Origen" => [
+            [
+                "idProveedor" => strtoupper($credenciales["empresa"]),
+                "Nombre" => $credenciales["empresa"],
+                "Direccion" => "Córdoba"
+            ]
+        ],
+        "Box" => [
+            [
+                "Length" => 30,
+                "Width" => 20,
+                "Height" => 15,
+                "Weight" => 2.5
+            ]
+        ]
+    ];
+
+    $data = enviarServicioCaddy($credenciales["base_url"], $token, $payload);
+
+    if (isset($data["token_expired"]) && $data["token_expired"] == 1) {
+        $token = obtenerTokenCaddy($credenciales);
+        $payload["token"] = $token;
+        $data = enviarServicioCaddy($credenciales["base_url"], $token, $payload);
+    }
+
+    $ok =
+        !empty($data["success"])
+        || (isset($data["status"]) && strtolower($data["status"]) === "ok");
+
+    if (!$ok) {
+        throw new Exception(
+            "Caddy rechazó el servicio: " .
+                json_encode($data, JSON_UNESCAPED_UNICODE)
+        );
+    }
+
+
+    $codigoSeguimiento =
+        $data["result"]["Codigo_Seguimiento"]
+        ?? $data["Codigo_Seguimiento"]
+        ?? "";
+
+    $idVentaCaddy =
+        $data["result"]["Id_de_Venta"]
+        ?? $data["Id_de_Venta"]
+        ?? "";
+
+    $tarifa = (float)($data["result"]["Tarifa"] ?? 0);
+    $fechaEntrega = $data["result"]["Fecha_Entrega"] ?? "";
+    $tituloServicio = $data["result"]["Titulo"] ?? "";
+    $responseJson = $mysqli->real_escape_string(json_encode($data, JSON_UNESCAPED_UNICODE));
+    $codigoSeguimientoSql = $mysqli->real_escape_string($codigoSeguimiento);
+    $idVentaCaddySql = $mysqli->real_escape_string($idVentaCaddy);
+    $empresaSql = $mysqli->real_escape_string($credenciales["empresa"]);
+    $fechaEntregaSql = $mysqli->real_escape_string($fechaEntrega);
+    $tituloServicioSql = $mysqli->real_escape_string($tituloServicio);
+
+    $sql = "UPDATE Ventas
+        SET 
+            caddy_codigo_seguimiento = '$codigoSeguimientoSql',
+            caddy_id_venta = '$idVentaCaddySql',
+            caddy_empresa = '$empresaSql',
+            caddy_response = '$responseJson',
+            caddy_created_at = NOW(),
+            caddy_tarifa = '$tarifa',
+            caddy_fecha_entrega = '$fechaEntregaSql',
+            caddy_titulo_servicio = '$tituloServicioSql'    
+        WHERE id = '$idVenta'
+        LIMIT 1
+    ";
+
+    if (!$mysqli->query($sql)) {
+        throw new Exception("Caddy creó el servicio, pero no se pudo guardar localmente: " . $mysqli->error);
+    }
+
+    return $data;
+}
+
+function enviarServicioCaddy($baseUrl, $token, $payload)
+{
+    $curl = curl_init();
+
+    curl_setopt_array($curl, [
+        CURLOPT_URL => $baseUrl . "/servicios",
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 30,
+        CURLOPT_CUSTOMREQUEST => "POST",
+        CURLOPT_POSTFIELDS => json_encode($payload, JSON_UNESCAPED_UNICODE),
+        CURLOPT_HTTPHEADER => [
+            "Accept: application/json",
+            "Content-Type: application/json",
+            "X-Api-Token: " . $token
+        ],
+    ]);
+
+    $response = curl_exec($curl);
+    $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+    $error = curl_error($curl);
+
+    curl_close($curl);
+
+    if ($error) {
+        throw new Exception("Error cURL Caddy: " . $error);
+    }
+
+    $data = json_decode($response, true);
+
+    if ($httpCode == 401 || $httpCode == 403) {
+        return [
+            "token_expired" => 1,
+            "response" => $response
+        ];
+    }
+
+    return $data ?: [
+        "status" => "error",
+        "response" => $response,
+        "http_code" => $httpCode
+    ];
+}
 
 function crearClienteWepointSiNoExiste($mysqli, $cliente, $token)
 {
@@ -409,8 +616,7 @@ if (empty($nroOrdenVenta)) {
 $responseJson = json_encode($data, JSON_UNESCAPED_UNICODE);
 $createdAt = date('Y-m-d H:i:s');
 
-$sqlUpdate = "
-    UPDATE Ventas
+$sqlUpdate = "UPDATE Ventas
     SET 
         NumeroOrdenVenta = ?,
         wepoint_id_orden_venta = ?,
@@ -454,6 +660,33 @@ if (!$stmtUpd->execute()) {
     ]);
 }
 
+$caddyData = null;
+$caddyError = null;
+
+if ((int)$idTransportista === 1) {
+    if (!empty($venta["caddy_codigo_seguimiento"])) {
+
+        $caddyData = [
+            "status" => "ok",
+            "message" => "Servicio ya creado previamente",
+            "codigo" => $venta["caddy_codigo_seguimiento"]
+        ];
+    } else {
+        try {
+
+            $caddyData = crearServicioCaddy(
+                $mysqli,
+                $venta,
+                $detalle,
+                $idVenta,
+                $nroOrdenVenta
+            );
+        } catch (Exception $e) {
+
+            $caddyError = $e->getMessage();
+        }
+    }
+}
 responder([
     "success" => true,
     "message" => "Orden de venta generada correctamente",
@@ -461,5 +694,7 @@ responder([
     "id_orden_venta" => $idOrdenWepoint,
     "nro_orden_venta" => $nroOrdenVenta,
     "estado" => $estado,
-    "total" => $total
+    "total" => $total,
+    "caddy" => $caddyData,
+    "caddy_error" => $caddyError
 ]);
