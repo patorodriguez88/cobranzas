@@ -611,11 +611,23 @@ VALUES
         try {
             eliminarOrdenVentaWepoint($mysqli, $id);
         } catch (Exception $e) {
-            echo json_encode(array(
-                "success" => 0,
-                "error" => $e->getMessage()
-            ));
-            exit;
+
+            $mensajeWepoint = $e->getMessage();
+
+            $ovYaNoExiste =
+                stripos($mensajeWepoint, '404') !== false ||
+                stripos($mensajeWepoint, 'not found') !== false ||
+                stripos($mensajeWepoint, 'no encontrada') !== false ||
+                stripos($mensajeWepoint, 'no existe') !== false ||
+                stripos($mensajeWepoint, 'eliminada') !== false;
+
+            if (!$ovYaNoExiste) {
+                echo json_encode(array(
+                    "success" => 0,
+                    "error" => $mensajeWepoint
+                ));
+                exit;
+            }
         }
 
 

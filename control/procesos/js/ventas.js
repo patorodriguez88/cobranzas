@@ -1898,7 +1898,12 @@ function eliminarAjustePago(idVenta) {
 
       success: function (r) {
         if (r.success) {
-          toast("Ajuste eliminado correctamente", "success");
+          Swal.fire({
+            icon: "success",
+            title: "Ajuste eliminado correctamente",
+            timer: 1200,
+            showConfirmButton: false,
+          });
 
           recargarListadoVentas();
 
