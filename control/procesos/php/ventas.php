@@ -23,7 +23,7 @@ function recalcularEstadoVenta($mysqli, $idVenta)
                 )
                 FROM CobranzasVentas CV
                 LEFT JOIN Cobranza_conciliacion CC 
-                    ON CC.idCobranza = CV.idCobranza
+                    ON CC.id_cobranza = CV.idCobranza
                     AND IFNULL(CC.Eliminado,0) = 0
                 WHERE CV.idVenta = '$idVenta'
                   AND IFNULL(CV.Eliminado,0) = 0
@@ -1294,13 +1294,22 @@ switch ($accion) {
         FROM CobranzasVentas CV
         LEFT JOIN Cobranza CB ON CB.id = CV.idCobranza
         LEFT JOIN Cobranza_conciliacion CC 
-            ON CC.idCobranza = CV.idCobranza
+            ON CC.id_cobranza = CV.idCobranza
             AND IFNULL(CC.Eliminado,0) = 0
         WHERE CV.idVenta = '$idVenta'
         AND CV.Eliminado = 0
         ORDER BY CV.id DESC";
 
         $resPagos = $mysqli->query($sqlPagos);
+
+        if (!$resPagos) {
+            echo json_encode(array(
+                "success" => 0,
+                "error" => "Error SQL pagos: " . $mysqli->error,
+                "sql" => $sqlPagos
+            ));
+            exit;
+        }
 
         $pagos = array();
 
