@@ -2535,24 +2535,30 @@ case 'stock_por_orden_ingreso':
     */
 
     $sqlUsuarios = "
-        SELECT
-            VD.idProducto,
-            IFNULL(V.Usuario, 'Sin usuario') AS Usuario,
-            SUM(VD.Cantidad) AS Total
-
-        FROM VentasDetalle VD
-
-        INNER JOIN Ventas V 
-            ON V.id = VD.idVenta
-
-        WHERE IFNULL(VD.Eliminado,0) = 0
-          AND IFNULL(V.Eliminado,0) = 0
-          AND VD.idProducto IN (1,2)
-
-        GROUP BY VD.idProducto, V.Usuario
-
-        ORDER BY VD.idProducto ASC, Total DESC
-    ";
+    SELECT
+        VCS.idProducto,
+        VCS.idOrdenCompra,
+        OC.NumeroOrden,
+        IFNULL(V.Usuario, 'Sin usuario') AS Usuario,
+        SUM(VCS.Cantidad) AS Total
+    FROM VentasConsumoStock VCS
+    INNER JOIN Ventas V 
+        ON V.id = VCS.idVenta
+    INNER JOIN OrdenesCompra OC 
+        ON OC.id = VCS.idOrdenCompra
+    WHERE IFNULL(VCS.Eliminado,0) = 0
+      AND IFNULL(V.Eliminado,0) = 0
+      AND VCS.idProducto IN (1,2)
+    GROUP BY 
+        VCS.idProducto,
+        VCS.idOrdenCompra,
+        OC.NumeroOrden,
+        V.Usuario
+    ORDER BY 
+        VCS.idProducto ASC,
+        OC.NumeroOrden ASC,
+        Total DESC
+";
 
     $resUsuarios = $mysqli->query($sqlUsuarios);
 
@@ -2568,15 +2574,17 @@ case 'stock_por_orden_ingreso':
 
     while ($u = $resUsuarios->fetch_assoc()) {
 
-        $tipo = ((int)$u['idProducto'] === 1)
-            ? "FIGURITAS"
-            : "ALBUM";
+    $tipo = ((int)$u['idProducto'] === 1)
+        ? "FIGURITAS"
+        : "ALBUM";
 
-        $data["VENDEDORES"][$tipo][] = [
-            "Usuario" => $u["Usuario"],
-            "Total" => (float)$u["Total"]
-        ];
-    }
+    $data["VENDEDORES"][$tipo][] = [
+        "idOrdenCompra" => (int)$u["idOrdenCompra"],
+        "NumeroOrden"  => (int)$u["NumeroOrden"],
+        "Usuario"      => $u["Usuario"],
+        "Total"        => (float)$u["Total"]
+    ];
+}
 
     echo json_encode([
         "success" => 1,

@@ -1506,12 +1506,13 @@ function renderVendedoresResumen(vendedores) {
   }
 
   let html = `
-    <div class="table-responsive">
+    <div class="table-responsive mt-2">
       <table class="table table-sm table-bordered mb-0" style="font-size:11px;">
         <thead class="table-light">
           <tr>
+            <th>OI</th>
             <th>Usuario</th>
-            <th class="text-end">Cantidad vendida</th>
+            <th class="text-end">Vendido</th>
           </tr>
         </thead>
         <tbody>
@@ -1520,6 +1521,7 @@ function renderVendedoresResumen(vendedores) {
   vendedores.forEach(function (v) {
     html += `
       <tr>
+        <td>OI #${v.NumeroOrden}</td>
         <td>${v.Usuario || "Sin usuario"}</td>
         <td class="text-end fw-bold">
           ${parseFloat(v.Total || 0).toLocaleString("es-AR")}
