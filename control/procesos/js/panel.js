@@ -324,17 +324,50 @@ function ver_tabla_conciliados(a) {
           var newdate = day + "." + month + "." + year + " " + hour;
 
           if (row.Estado == "Rechazado") {
-            return (
-              "<td>" +
-              '<h6><span class="badge badge-danger-lighten"><i class="mdi mdi-cancel"></i> Rechazado </span></h6>' +
-              "</td>"
-            );
+
+          return (
+            "<td>" +
+            '<h6><span class="badge badge-danger-lighten"><i class="mdi mdi-cancel"></i> Rechazado </span></h6>' +
+            "</td>"
+          );
+
           } else {
-            return (
-              "<td>" +
-              '<h6><span class="badge badge-success-lighten mb-0"><i class="mdi mdi-bitcoin"></i> Aceptado </span></h6>' +
-              `<small class="text-muted">${row.User} ${newdate}</small></td>`
-            );
+
+              let badgeVinculo = '';
+
+              if (parseFloat(row.TotalAplicado || 0) <= 0) {
+
+                  badgeVinculo =
+                  '<br><span class="badge badge-warning-lighten">' +
+                  '<i class="mdi mdi-link-off"></i> Sin vincular' +
+                  '</span>';
+
+              } else if (
+                  parseFloat(row.TotalAplicado || 0) < parseFloat(row.Importe || 0)
+              ) {
+
+                  badgeVinculo =
+                  '<br><span class="badge badge-info-lighten">' +
+                  '<i class="mdi mdi-link-variant"></i> Parcial' +
+                  '</span>';
+
+              } else {
+
+                  badgeVinculo =
+                  '<br><span class="badge badge-success-lighten">' +
+                  '<i class="mdi mdi-link"></i> Vinculado' +
+                  '</span>';
+              }
+
+              return (
+                "<td>" +
+                '<h6><span class="badge badge-success-lighten mb-0">' +
+                '<i class="mdi mdi-bitcoin"></i> Aceptado </span></h6>' +
+
+                badgeVinculo +
+
+                `<br><small class="text-muted">${row.User} ${newdate}</small></td>`
+              );
           }
         },
       },
@@ -479,7 +512,7 @@ function abrirAsignarPago(idCobranza) {
 
   $("#modal_asignar_pago").modal("show");
 },
-    error: function (xhr) {
+error: function (xhr) {
       console.log(xhr.responseText);
       Swal.fire({
         icon: "error",

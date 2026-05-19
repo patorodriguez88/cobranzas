@@ -20,23 +20,38 @@ if (isset($_POST['Observaciones_Usuario'])) {
 //TABLA CONCILIADOS
 if (isset($_POST['Tabla_conciliados'])) {
 
+    $whereFiltro = "";
+
     if (isset($_POST['Filtro'])) {
-
-        $sql = $mysqli->query("SELECT usuarios.Usuario as User,Cobranza_conciliacion.*,Cobranza.Importe as Importe_original 
-    FROM Cobranza_conciliacion INNER JOIN Cobranza ON Cobranza.id=Cobranza_conciliacion.id_cobranza 
-    INNER JOIN usuarios ON Cobranza_conciliacion.Usuario=usuarios.id WHERE Exportado='' ");
-    } else {
-
-        $sql = $mysqli->query("SELECT usuarios.Usuario as User,Cobranza_conciliacion.*,Cobranza.Importe as Importe_original 
-    FROM Cobranza_conciliacion INNER JOIN Cobranza ON Cobranza.id=Cobranza_conciliacion.id_cobranza
-    INNER JOIN usuarios ON Cobranza_conciliacion.Usuario=usuarios.id ");
+        $whereFiltro = "WHERE Cobranza_conciliacion.Exportado = ''";
     }
 
+    $sql = $mysqli->query("SELECT 
+            usuarios.Usuario AS User,
+            Cobranza_conciliacion.*,
+            Cobranza.Importe AS Importe_original,
+
+            IFNULL((
+                SELECT SUM(CV.ImporteAplicado)
+                FROM CobranzasVentas CV
+                WHERE CV.idCobranza = Cobranza_conciliacion.id_cobranza
+                  AND IFNULL(CV.Eliminado,0) = 0
+            ),0) AS TotalAplicado
+
+        FROM Cobranza_conciliacion
+
+        INNER JOIN Cobranza 
+            ON Cobranza.id = Cobranza_conciliacion.id_cobranza
+
+        INNER JOIN usuarios 
+            ON Cobranza_conciliacion.Usuario = usuarios.id
+
+        $whereFiltro
+    ");
 
     $rows = array();
 
     while ($row = $sql->fetch_array(MYSQLI_ASSOC)) {
-
         $rows[] = $row;
     }
 
