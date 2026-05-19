@@ -475,12 +475,18 @@ function eliminarVenta(id) {
       dataType: "json",
       success: function (r) {
         if (r.success == 1) {
-          Swal.fire({
-            icon: "success",
-            title: "Venta eliminada",
-            timer: 1200,
-            showConfirmButton: false,
-          });
+          if (r.warning && r.warning !== "") {
+            Swal.fire({
+              icon: "warning",
+              title: "Venta eliminada",
+              text: r.warning,
+            });
+          } else {
+            Swal.fire({
+              icon: "success",
+              title: "Venta eliminada correctamente",
+            });
+          }
 
           if ($.fn.DataTable.isDataTable("#tabla_ventas")) {
             $("#tabla_ventas").DataTable().ajax.reload(null, false);

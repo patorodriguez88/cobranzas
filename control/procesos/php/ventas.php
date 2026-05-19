@@ -608,24 +608,40 @@ VALUES
             exit;
         }
 
+        $warningWepoint = "";
+
         try {
+
             eliminarOrdenVentaWepoint($mysqli, $id);
         } catch (Exception $e) {
 
             $mensajeWepoint = $e->getMessage();
 
             $ovYaNoExiste =
+
                 stripos($mensajeWepoint, '404') !== false ||
+
                 stripos($mensajeWepoint, 'not found') !== false ||
+
                 stripos($mensajeWepoint, 'no encontrada') !== false ||
+
                 stripos($mensajeWepoint, 'no existe') !== false ||
+
                 stripos($mensajeWepoint, 'eliminada') !== false;
 
-            if (!$ovYaNoExiste) {
+            if ($ovYaNoExiste) {
+
+                $warningWepoint = "La OV ya no existía en Wepoint. Se eliminó únicamente la venta local.";
+            } else {
+
                 echo json_encode(array(
+
                     "success" => 0,
+
                     "error" => $mensajeWepoint
+
                 ));
+
                 exit;
             }
         }
@@ -685,7 +701,8 @@ VALUES
             $mysqli->commit();
 
             echo json_encode(array(
-                "success" => 1
+                "success" => 1,
+                "warning" => $warningWepoint
             ));
         } catch (Exception $e) {
 
