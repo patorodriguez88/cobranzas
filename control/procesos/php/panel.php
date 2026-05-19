@@ -149,12 +149,39 @@ if (isset($_POST['Conciliar_quik_cancel'])) {
 //BUSCO DATOS
 if (isset($_POST['Datos'])) {
 
-    $sql = $mysqli->query("SELECT * FROM Cobranza WHERE id=" . $_POST['id'] . " ");
+    $id = (int)$_POST['id'];
+
+    $sql = $mysqli->query("
+        SELECT 
+            C.*,
+
+            CASE
+                WHEN CC.Importe IS NOT NULL THEN CC.Importe
+                ELSE C.Importe
+            END AS ImporteReal,
+
+            CASE
+                WHEN CC.Importe IS NOT NULL THEN 1
+                ELSE 0
+            END AS TieneConciliacion
+
+        FROM Cobranza C
+
+        LEFT JOIN (
+            SELECT 
+                id_cobranza,
+                MAX(Importe) AS Importe
+            FROM Cobranza_conciliacion
+            GROUP BY id_cobranza
+        ) CC ON CC.id_cobranza = C.id
+
+        WHERE C.id = '$id'
+        LIMIT 1
+    ");
 
     $rows = array();
 
     while ($row = $sql->fetch_array(MYSQLI_ASSOC)) {
-
         $rows[] = $row;
     }
 

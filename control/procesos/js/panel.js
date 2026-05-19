@@ -438,7 +438,7 @@ function abrirAsignarPago(idCobranza) {
       $("#asignar_id_cobranza").val(c.id);
       $("#asignar_cliente").val(c.NombreCliente);
       $("#asignar_numero_cliente").val(c.NumeroCliente);
-      $("#asignar_importe_pago").val(c.Importe);
+      $("#asignar_importe_pago").val(c.ImporteReal);
       $("#asignar_banco_operacion").val(c.Banco + " / Op.: " + c.Operacion);
 
       $("#resumen_pago").text(formatearMonedaAsignacion(c.Importe));
