@@ -1534,7 +1534,39 @@ function generarOrdenVentaWepoint(idVenta) {
       },
       success: function (res) {
         if (res.success) {
-          Swal.fire("OV generada", "Número: " + res.nro_orden_venta, "success");
+          let htmlOk = `
+    <div class="text-start">
+      <p class="mb-1"><b>OV Wepoint:</b> ${res.nro_orden_venta || "-"}</p>
+  `;
+
+          if (res.caddy && res.caddy.result && res.caddy.result.Codigo_Seguimiento) {
+            htmlOk += `
+      <p class="mb-1">
+        <b>Caddy:</b> 
+        <span class="badge bg-warning text-dark">
+          ${res.caddy.result.Codigo_Seguimiento}
+        </span>
+      </p>
+    `;
+          }
+
+          if (res.caddy_error) {
+            htmlOk += `
+      <div class="alert alert-warning mt-2 mb-0">
+        <b>La OV se creó, pero Caddy falló:</b><br>
+        ${res.caddy_error}
+      </div>
+    `;
+          }
+
+          htmlOk += `</div>`;
+
+          Swal.fire({
+            icon: res.caddy_error ? "warning" : "success",
+            title: res.caddy_error ? "OV creada con advertencia" : "OV generada",
+            html: htmlOk,
+            width: 750,
+          });
 
           abrirEstadoVenta(idVenta);
 
