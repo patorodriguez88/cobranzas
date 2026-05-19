@@ -359,15 +359,24 @@ function ver_tabla_conciliados(a) {
                   '</span>';
               }
 
-              return (
-                "<td>" +
-                '<h6><span class="badge badge-success-lighten mb-0">' +
-                '<i class="mdi mdi-bitcoin"></i> Aceptado </span></h6>' +
-
-                badgeVinculo +
-
-                `<br><small class="text-muted">${row.User} ${newdate}</small></td>`
-              );
+              return `<td>
+                        <div class="d-flex flex-column gap-1">
+                            <div>
+                                <span class="badge badge-success-lighten">
+                                    <i class="mdi mdi-bitcoin"></i>
+                                    Aceptado
+                                </span>
+                                ${badgeVinculado}
+                            </div>
+                            <small class="text-muted">
+                                <i class="mdi mdi-account-outline"></i>
+                                ${row.User}
+                                ·
+                                ${newdate}
+                            </small>
+                        </div>
+                    </td>
+                    `;
           }
         },
       },
