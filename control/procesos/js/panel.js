@@ -338,7 +338,7 @@ function ver_tabla_conciliados(a) {
               if (parseFloat(row.TotalAplicado || 0) <= 0) {
 
                   badgeVinculo =
-                  '<br><span class="badge badge-warning-lighten">' +
+                  '<span class="badge badge-warning-lighten">' +
                   '<i class="mdi mdi-link-off"></i> Sin vincular' +
                   '</span>';
 
@@ -347,14 +347,14 @@ function ver_tabla_conciliados(a) {
               ) {
 
                   badgeVinculo =
-                  '<br><span class="badge badge-info-lighten">' +
+                  '<span class="badge badge-info-lighten">' +
                   '<i class="mdi mdi-link-variant"></i> Parcial' +
                   '</span>';
 
               } else {
 
                   badgeVinculo =
-                  '<br><span class="badge badge-success-lighten">' +
+                  '<br><span class="badge badge-primary-lighten ms-1">' +
                   '<i class="mdi mdi-link"></i> Vinculado' +
                   '</span>';
               }
@@ -366,7 +366,7 @@ function ver_tabla_conciliados(a) {
                                     <i class="mdi mdi-bitcoin"></i>
                                     Aceptado
                                 </span>
-                                ${badgeVinculado}
+                                ${badgeVinculo}
                             </div>
                             <small class="text-muted">
                                 <i class="mdi mdi-account-outline"></i>
