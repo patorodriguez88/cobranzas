@@ -265,6 +265,17 @@ function ver_tabla_conciliados(a) {
       [10, 25, 50, -1],
       [10, 25, 50, "All"],
     ],
+    autoWidth: false,
+    scrollX: false,
+    columnDefs: [
+      { targets: 0, className: "col-id" },
+      { targets: 1, className: "col-fecha" },
+      { targets: 2, className: "col-cliente" },
+      { targets: 3, className: "col-banco" },
+      { targets: 4, className: "col-importe" },
+      { targets: 5, className: "col-estado" },
+      { targets: 7, className: "col-acciones" }
+    ],
     ajax: {
       url: "control/procesos/php/panel.php",
       data: { Tabla_conciliados: 1, Filtro: a },

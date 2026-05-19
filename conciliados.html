@@ -13,7 +13,66 @@
     <link href="saas/assets/css/icons.min.css" rel="stylesheet" type="text/css" />
     <link href="saas/assets/css/app.min.css" rel="stylesheet" type="text/css" id="app-style" />
   </head>
+<style>
+  #cobranzas_tabla {
+  font-size: 11px;
+  width: 100% !important;
+}
 
+#cobranzas_tabla th,
+#cobranzas_tabla td {
+  padding: 6px 8px !important;
+  vertical-align: middle;
+}
+
+#cobranzas_tabla td {
+  white-space: normal !important;
+}
+
+#cobranzas_tabla .col-id {
+  width: 45px;
+  text-align: center;
+}
+
+#cobranzas_tabla .col-fecha {
+  width: 95px;
+}
+
+#cobranzas_tabla .col-cliente {
+  max-width: 210px;
+}
+
+#cobranzas_tabla .col-banco {
+  max-width: 250px;
+  word-break: break-word;
+}
+
+#cobranzas_tabla .col-importe {
+  width: 130px;
+  text-align: right;
+  white-space: nowrap !important;
+}
+
+#cobranzas_tabla .col-estado {
+  width: 170px;
+}
+
+#cobranzas_tabla .col-acciones {
+  width: 75px;
+  text-align: center;
+  white-space: nowrap !important;
+}
+
+.estado-compacto .badge {
+  font-size: 10px;
+  padding: 3px 6px;
+}
+
+.estado-compacto small {
+  font-size: 10px;
+  line-height: 12px;
+}
+</style>
   <body
     class="loading"
     data-layout-color="light"
