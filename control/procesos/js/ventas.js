@@ -832,12 +832,25 @@ function abrirEstadoVenta(idVenta) {
         iconoDistribuidora = "mdi-truck-fast";
       }
       $("#offcanvas_venta_titulo").html(`
-        Venta #${v.NumeroVenta}
-        <span id="badge_distribuidora" class="badge ${claseBadge} ms-2">
-        <i class="mdi ${iconoDistribuidora} me-1"></i>
-        ${distribuidora}
+    
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+
+        <span>
+            Venta #${v.NumeroVenta}
         </span>
-      `);
+
+        <span id="badge_distribuidora" class="badge ${claseBadge}">
+            <i class="mdi ${iconoDistribuidora} me-1"></i>
+            ${distribuidora}
+        </span>
+
+        <span class="badge bg-light text-dark border">
+            [${v.Ncliente || 'S/N'}] ${v.RazonSocial || 'Consumidor Final'}
+        </span>
+
+    </div>
+
+`);
 
       $("#venta_estado_cuenta").html(`
         <div class="d-flex flex-wrap align-items-center gap-3 small mb-2">

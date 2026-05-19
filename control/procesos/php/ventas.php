@@ -1238,6 +1238,7 @@ switch ($accion) {
 
         V.EstadoPago,
         V.Observaciones,
+        C.Ncliente,
         C.RazonSocial,
         V.NumeroOrdenVenta,
 
