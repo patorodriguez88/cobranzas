@@ -84,8 +84,7 @@ function crearClienteWepointSiNoExiste($mysqli, $cliente, $token)
 
     $responseJson = $mysqli->real_escape_string(json_encode($data, JSON_UNESCAPED_UNICODE));
 
-    $sqlUpdateCliente = "
-        UPDATE Clientes
+    $sqlUpdateCliente = "UPDATE Clientes
         SET 
             wepoint_id_cliente = '$nuevoId',
             wepoint_response = '$responseJson',
@@ -118,11 +117,33 @@ if ($idTransportista <= 0) {
     ]);
 }
 
-/*
-    Por ahora dejamos Dinter.
-    Luego agregamos token/id_empresa para Misas según Clientes.Distribuidora.
-*/
-$token = '1383|1w3olMBz6851a6JdfbA1GH0jdF5QdUnwUtAfehSL0f00e3a5';
+function obtenerCredencialesWepoint($distribuidora = 'Dinter')
+{
+    $distribuidora = trim(strtoupper($distribuidora));
+
+    switch ($distribuidora) {
+
+        case 'MISAS':
+
+            return [
+                "empresa" => "Misas",
+                "token" => 'TOKEN_MISAS',
+                "id_cliente_origen" => 999
+            ];
+
+        case 'DINTER':
+        default:
+
+            return [
+                "empresa" => "Dinter",
+                "token" => '1383|1w3olMBz6851a6JdfbA1GH0jdF5QdUnwUtAfehSL0f00e3a5',
+                "id_cliente_origen" => 219
+            ];
+    }
+}
+// $token = '1383|1w3olMBz6851a6JdfbA1GH0jdF5QdUnwUtAfehSL0f00e3a5';
+
+
 
 $sqlEstado = "
     SELECT EstadoPago
@@ -157,8 +178,7 @@ if ($rowEstado['EstadoPago'] != 'PAGADA') {
     ]);
 }
 
-$sqlVenta = "
-    SELECT 
+$sqlVenta = "SELECT 
         V.*,
         C.id AS idCliente,
         C.RazonSocial,
@@ -205,6 +225,9 @@ if ($resVenta->num_rows === 0) {
 }
 
 $venta = $resVenta->fetch_assoc();
+$distribuidora = $venta['Distribuidora'] ?? 'Dinter';
+$wepoint = obtenerCredencialesWepoint($distribuidora);
+$token = $wepoint['token'];
 
 if (!empty($venta['NumeroOrdenVenta'])) {
     responder([
@@ -225,8 +248,7 @@ try {
     ]);
 }
 
-$sqlDetalle = "
-    SELECT 
+$sqlDetalle = "SELECT 
         VD.idProducto,
         VD.Cantidad,
         VD.PrecioUnitario,

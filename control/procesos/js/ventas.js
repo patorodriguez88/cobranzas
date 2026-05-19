@@ -804,12 +804,34 @@ function abrirEstadoVenta(idVenta) {
         return;
       }
 
+      let distribuidora = (r.venta.Distribuidora || "DINTER").toString().trim().toUpperCase();
+
+      let claseBadge = "bg-primary";
+
+      if (distribuidora === "MISAS") {
+        claseBadge = "bg-success";
+      } else if (distribuidora === "DINTER") {
+        claseBadge = "bg-primary";
+      } else {
+        claseBadge = "bg-dark";
+      }
+
       let v = r.venta;
 
       ventaActualOffcanvas = v.id;
       numeroOrdenVentaActual = v.NumeroOrdenVenta || "";
+      let iconoDistribuidora = "mdi-office-building";
 
-      $("#offcanvas_venta_titulo").text("Venta #" + v.NumeroVenta);
+      if (distribuidora === "MISAS") {
+        iconoDistribuidora = "mdi-truck-fast";
+      }
+      $("#offcanvas_venta_titulo").html(`
+        Venta #${v.NumeroVenta}
+        <span id="badge_distribuidora" class="badge ${claseBadge} ms-2">
+        <i class="mdi ${iconoDistribuidora} me-1"></i>
+        ${distribuidora}
+        </span>
+      `);
 
       $("#venta_estado_cuenta").html(`
         <div class="d-flex flex-wrap align-items-center gap-3 small mb-2">
@@ -840,9 +862,9 @@ function abrirEstadoVenta(idVenta) {
         ${badgeEstadoPago(v.EstadoPago)}
     </div>
 
-</div>
+    </div>
 
-`);
+    `);
       $("#texto_observaciones_venta").val(v.Observaciones || "");
 
       let htmlDetalleTotal = "";
@@ -968,7 +990,7 @@ function abrirEstadoVenta(idVenta) {
           : `<span class="badge bg-warning mt-1">Sin conciliar</span>`
       }
       </td>
-<td>
+  <td>
   <div>${p.Operacion || ""}</div>
 
   ${
@@ -980,7 +1002,7 @@ function abrirEstadoVenta(idVenta) {
       `
       : ""
   }
-</td>
+  </td>
       <td>${formatoMoneda(p.ImporteAplicado)}</td>
       <td class="text-center">${iconoImagen}</td>
     </tr>

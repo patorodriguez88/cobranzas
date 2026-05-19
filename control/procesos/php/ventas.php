@@ -1009,7 +1009,7 @@ VALUES
         V.Fecha,
         V.Total,
         V.TotalPagado,
-
+        C.Distribuidora,
         IFNULL((
             SELECT SUM(AP.importe)
             FROM Ventas_Ajustes_Pago AP
