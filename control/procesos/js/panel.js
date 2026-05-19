@@ -327,68 +327,63 @@ function ver_tabla_conciliados(a) {
       {
         data: null,
         render: function (data, type, row) {
-          var Xmas95 = new Date(row.TimeStamp);
-          var day = Xmas95.getDate();
-          var month = Xmas95.getMonth() + 1;
-          var year = Xmas95.getUTCFullYear();
-          let hour = moment(row.TimeStamp).add(3, "hour").format("HH:mm");
-          var newdate = day + "." + month + "." + year + " " + hour;
+          var fecha = "";
+          if (row.TimeStamp) {
+            fecha = moment(row.TimeStamp).add(3, "hour").format("DD/MM/YYYY HH:mm");
+          }
 
           if (row.Estado == "Rechazado") {
-
-          return (
-            "<td>" +
-            '<h6><span class="badge badge-danger-lighten"><i class="mdi mdi-cancel"></i> Rechazado </span></h6>' +
-            "</td>"
-          );
-
-          } else {
-
-              let badgeVinculo = '';
-
-              if (parseFloat(row.TotalAplicado || 0) <= 0) {
-
-                  badgeVinculo =
-                  '<span class="badge badge-warning-lighten">' +
-                  '<i class="mdi mdi-link-off"></i> Sin vincular' +
-                  '</span>';
-
-              } else if (
-                  parseFloat(row.TotalAplicado || 0) < parseFloat(row.Importe || 0)
-              ) {
-
-                  badgeVinculo =
-                  '<span class="badge badge-info-lighten">' +
-                  '<i class="mdi mdi-link-variant"></i> Parcial' +
-                  '</span>';
-
-              } else {
-
-                  badgeVinculo =
-                  '<br><span class="badge badge-primary-lighten ms-1">' +
-                  '<i class="mdi mdi-link"></i> Vinculado' +
-                  '</span>';
-              }
-
-              return `<td>
-                        <div class="d-flex flex-column gap-1">
-                            <div>
-                                <span class="badge badge-success-lighten">
-                                    <i class="mdi mdi-bitcoin"></i>
-                                    Aceptado
-                                </span>
-                                ${badgeVinculo}
-                            </div>
-                            <small class="text-muted">
-                                <i class="mdi mdi-account-outline"></i>
-                                ${row.User}
-                                ·
-                                ${newdate}
-                            </small>
-                        </div>
-                    </td>
-                    `;
+            return `
+              <div class="estado-compacto">
+                <span class="badge badge-danger-lighten">
+                  <i class="mdi mdi-cancel"></i> Rechazado
+                </span>
+                <small class="text-muted d-block mt-1">
+                  <i class="mdi mdi-account-outline"></i> ${row.User || ""} · ${fecha}
+                </small>
+              </div>
+            `;
           }
+
+          let totalAplicado = parseFloat(row.TotalAplicado || 0);
+          let importe = parseFloat(row.Importe || 0);
+
+          let badgeVinculo = "";
+
+          if (totalAplicado <= 0) {
+            badgeVinculo = `
+              <span class="badge badge-warning-lighten ms-1">
+                <i class="mdi mdi-link-off"></i> Sin vincular
+              </span>
+            `;
+          } else if (totalAplicado < importe) {
+            badgeVinculo = `
+              <span class="badge badge-info-lighten ms-1">
+                <i class="mdi mdi-link-variant"></i> Parcial
+              </span>
+            `;
+          } else {
+            badgeVinculo = `
+              <span class="badge badge-primary-lighten ms-1">
+                <i class="mdi mdi-link"></i> Vinculado
+              </span>
+            `;
+          }
+
+          return `
+            <div class="estado-compacto">
+              <div class="d-flex align-items-center flex-wrap gap-1">
+                <span class="badge badge-success-lighten">
+                  <i class="mdi mdi-bitcoin"></i> Aceptado
+                </span>
+                ${badgeVinculo}
+              </div>
+
+              <small class="text-muted d-block mt-1">
+                <i class="mdi mdi-account-outline"></i> ${row.User || ""} · ${fecha}
+              </small>
+            </div>
+          `;
         },
       },
       {
