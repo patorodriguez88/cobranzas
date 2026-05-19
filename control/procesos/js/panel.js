@@ -464,9 +464,12 @@ function abrirAsignarPago(idCobranza) {
 }
 
 function cargarVentasPendientesAsignacion(numeroCliente, importePago) {
+
   $("#tabla_asignar_ventas tbody").html(`
     <tr>
-      <td colspan="6" class="text-center text-muted">Buscando ventas pendientes...</td>
+      <td colspan="6" class="text-center text-muted">
+        Buscando ventas pendientes...
+      </td>
     </tr>
   `);
 
@@ -478,10 +481,13 @@ function cargarVentasPendientesAsignacion(numeroCliente, importePago) {
       VentasPendientesCliente: 1,
       NumeroCliente: numeroCliente,
     },
+
     success: function (r) {
+
       let html = "";
 
       if (!r.success || !r.data || r.data.length === 0) {
+
         html = `
           <tr>
             <td colspan="6" class="text-center text-muted">
@@ -489,44 +495,64 @@ function cargarVentasPendientesAsignacion(numeroCliente, importePago) {
             </td>
           </tr>
         `;
+
       } else {
-        let disponible = parseFloat(importePago || 0);
+
+        let pagoDisponible = parseFloat(importePago || 0);
 
         r.data.forEach(function (v) {
-          let saldo = parseFloat(v.Saldo || 0);
-          let sugerido = 0;
 
-          if (disponible > 0) {
-            sugerido = Math.min(disponible, saldo);
-            disponible -= sugerido;
-          }
+          let saldo = parseFloat(v.Saldo || 0);
+
+          let sugerido = Math.min(pagoDisponible, saldo);
+
+          pagoDisponible -= sugerido;
 
           html += `
             <tr>
-              <td><span class="badge bg-primary">#${v.NumeroVenta}</span></td>
-              <td>${formatearFechaAsignacion(v.Fecha)}</td>
-              <td>${formatearMonedaAsignacion(v.Total)}</td>
-              <td>${formatearMonedaAsignacion(v.TotalPagado)}</td>
-              <td>${formatearMonedaAsignacion(v.Saldo)}</td>
+
+              <td>
+                <span class="badge bg-primary">
+                  #${v.NumeroVenta}
+                </span>
+              </td>
+
+              <td>
+                ${formatearFechaAsignacion(v.Fecha)}
+              </td>
+
+              <td>
+                ${formatearMonedaAsignacion(v.Total)}
+              </td>
+
+              <td>
+                ${formatearMonedaAsignacion(v.TotalPagado)}
+              </td>
+
+              <td>
+                ${formatearMonedaAsignacion(v.Saldo)}
+              </td>
+
               <td>
                 <input 
-                  type="number"
-                  class="form-control form-control-sm importe_aplicar_pago"
+                  type="text"
+                  class="form-control form-control-sm importe_aplicar_pago text-end"
                   data-idventa="${v.id}"
-                  data-saldo="${v.Saldo}"
-                  value="${sugerido.toFixed(2)}"
-                  min="0"
-                  max="${v.Saldo}"
-                  step="0.01">
+                  data-saldo="${saldo}"
+                  data-valor="${sugerido.toFixed(2)}"
+                  value="${formatearMonedaAsignacion(sugerido)}">
               </td>
+
             </tr>
           `;
         });
       }
 
       $("#tabla_asignar_ventas tbody").html(html);
+
       recalcularResumenAsignacion();
     },
+
     error: function (xhr) {
       console.log(xhr.responseText);
     },
@@ -580,9 +606,16 @@ function recalcularResumenAsignacion() {
   let pago = parseFloat($("#asignar_importe_pago").val() || 0);
   let aplicado = 0;
 
-  $(".importe_aplicar_pago").each(function () {
-    aplicado += parseFloat($(this).val() || 0);
-  });
+  $(document).on("focus", ".importe_aplicar_pago", function () {
+  $(this).val($(this).data("valor") || "0.00");
+});
+
+$(document).on("blur", ".importe_aplicar_pago", function () {
+  let valor = parseFloat($(this).val() || 0);
+  $(this).data("valor", valor.toFixed(2));
+  $(this).val(formatearMonedaAsignacion(valor));
+  recalcularResumenAsignacion();
+});
 
   let diferencia = pago - aplicado;
 
@@ -595,7 +628,7 @@ function obtenerAplicacionesAsignacion() {
   let aplicaciones = [];
 
   $(".importe_aplicar_pago").each(function () {
-    let importe = parseFloat($(this).val() || 0);
+    let importe = parseFloat($(this).data("valor") || 0);
 
     if (importe > 0) {
       aplicaciones.push({
