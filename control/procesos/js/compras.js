@@ -87,10 +87,6 @@ function agregarFilaProductoCompra() {
 
 $(document).on("change", ".producto_compra", function () {
   let fila = $(this).closest("tr");
-  
-  let stock = parseFloat($(this).find(":selected").attr("data-stock") || 0);
-  
-  fila.find(".stock_actual_compra").val(stock);
   calcularFilaCompra(fila);
 });
 
@@ -104,9 +100,12 @@ $(document).on("click", ".eliminar_fila_compra", function () {
 });
 
 function calcularFilaCompra(fila) {
-  let stockActual = parseFloat(fila.find(".stock_actual_compra").val() || 0);
+  let selected = fila.find(".producto_compra option:selected");
+
+  let stockActual = parseFloat(selected.attr("data-stock") || 0);
   let cantidad = parseFloat(fila.find(".cantidad_compra").val() || 0);
 
+  fila.find(".stock_actual_compra").val(stockActual);
   fila.find(".stock_nuevo_compra").val(stockActual + cantidad);
 }
 
