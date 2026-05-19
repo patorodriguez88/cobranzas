@@ -1471,9 +1471,6 @@ function cargarResumenProductosVentas() {
         return;
       }
 
-      $("#figus_vendedores").html(renderStockPorOI(r.data.FIGURITAS));
-      $("#album_vendedores").html(renderStockPorOI(r.data.ALBUM));
-
       $("#figus_stock").text(totalDisponibleOI(r.data.FIGURITAS));
       $("#album_stock").text(totalDisponibleOI(r.data.ALBUM));
 
@@ -1482,30 +1479,60 @@ function cargarResumenProductosVentas() {
 
       $("#figus_pendiente").text(totalDisponibleOI(r.data.FIGURITAS));
       $("#album_pendiente").text(totalDisponibleOI(r.data.ALBUM));
-      $("#figus_vendedores_usuario").html(renderVendedoresResumen(r.data.VENDEDORES.FIGURITAS));
-      $("#album_vendedores_usuario").html(renderVendedoresResumen(r.data.VENDEDORES.ALBUM));
-      
+
+      $("#figus_vendedores").html(`
+        ${renderStockPorOI(r.data.FIGURITAS)}
+        <hr>
+        <h6 class="mb-1">Ventas por usuario</h6>
+        ${renderVendedoresResumen(r.data.VENDEDORES.FIGURITAS)}
+      `);
+
+      $("#album_vendedores").html(`
+        ${renderStockPorOI(r.data.ALBUM)}
+        <hr>
+        <h6 class="mb-1">Ventas por usuario</h6>
+        ${renderVendedoresResumen(r.data.VENDEDORES.ALBUM)}
+      `);
+    },
+    error: function (xhr) {
+      console.log(xhr.responseText);
     },
   });
 }
 
 function renderVendedoresResumen(vendedores) {
   if (!vendedores || vendedores.length === 0) {
-    return "Sin datos por vendedor.";
+    return `<div class="text-muted small">Sin ventas por usuario.</div>`;
   }
 
-  let html = "";
+  let html = `
+    <div class="table-responsive">
+      <table class="table table-sm table-bordered mb-0" style="font-size:11px;">
+        <thead class="table-light">
+          <tr>
+            <th>Usuario</th>
+            <th class="text-end">Cantidad vendida</th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
 
   vendedores.forEach(function (v) {
     html += `
-      <div class="d-flex justify-content-between">
-        <span>${v.Usuario || "Sin usuario"}</span>
-        <strong>
-        ${parseInt(v.Total || 0).toLocaleString("es-AR")}
-        </strong>
-      </div>
+      <tr>
+        <td>${v.Usuario || "Sin usuario"}</td>
+        <td class="text-end fw-bold">
+          ${parseFloat(v.Total || 0).toLocaleString("es-AR")}
+        </td>
+      </tr>
     `;
   });
+
+  html += `
+        </tbody>
+      </table>
+    </div>
+  `;
 
   return html;
 }
