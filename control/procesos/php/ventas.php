@@ -5,7 +5,6 @@ error_reporting(E_ALL);
 session_start();
 include_once __DIR__ . "/../../../conexion/conexioni.php";
 
-
 function recalcularEstadoVenta($mysqli, $idVenta)
 {
     $idVenta = (int)$idVenta;
@@ -24,7 +23,7 @@ function recalcularEstadoVenta($mysqli, $idVenta)
                 FROM CobranzasVentas CV
                 LEFT JOIN Cobranza_conciliacion CC 
                     ON CC.id_cobranza = CV.idCobranza
-                    AND IFNULL(CC.Eliminado,0) = 0
+                    
                 WHERE CV.idVenta = '$idVenta'
                   AND IFNULL(CV.Eliminado,0) = 0
             ),0) AS TotalPagadoReal,
@@ -1295,7 +1294,7 @@ switch ($accion) {
         LEFT JOIN Cobranza CB ON CB.id = CV.idCobranza
         LEFT JOIN Cobranza_conciliacion CC 
             ON CC.id_cobranza = CV.idCobranza
-            AND IFNULL(CC.Eliminado,0) = 0
+            
         WHERE CV.idVenta = '$idVenta'
         AND CV.Eliminado = 0
         ORDER BY CV.id DESC";
