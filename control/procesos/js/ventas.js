@@ -1743,7 +1743,16 @@ function guardarAjustePago() {
     success: function (res) {
       if (res.success) {
         $("#modalAjustePago").modal("hide");
-        toast("Ajuste cargado correctamente", "success");
+        
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: 'Ajuste cargado correctamente',
+            showConfirmButton: false,
+            timer: 2500,
+            timerProgressBar: true
+        });
 
         if ($.fn.DataTable.isDataTable("#tabla_ventas")) {
           $("#tabla_ventas").DataTable().ajax.reload(null, false);
@@ -1860,7 +1869,16 @@ function guardarDepositoVenta() {
           }
 
           $("#modalDepositoVenta").modal("hide");
-          toast("Depósito cargado correctamente", "success");
+          
+          Swal.fire({
+              toast: true,
+              position: 'top-end',
+              icon: 'success',
+              title: 'Depósito cargado correctamente',
+              showConfirmButton: false,
+              timer: 2500,
+              timerProgressBar: true
+          });
 
           setTimeout(function () {
             if (dropzoneDeposito) {
@@ -1976,7 +1994,17 @@ $(document).ready(function () {
         });
 
         this.on("success", function () {
-          toast("Comprobante subido correctamente", "success");
+          Swal.fire({
+              toast: true,
+              position: 'top-end',
+              icon: 'success',
+              title: 'Comprobante subido correctamente',
+              showConfirmButton: false,
+              timer: 2500,
+              timerProgressBar: true
+          });
+          
+
           idCobranzaPendienteComprobante = 0;
         });
 
