@@ -3,67 +3,171 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
+session_start();
+
 include_once __DIR__ . "/../../../conexion/conexioni.php";
 
 header('Content-Type: application/json; charset=utf-8');
 date_default_timezone_set('America/Argentina/Cordoba');
 
+function responder($data)
+{
+    echo json_encode($data, JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+function crearClienteWepointSiNoExiste($mysqli, $cliente, $token)
+{
+    $idClienteLocal = isset($cliente['idCliente']) ? (int)$cliente['idCliente'] : 0;
+    $wepointId = isset($cliente['wepoint_id_cliente']) ? (int)$cliente['wepoint_id_cliente'] : 0;
+
+    if ($wepointId > 0) {
+        return $wepointId;
+    }
+
+    if ($idClienteLocal <= 0) {
+        throw new Exception("La venta no tiene cliente local válido.");
+    }
+
+    $payloadCliente = [
+        "nombre" => $cliente['RazonSocial'] ?? '',
+        "telefono" => $cliente['Celular'] ?? '',
+        "email" => "",
+        "direccion" => $cliente['Direccion'] ?? '',
+        "provincia" => "Córdoba",
+        "ciudad" => $cliente['Ciudad'] ?? 'Córdoba',
+        "codigo_postal" => "5000",
+        "barrio" => "",
+        "entre_calles" => ""
+    ];
+
+    $curl = curl_init();
+
+    curl_setopt_array($curl, [
+        CURLOPT_URL => 'https://sistema.wepoint.ar/api/v2/clientes',
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_ENCODING => '',
+        CURLOPT_MAXREDIRS => 10,
+        CURLOPT_TIMEOUT => 30,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+        CURLOPT_CUSTOMREQUEST => 'POST',
+        CURLOPT_POSTFIELDS => json_encode($payloadCliente, JSON_UNESCAPED_UNICODE),
+        CURLOPT_HTTPHEADER => [
+            'Accept: application/json',
+            'Content-Type: application/json',
+            'Authorization: Bearer ' . $token
+        ],
+    ]);
+
+    $response = curl_exec($curl);
+    $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+    $error = curl_error($curl);
+
+    curl_close($curl);
+
+    if ($error) {
+        throw new Exception("Error cURL creando cliente Wepoint: " . $error);
+    }
+
+    $data = json_decode($response, true);
+
+    if ($httpCode < 200 || $httpCode >= 300 || empty($data['success'])) {
+        throw new Exception("Wepoint rechazó la creación del cliente: " . $response);
+    }
+
+    $nuevoId = isset($data['data']['id_cliente']) ? (int)$data['data']['id_cliente'] : 0;
+
+    if ($nuevoId <= 0) {
+        throw new Exception("Wepoint creó el cliente pero no devolvió id_cliente.");
+    }
+
+    $responseJson = $mysqli->real_escape_string(json_encode($data, JSON_UNESCAPED_UNICODE));
+
+    $sqlUpdateCliente = "
+        UPDATE Clientes
+        SET 
+            wepoint_id_cliente = '$nuevoId',
+            wepoint_response = '$responseJson',
+            wepoint_created_at = NOW()
+        WHERE id = '$idClienteLocal'
+        LIMIT 1
+    ";
+
+    if (!$mysqli->query($sqlUpdateCliente)) {
+        throw new Exception("Cliente creado en Wepoint, pero no se pudo guardar localmente: " . $mysqli->error);
+    }
+
+    return $nuevoId;
+}
+
 $idVenta = isset($_POST['idVenta']) ? (int)$_POST['idVenta'] : 0;
 $idTransportista = isset($_POST['idTransportista']) ? (int)$_POST['idTransportista'] : 0;
 
 if ($idVenta <= 0) {
-    echo json_encode(["success" => false, "message" => "ID de venta inválido"]);
-    exit;
+    responder([
+        "success" => false,
+        "message" => "ID de venta inválido"
+    ]);
 }
 
 if ($idTransportista <= 0) {
-    echo json_encode([
+    responder([
         "success" => false,
         "message" => "Debe seleccionar una forma de entrega."
     ]);
-    exit;
 }
 
-$sqlEstado = "SELECT EstadoPago FROM Ventas WHERE id = '$idVenta' LIMIT 1";
+/*
+    Por ahora dejamos Dinter.
+    Luego agregamos token/id_empresa para Misas según Clientes.Distribuidora.
+*/
+$token = '1383|1w3olMBz6851a6JdfbA1GH0jdF5QdUnwUtAfehSL0f00e3a5';
+
+$sqlEstado = "
+    SELECT EstadoPago
+    FROM Ventas
+    WHERE id = '$idVenta'
+    LIMIT 1
+";
+
 $resEstado = $mysqli->query($sqlEstado);
 
 if (!$resEstado) {
-    echo json_encode([
+    responder([
         "success" => false,
         "message" => "Error consultando estado de venta.",
         "mysql_error" => $mysqli->error
     ]);
-    exit;
 }
 
 $rowEstado = $resEstado->fetch_assoc();
 
 if (!$rowEstado) {
-    echo json_encode([
+    responder([
         "success" => false,
         "message" => "Venta inexistente"
     ]);
-    exit;
 }
 
 if ($rowEstado['EstadoPago'] != 'PAGADA') {
-    echo json_encode([
+    responder([
         "success" => false,
         "message" => "La venta debe estar PAGADA para generar la OV."
     ]);
-    exit;
 }
-
-$token = '1383|1w3olMBz6851a6JdfbA1GH0jdF5QdUnwUtAfehSL0f00e3a5';
 
 $sqlVenta = "
     SELECT 
         V.*,
+        C.id AS idCliente,
         C.RazonSocial,
-        C.Celular,        
+        C.Celular,
         C.Direccion,
-        C.Ciudad,    
-        C.Ncliente    
+        C.Ciudad,
+        C.Ncliente,
+        C.Distribuidora,
+        C.wepoint_id_cliente
     FROM Ventas V
     LEFT JOIN Clientes C ON C.id = V.idCliente
     WHERE V.id = ?
@@ -74,47 +178,51 @@ $sqlVenta = "
 $stmt = $mysqli->prepare($sqlVenta);
 
 if (!$stmt) {
-    echo json_encode([
+    responder([
         "success" => false,
         "message" => "Error preparando sqlVenta",
-        "mysql_error" => $mysqli->error,
-        "sql" => $sqlVenta
+        "mysql_error" => $mysqli->error
     ]);
-    exit;
 }
 
 $stmt->bind_param("i", $idVenta);
 
 if (!$stmt->execute()) {
-    echo json_encode([
+    responder([
         "success" => false,
         "message" => "Error ejecutando sqlVenta",
         "mysql_error" => $stmt->error
     ]);
-    exit;
 }
 
 $resVenta = $stmt->get_result();
 
 if ($resVenta->num_rows === 0) {
-    echo json_encode([
+    responder([
         "success" => false,
         "message" => "Venta no encontrada o eliminada."
     ]);
-    exit;
 }
 
 $venta = $resVenta->fetch_assoc();
 
 if (!empty($venta['NumeroOrdenVenta'])) {
-    echo json_encode([
+    responder([
         "success" => true,
         "message" => "La orden ya fue generada anteriormente",
         "id_orden_venta" => isset($venta['wepoint_id_orden_venta']) ? $venta['wepoint_id_orden_venta'] : null,
         "nro_orden_venta" => $venta['NumeroOrdenVenta'],
         "estado" => isset($venta['wepoint_estado']) ? $venta['wepoint_estado'] : null
     ]);
-    exit;
+}
+
+try {
+    $idClienteWepoint = crearClienteWepointSiNoExiste($mysqli, $venta, $token);
+} catch (Exception $e) {
+    responder([
+        "success" => false,
+        "message" => $e->getMessage()
+    ]);
 }
 
 $sqlDetalle = "
@@ -133,24 +241,21 @@ $sqlDetalle = "
 $stmtDet = $mysqli->prepare($sqlDetalle);
 
 if (!$stmtDet) {
-    echo json_encode([
+    responder([
         "success" => false,
         "message" => "Error preparando detalle de venta.",
-        "mysql_error" => $mysqli->error,
-        "sql" => $sqlDetalle
+        "mysql_error" => $mysqli->error
     ]);
-    exit;
 }
 
 $stmtDet->bind_param("i", $idVenta);
 
 if (!$stmtDet->execute()) {
-    echo json_encode([
+    responder([
         "success" => false,
         "message" => "Error ejecutando detalle de venta.",
         "mysql_error" => $stmtDet->error
     ]);
-    exit;
 }
 
 $resDetalle = $stmtDet->get_result();
@@ -161,11 +266,10 @@ while ($row = $resDetalle->fetch_assoc()) {
     $idProductoWepoint = (int)($row['idProductoWepoint'] ?? 0);
 
     if ($idProductoWepoint <= 0) {
-        echo json_encode([
+        responder([
             "success" => false,
             "message" => "El producto " . $row['Nombre'] . " no tiene idProductoWepoint configurado."
         ]);
-        exit;
     }
 
     $detalle[] = [
@@ -176,24 +280,22 @@ while ($row = $resDetalle->fetch_assoc()) {
 }
 
 if (empty($detalle)) {
-    echo json_encode([
+    responder([
         "success" => false,
         "message" => "La venta no tiene productos cargados."
     ]);
-    exit;
 }
 
-$numeroVenta = isset($venta['NumeroVenta'])
-    ? trim($venta['NumeroVenta'])
-    : $idVenta;
+$numeroVenta = isset($venta['NumeroVenta']) ? trim($venta['NumeroVenta']) : $idVenta;
+$ncliente = isset($venta['Ncliente']) ? trim($venta['Ncliente']) : '';
 
-$ncliente = isset($venta['Ncliente'])
-    ? trim($venta['Ncliente'])
-    : '';
+$usuarioActual = 'Sistema';
 
-$usuarioActual = isset($_SESSION['user-name'])
-    ? trim($_SESSION['user-name'])
-    : 'Sistema';
+if (isset($_SESSION['user_name']) && $_SESSION['user_name'] != '') {
+    $usuarioActual = trim($_SESSION['user_name']);
+} elseif (isset($_SESSION['Usuario']) && $_SESSION['Usuario'] != '') {
+    $usuarioActual = trim($_SESSION['Usuario']);
+}
 
 $referencia = "Venta #" . $numeroVenta;
 
@@ -203,16 +305,14 @@ if ($ncliente != '') {
 
 $referencia .= " | Usuario " . $usuarioActual;
 
-$notas = isset($venta['Observaciones'])
-    ? trim($venta['Observaciones'])
-    : '';
+$notas = isset($venta['Observaciones']) ? trim($venta['Observaciones']) : '';
 
 $payload = [
     "no_referencia" => $referencia,
     "fecha" => date('Y-m-d'),
     "notas" => $notas,
     "id_transportista" => (string)$idTransportista,
-    "id_cliente" => "219",
+    "id_cliente" => (string)$idClienteWepoint,
     "destinatario" => [
         "nombre" => $venta['RazonSocial'] ?? '',
         "telefono" => $venta['Celular'] ?? '',
@@ -253,24 +353,22 @@ $error = curl_error($curl);
 curl_close($curl);
 
 if ($error) {
-    echo json_encode([
+    responder([
         "success" => false,
         "message" => "Error cURL: " . $error
     ]);
-    exit;
 }
 
 $data = json_decode($response, true);
 
 if ($httpCode < 200 || $httpCode >= 300 || empty($data['success'])) {
-    echo json_encode([
+    responder([
         "success" => false,
         "message" => "Wepoint rechazó la orden",
         "http_code" => $httpCode,
         "response" => $data ?: $response,
         "payload" => $payload
     ]);
-    exit;
 }
 
 $idOrdenWepoint = $data['data']['id_orden_venta'] ?? null;
@@ -279,12 +377,11 @@ $estado = $data['data']['estado'] ?? null;
 $total = isset($data['data']['total']) ? (float)$data['data']['total'] : 0;
 
 if (empty($nroOrdenVenta)) {
-    echo json_encode([
+    responder([
         "success" => false,
         "message" => "Wepoint creó la orden pero no devolvió nro_orden_venta.",
         "response" => $data
     ]);
-    exit;
 }
 
 $responseJson = json_encode($data, JSON_UNESCAPED_UNICODE);
@@ -307,13 +404,11 @@ $sqlUpdate = "
 $stmtUpd = $mysqli->prepare($sqlUpdate);
 
 if (!$stmtUpd) {
-    echo json_encode([
+    responder([
         "success" => false,
         "message" => "Error preparando UPDATE local de la venta.",
-        "mysql_error" => $mysqli->error,
-        "sql" => $sqlUpdate
+        "mysql_error" => $mysqli->error
     ]);
-    exit;
 }
 
 $stmtUpd->bind_param(
@@ -329,18 +424,18 @@ $stmtUpd->bind_param(
 );
 
 if (!$stmtUpd->execute()) {
-    echo json_encode([
+    responder([
         "success" => false,
         "message" => "La OV se generó en Wepoint, pero no se pudo guardar localmente.",
         "error" => $stmtUpd->error,
         "nro_orden_venta" => $nroOrdenVenta
     ]);
-    exit;
 }
 
-echo json_encode([
+responder([
     "success" => true,
     "message" => "Orden de venta generada correctamente",
+    "id_cliente_wepoint" => $idClienteWepoint,
     "id_orden_venta" => $idOrdenWepoint,
     "nro_orden_venta" => $nroOrdenVenta,
     "estado" => $estado,
