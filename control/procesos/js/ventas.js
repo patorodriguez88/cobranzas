@@ -1482,6 +1482,9 @@ function cargarResumenProductosVentas() {
 
       $("#figus_pendiente").text(totalDisponibleOI(r.data.FIGURITAS));
       $("#album_pendiente").text(totalDisponibleOI(r.data.ALBUM));
+      $("#figus_vendedores_usuario").html(renderVendedoresResumen(r.data.VENDEDORES.FIGURITAS));
+      $("#album_vendedores_usuario").html(renderVendedoresResumen(r.data.VENDEDORES.ALBUM));
+      
     },
   });
 }

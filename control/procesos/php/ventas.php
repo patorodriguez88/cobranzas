@@ -794,29 +794,59 @@ switch ($accion) {
 
     case 'productos_venta_rapida':
 
-        $sql = "
+    $sql = "
         SELECT 
-            id,
-            Nombre,
-            Stock,
-            PrecioVenta
-        FROM Productos
-        WHERE Eliminado = 0
-          AND Activo = 1
-          AND MostrarEnVentaRapida = 1
-        ORDER BY Nombre ASC
+            P.id,
+            P.Nombre,
+            P.PrecioVenta,
+
+            (
+                IFNULL((
+                    SELECT SUM(OCD.Cantidad)
+                    FROM OrdenesCompraDetalle OCD
+                    INNER JOIN OrdenesCompra OC 
+                        ON OC.id = OCD.idOrdenCompra
+                    WHERE OCD.idProducto = P.id
+                      AND IFNULL(OCD.Eliminado,0) = 0
+                      AND IFNULL(OC.Eliminado,0) = 0
+                ),0)
+                -
+                IFNULL((
+                    SELECT SUM(VCS.Cantidad)
+                    FROM VentasConsumoStock VCS
+                    INNER JOIN Ventas V 
+                        ON V.id = VCS.idVenta
+                    WHERE VCS.idProducto = P.id
+                      AND IFNULL(VCS.Eliminado,0) = 0
+                      AND IFNULL(V.Eliminado,0) = 0
+                ),0)
+            ) AS Stock
+
+        FROM Productos P
+        WHERE P.Eliminado = 0
+          AND P.Activo = 1
+          AND P.MostrarEnVentaRapida = 1
+        ORDER BY P.Nombre ASC
     ";
 
-        $res = $mysqli->query($sql);
+    $res = $mysqli->query($sql);
 
-        $data = array();
+    if (!$res) {
+        echo json_encode([
+            "success" => 0,
+            "error" => $mysqli->error
+        ]);
+        exit;
+    }
 
-        while ($row = $res->fetch_assoc()) {
-            $data[] = $row;
-        }
+    $data = array();
 
-        echo json_encode($data);
-        break;
+    while ($row = $res->fetch_assoc()) {
+        $data[] = $row;
+    }
+
+    echo json_encode($data);
+    break;
 
     case 'ultimas_ventas':
 
@@ -2415,9 +2445,9 @@ switch ($accion) {
 
         break;
 
-    case 'stock_por_orden_ingreso':
+case 'stock_por_orden_ingreso':
 
-        $sql = "SELECT
+    $sql = "SELECT
             P.id AS idProducto,
             P.Nombre AS Producto,
             OC.id AS idOrdenCompra,
@@ -2427,7 +2457,8 @@ switch ($accion) {
             IFNULL((
                 SELECT SUM(VCS.Cantidad)
                 FROM VentasConsumoStock VCS
-                INNER JOIN Ventas V ON V.id = VCS.idVenta
+                INNER JOIN Ventas V 
+                    ON V.id = VCS.idVenta
                 WHERE VCS.idOrdenCompraDetalle = OCD.id
                   AND IFNULL(VCS.Eliminado,0) = 0
                   AND IFNULL(V.Eliminado,0) = 0
@@ -2438,7 +2469,8 @@ switch ($accion) {
                 - IFNULL((
                     SELECT SUM(VCS.Cantidad)
                     FROM VentasConsumoStock VCS
-                    INNER JOIN Ventas V ON V.id = VCS.idVenta
+                    INNER JOIN Ventas V 
+                        ON V.id = VCS.idVenta
                     WHERE VCS.idOrdenCompraDetalle = OCD.id
                       AND IFNULL(VCS.Eliminado,0) = 0
                       AND IFNULL(V.Eliminado,0) = 0
@@ -2446,47 +2478,112 @@ switch ($accion) {
             ) AS StockDisponible
 
         FROM OrdenesCompraDetalle OCD
-        INNER JOIN OrdenesCompra OC ON OC.id = OCD.idOrdenCompra
-        INNER JOIN Productos P ON P.id = OCD.idProducto
+
+        INNER JOIN OrdenesCompra OC 
+            ON OC.id = OCD.idOrdenCompra
+
+        INNER JOIN Productos P 
+            ON P.id = OCD.idProducto
+
         WHERE IFNULL(OCD.Eliminado,0) = 0
           AND IFNULL(OC.Eliminado,0) = 0
           AND P.id IN (1,2)
+
         ORDER BY P.id ASC, OC.NumeroOrden ASC
     ";
 
-        $res = $mysqli->query($sql);
+    $res = $mysqli->query($sql);
 
-        if (!$res) {
-            echo json_encode([
-                "success" => 0,
-                "error" => $mysqli->error
-            ]);
-            exit;
-        }
-
-        $data = [
-            "FIGURITAS" => [],
-            "ALBUM" => []
-        ];
-
-        while ($row = $res->fetch_assoc()) {
-            $tipo = ((int)$row['idProducto'] === 1) ? "FIGURITAS" : "ALBUM";
-
-            $data[$tipo][] = [
-                "idOrdenCompra" => $row["idOrdenCompra"],
-                "NumeroOrden" => $row["NumeroOrden"],
-                "StockIngresado" => (float)$row["StockIngresado"],
-                "StockAsignado" => (float)$row["StockAsignado"],
-                "StockDisponible" => (float)$row["StockDisponible"]
-            ];
-        }
+    if (!$res) {
 
         echo json_encode([
-            "success" => 1,
-            "data" => $data
+            "success" => 0,
+            "error" => $mysqli->error
         ]);
 
-        break;
+        exit;
+    }
+
+    $data = [
+        "FIGURITAS" => [],
+        "ALBUM" => [],
+        "VENDEDORES" => [
+            "FIGURITAS" => [],
+            "ALBUM" => []
+        ]
+    ];
+
+    while ($row = $res->fetch_assoc()) {
+
+        $tipo = ((int)$row['idProducto'] === 1)
+            ? "FIGURITAS"
+            : "ALBUM";
+
+        $data[$tipo][] = [
+            "idOrdenCompra" => (int)$row["idOrdenCompra"],
+            "NumeroOrden" => (int)$row["NumeroOrden"],
+            "StockIngresado" => (float)$row["StockIngresado"],
+            "StockAsignado" => (float)$row["StockAsignado"],
+            "StockDisponible" => (float)$row["StockDisponible"]
+        ];
+    }
+
+    /*
+    =====================================================
+    VENTAS POR USUARIO
+    =====================================================
+    */
+
+    $sqlUsuarios = "
+        SELECT
+            VD.idProducto,
+            IFNULL(V.Usuario, 'Sin usuario') AS Usuario,
+            SUM(VD.Cantidad) AS Total
+
+        FROM VentasDetalle VD
+
+        INNER JOIN Ventas V 
+            ON V.id = VD.idVenta
+
+        WHERE IFNULL(VD.Eliminado,0) = 0
+          AND IFNULL(V.Eliminado,0) = 0
+          AND VD.idProducto IN (1,2)
+
+        GROUP BY VD.idProducto, V.Usuario
+
+        ORDER BY VD.idProducto ASC, Total DESC
+    ";
+
+    $resUsuarios = $mysqli->query($sqlUsuarios);
+
+    if (!$resUsuarios) {
+
+        echo json_encode([
+            "success" => 0,
+            "error" => $mysqli->error
+        ]);
+
+        exit;
+    }
+
+    while ($u = $resUsuarios->fetch_assoc()) {
+
+        $tipo = ((int)$u['idProducto'] === 1)
+            ? "FIGURITAS"
+            : "ALBUM";
+
+        $data["VENDEDORES"][$tipo][] = [
+            "Usuario" => $u["Usuario"],
+            "Total" => (float)$u["Total"]
+        ];
+    }
+
+    echo json_encode([
+        "success" => 1,
+        "data" => $data
+    ]);
+
+    break;
 
     case 'importar_excel_preview':
 
