@@ -35,16 +35,35 @@ switch ($accion) {
 
     case 'productos':
 
-        $sql = "
-            SELECT 
-                id,
-                Nombre,
-                Stock
-            FROM Productos
-            WHERE Eliminado = 0
-              AND Activo = 1
-            ORDER BY Nombre ASC
-        ";
+        $sql = "SELECT 
+            P.id,
+            P.Nombre,
+            (
+                IFNULL((
+                    SELECT SUM(OCD.Cantidad)
+                    FROM OrdenesCompraDetalle OCD
+                    INNER JOIN OrdenesCompra OC 
+                        ON OC.id = OCD.idOrdenCompra
+                    WHERE OCD.idProducto = P.id
+                      AND IFNULL(OCD.Eliminado,0) = 0
+                      AND IFNULL(OC.Eliminado,0) = 0
+                ),0)
+                -
+                IFNULL((
+                    SELECT SUM(VCS.Cantidad)
+                    FROM VentasConsumoStock VCS
+                    INNER JOIN Ventas V 
+                        ON V.id = VCS.idVenta
+                    WHERE VCS.idProducto = P.id
+                      AND IFNULL(VCS.Eliminado,0) = 0
+                      AND IFNULL(V.Eliminado,0) = 0
+                ),0)
+            ) AS Stock
+        FROM Productos P
+        WHERE P.Eliminado = 0
+          AND P.Activo = 1
+        ORDER BY P.Nombre ASC
+    ";
 
         $res = $mysqli->query($sql);
 
