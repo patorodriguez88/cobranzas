@@ -24,11 +24,22 @@ $("#btn_leer_excel_ventas").click(function () {
 
     const datos = rows
       .map((r) => ({
-        Cliente: String(r.CLIENTE || r.Cliente || r.cliente || "").trim(),
+        Ncliente: String(
+          r.NCLIENTE ||
+            r.Ncliente ||
+            r.ncliente ||
+            r["NUMERO CLIENTE"] ||
+            r["Número Cliente"] ||
+            r["Numero Cliente"] ||
+            r.CLIENTE ||
+            r.Cliente ||
+            r.cliente ||
+            "",
+        ).trim(),
         Figuritas: parseInt(r.FIGURITAS || r.Figuritas || r.figuritas || 0),
         Album: parseInt(r.ALBUM || r.Album || r.album || 0),
       }))
-      .filter((r) => r.Cliente !== "");
+      .filter((r) => r.Ncliente !== "");
 
     validarImportacionVentas(datos);
   };
