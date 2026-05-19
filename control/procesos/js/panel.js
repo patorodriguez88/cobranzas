@@ -424,34 +424,61 @@ function abrirAsignarPago(idCobranza) {
       id: idCobranza,
     },
     success: function (r) {
-      if (!r.data || !r.data[0]) {
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: "No se encontró la cobranza.",
-        });
-        return;
-      }
 
-      let c = r.data[0];
+  if (!r.data || !r.data[0]) {
 
-      $("#asignar_id_cobranza").val(c.id);
-      $("#asignar_cliente").val(c.NombreCliente);
-      $("#asignar_numero_cliente").val(c.NumeroCliente);
-      $("#asignar_importe_pago").val(c.ImporteReal);
-      $("#asignar_banco_operacion").val(c.Banco + " / Op.: " + c.Operacion);
+    Swal.fire({
+      icon: "error",
+      title: "Error",
+      text: "No se encontró la cobranza.",
+    });
 
-      $("#resumen_pago").text(formatearMonedaAsignacion(c.Importe));
-      $("#resumen_aplicado").text(formatearMonedaAsignacion(0));
-      $("#resumen_diferencia").text(formatearMonedaAsignacion(c.Importe));
+    return;
+  }
 
-      window.idCobranzaActual = idCobranza;
+  let c = r.data[0];
 
-      cargarVentasPendientesAsignacion(c.NumeroCliente, c.Importe);
-      cargarVentasAplicadas(idCobranza);
+  let importeReal = parseFloat(
+    c.ImporteReal || c.Importe || 0
+  );
 
-      $("#modal_asignar_pago").modal("show");
-    },
+  $("#asignar_id_cobranza").val(c.id);
+
+  $("#asignar_cliente").val(c.NombreCliente);
+
+  $("#asignar_numero_cliente").val(c.NumeroCliente);
+
+  $("#asignar_importe_pago")
+    .val(importeReal.toFixed(2))
+    .data("valor", importeReal);
+
+  $("#asignar_banco_operacion").val(
+    c.Banco + " / Op.: " + c.Operacion
+  );
+
+  $("#resumen_pago").text(
+    formatearMonedaAsignacion(importeReal)
+  );
+
+  $("#resumen_aplicado").text(
+    formatearMonedaAsignacion(0)
+  );
+
+  $("#resumen_diferencia").text(
+    formatearMonedaAsignacion(importeReal)
+  );
+
+  window.idCobranzaActual = idCobranza;
+
+  cargarVentasPendientesAsignacion(
+    c.NumeroCliente,
+    importeReal
+  );
+
+  cargarVentasAplicadas(idCobranza);
+
+  $("#modal_asignar_pago").modal("show");
+},
     error: function (xhr) {
       console.log(xhr.responseText);
       Swal.fire({
@@ -558,7 +585,16 @@ function cargarVentasPendientesAsignacion(numeroCliente, importePago) {
     },
   });
 }
+$(document).on("focus", ".importe_aplicar_pago", function () {
+  $(this).val($(this).data("valor") || "0.00");
+});
 
+$(document).on("blur", ".importe_aplicar_pago", function () {
+  let valor = parseFloat($(this).val() || 0);
+  $(this).data("valor", valor.toFixed(2));
+  $(this).val(formatearMonedaAsignacion(valor));
+  recalcularResumenAsignacion();
+});
 $(document).on("keyup change", ".importe_aplicar_pago", function () {
   let input = $(this);
 
@@ -603,19 +639,12 @@ $(document).on("keyup change", ".importe_aplicar_pago", function () {
 });
 
 function recalcularResumenAsignacion() {
-  let pago = parseFloat($("#asignar_importe_pago").val() || 0);
+  let pago = parseFloat($("#asignar_importe_pago").data("valor") || $("#asignar_importe_pago").val() || 0);
   let aplicado = 0;
 
-  $(document).on("focus", ".importe_aplicar_pago", function () {
-  $(this).val($(this).data("valor") || "0.00");
-});
-
-$(document).on("blur", ".importe_aplicar_pago", function () {
-  let valor = parseFloat($(this).val() || 0);
-  $(this).data("valor", valor.toFixed(2));
-  $(this).val(formatearMonedaAsignacion(valor));
-  recalcularResumenAsignacion();
-});
+  $(".importe_aplicar_pago").each(function () {
+    aplicado += parseFloat($(this).data("valor") || 0);
+  });
 
   let diferencia = pago - aplicado;
 
