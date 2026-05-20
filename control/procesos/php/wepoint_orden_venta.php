@@ -37,21 +37,29 @@ function obtenerCredencialesCaddy($distribuidora = 'Dinter')
 }
 function obtenerTokenCaddy($credenciales)
 {
+    $payload = json_encode([
+        "usuario" => $credenciales["usuario"],
+        "password" => $credenciales["password"]
+    ]);
+
     $curl = curl_init();
 
     curl_setopt_array($curl, [
         CURLOPT_URL => $credenciales["base_url"] . "/auth",
         CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => $payload,
+        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
         CURLOPT_TIMEOUT => 30,
-        CURLOPT_CUSTOMREQUEST => "POST",
-        CURLOPT_POSTFIELDS => json_encode([
-            "usuario" => $credenciales["usuario"],
-            "password" => $credenciales["password"]
-        ], JSON_UNESCAPED_UNICODE),
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_SSL_VERIFYPEER => false,
+        CURLOPT_SSL_VERIFYHOST => false,
         CURLOPT_HTTPHEADER => [
+            "Content-Type: application/json",
             "Accept: application/json",
-            "Content-Type: application/json"
+            "Content-Length: " . strlen($payload)
         ],
+        CURLOPT_USERAGENT => "Mozilla/5.0"
     ]);
 
     $response = curl_exec($curl);
@@ -60,31 +68,34 @@ function obtenerTokenCaddy($credenciales)
 
     curl_close($curl);
 
+    file_put_contents(__DIR__ . "/debug_caddy.log",
+        "\n\nAUTH CADDY\n" .
+        "HTTP: " . $httpCode . "\n" .
+        "ERROR: " . $error . "\n" .
+        "PAYLOAD: " . $payload . "\n" .
+        "RESPONSE: " . $response . "\n",
+        FILE_APPEND
+    );
+
     if ($error) {
         throw new Exception("Error auth Caddy: " . $error);
     }
 
     $data = json_decode($response, true);
-    file_put_contents(__DIR__ . "/debug_caddy.log",
-    "\n\nAUTH CADDY\n" .
-    "HTTP: " . $httpCode . "\n" .
-    "ERROR: " . $error . "\n" .
-    "RESPONSE: " . $response . "\n",
-    FILE_APPEND
-);
 
     if ($httpCode < 200 || $httpCode >= 300) {
         throw new Exception("Caddy rechazó auth: " . $response);
     }
 
-    $token = $data["token"] ?? $data["result"]["token"] ?? "";
+    $token = $data["result"]["token"] ?? "";
 
     if ($token == "") {
-        throw new Exception("Caddy autenticó pero no devolvió token: " . $response);
+        throw new Exception("No se recibió token");
     }
 
     return $token;
 }
+
 function crearServicioCaddy($mysqli, $venta, $detalle, $idVenta, $nroOrdenVenta)
 {
     $distribuidora = $venta["Distribuidora"] ?? "Dinter";
