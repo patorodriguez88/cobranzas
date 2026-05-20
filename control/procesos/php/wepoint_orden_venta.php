@@ -200,7 +200,9 @@ function enviarServicioCaddy($baseUrl, $token, $payload)
 {
     $curl = curl_init();
 
-   curl_setopt_array($curl, [
+$jsonPayload = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+curl_setopt_array($curl, [
     CURLOPT_URL => $baseUrl . "/servicios",
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_ENCODING => '',
@@ -209,10 +211,11 @@ function enviarServicioCaddy($baseUrl, $token, $payload)
     CURLOPT_FOLLOWLOCATION => true,
     CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
     CURLOPT_CUSTOMREQUEST => "POST",
-    CURLOPT_POSTFIELDS => json_encode($payload, JSON_UNESCAPED_UNICODE),
+    CURLOPT_POSTFIELDS => $jsonPayload,
     CURLOPT_HTTPHEADER => [
         "X-Api-Token: Bearer " . $token,
-        "Content-Type: application/json"
+        "Content-Type: application/json",
+        "Content-Length: " . strlen($jsonPayload)
     ],
 ]);
 
@@ -229,7 +232,7 @@ function enviarServicioCaddy($baseUrl, $token, $payload)
         "HTTP: " . $httpCode . "\n" .
         "ERROR: " . $error . "\n" .
         "TOKEN: " . $token . "\n" .
-        "PAYLOAD: " . json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "\n" .
+        "PAYLOAD: " . $jsonPayload . "\n" .
         "RESPONSE: " . $response . "\n",
         FILE_APPEND
     );
