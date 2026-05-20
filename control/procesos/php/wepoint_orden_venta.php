@@ -196,7 +196,13 @@ function enviarServicioCaddy($baseUrl, $token, $payload)
             "X-Api-Token: " . $token
         ],
     ]);
-
+    file_put_contents(
+        __DIR__ . "/caddy_debug.txt",
+        json_encode([
+            "url" => $baseUrl . "/servicios",
+            "payload" => $payload
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+    );
     $response = curl_exec($curl);
     $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
     $error = curl_error($curl);
@@ -216,11 +222,11 @@ function enviarServicioCaddy($baseUrl, $token, $payload)
         ];
     }
 
-    return $data ?: [
-        "status" => "error",
-        "response" => $response,
-        "http_code" => $httpCode
-    ];
+    return [
+    "decoded" => $data,
+    "raw" => $response,
+    "http_code" => $httpCode
+];
 }
 
 function crearClienteWepointSiNoExiste($mysqli, $cliente, $token)
@@ -241,8 +247,8 @@ function crearClienteWepointSiNoExiste($mysqli, $cliente, $token)
         "telefono" => $cliente['Celular'] ?? '',
         "email" => "",
         "direccion" => $cliente['Direccion'] ?? '',
-        "provincia" => "Córdoba",
-        "ciudad" => $cliente['Ciudad'] ?? 'Córdoba',
+        "provincia" => "Cordoba",
+        "ciudad" => $cliente['Ciudad'] ?? 'Cordoba',
         "codigo_postal" => "5000",
         "barrio" => "",
         "entre_calles" => ""
