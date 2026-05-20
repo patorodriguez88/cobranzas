@@ -818,6 +818,8 @@ function abrirEstadoVenta(idVenta) {
         claseBadge = "bg-success";
       } else if (distribuidora === "DINTER") {
         claseBadge = "bg-primary";
+      } else if (distribuidora === "RAK") {
+        claseBadge = "bg-danger";
       } else {
         claseBadge = "bg-dark";
       }
