@@ -1256,6 +1256,12 @@ switch ($accion) {
         C.Ncliente,
         C.RazonSocial,
         V.NumeroOrdenVenta,
+        V.caddy_id_venta,
+        V.caddy_codigo_seguimiento,
+        V.caddy_fecha_entrega,
+        V.caddy_titulo_servicio,
+        V.caddy_tarifa,
+        V.caddy_created_at,
 
         (
             SELECT CONCAT(
@@ -1271,11 +1277,11 @@ switch ($accion) {
             LIMIT 1
         ) AS TurnoRetiro
 
-    FROM Ventas V
-    LEFT JOIN Clientes C ON C.id = V.idCliente
-    WHERE V.id = '$idVenta'
-      AND V.Eliminado = 0
-    LIMIT 1";
+        FROM Ventas V
+        LEFT JOIN Clientes C ON C.id = V.idCliente
+        WHERE V.id = '$idVenta'
+        AND V.Eliminado = 0
+        LIMIT 1";
 
         $resVenta = $mysqli->query($sqlVenta);
 
@@ -1372,10 +1378,10 @@ switch ($accion) {
         VD.Cantidad,
         VD.PrecioUnitario,
         VD.Subtotal
-    FROM VentasDetalle VD
-    WHERE VD.idVenta = '$idVenta'
-      AND VD.Eliminado = 0
-    ORDER BY VD.id ASC";
+        FROM VentasDetalle VD
+        WHERE VD.idVenta = '$idVenta'
+        AND VD.Eliminado = 0
+        ORDER BY VD.id ASC";
 
         $resDetalle = $mysqli->query($sqlDetalle);
 
