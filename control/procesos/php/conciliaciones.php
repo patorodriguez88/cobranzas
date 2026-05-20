@@ -17,7 +17,7 @@ switch ($accion) {
 
         $idCobranza = isset($_POST['idCobranza']) ? (int)$_POST['idCobranza'] : 0;
 
-       
+
         $sql = "SELECT 
                 CV.id AS id,
                 CV.idCobranza,
@@ -50,12 +50,12 @@ switch ($accion) {
 
             LEFT JOIN (
             SELECT 
-                idCobranza,
+                id_cobranza,
                 MAX(Importe) AS Importe
             FROM Cobranza_conciliacion
             WHERE IFNULL(Eliminado,0)=0
-            GROUP BY idCobranza
-        ) CC ON CC.idCobranza = CV.idCobranza
+            GROUP BY id_cobranza
+        ) CC ON CC.id_cobranza = CV.idCobranza
 
             WHERE CV.idCobranza = '$idCobranza'
             AND IFNULL(CV.Eliminado,0) = 0
@@ -155,7 +155,7 @@ switch ($accion) {
 
                 SELECT 
 
-                    idCobranza,
+                    id_cobranza,
 
                     MAX(Importe) AS Importe
 
@@ -163,7 +163,7 @@ switch ($accion) {
 
                 WHERE IFNULL(Eliminado,0) = 0
 
-                GROUP BY idCobranza
+                GROUP BY id_cobranza
 
             ) CC ON CC.idCobranza = CV.idCobranza
 
