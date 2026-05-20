@@ -1428,7 +1428,10 @@ $(document).on("change", ".cantidad-producto-venta", function () {
         }
 
         cargarResumenVentas();
-        cargarResumenProductosVentas();
+
+        setTimeout(function () {
+          cargarResumenProductosVentas();
+        }, 300);
       } else {
         Swal.fire("Error", r.error || "No se pudo actualizar.", "error");
 
