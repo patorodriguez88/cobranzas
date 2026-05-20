@@ -21,7 +21,7 @@ $payload = [
     "Cobranza" => "107690",
     "idProveedor" => "TEST" . time(),
     "Observaciones" => "Prueba directa Caddy",
-    "WebHook" => "https://mi-sistema.com/webhook/caddy",
+    "WebHook" => "",
     "Origen" => [["idProveedor" => "", "Nombre" => "", "Direccion" => ""]],
     "Box" => [["Length" => "10", "Width" => "10", "Height" => "10", "Weight" => "10"]]
 ];
