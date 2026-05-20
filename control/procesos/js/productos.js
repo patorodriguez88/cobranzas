@@ -41,12 +41,7 @@ function cargarProductos() {
         render: function (data, type, row) {
           let stock = parseFloat(row.StockReal || 0);
           let minimo = parseFloat(row.StockMinimo || 0);
-
-          let clase = "success";
-
-          if (stock <= minimo) {
-            clase = "danger";
-          }
+          let clase = stock <= minimo ? "danger" : "success";
 
           return `
             <span class="badge bg-${clase}">
@@ -62,23 +57,22 @@ function cargarProductos() {
             ? '<span class="badge bg-success">Activo</span>'
             : '<span class="badge bg-danger">Inactivo</span>';
         },
-      },      
-        {
-          data: null,
-          orderable: false,
-          render: function (data, type, row) {
-            return `
-              <i class="mdi mdi-pencil mdi-18px text-warning ms-2"
-                style="cursor:pointer"
-                title="Editar producto"
-                onclick="editarProducto(${row.id})"></i>
+      },
+      {
+        data: null,
+        orderable: false,
+        render: function (data, type, row) {
+          return `
+            <i class="mdi mdi-pencil mdi-18px text-warning ms-2"
+               style="cursor:pointer"
+               title="Editar producto"
+               onclick="editarProducto(${row.id})"></i>
 
-              <i class="mdi mdi-delete mdi-18px text-danger ms-2"
-                style="cursor:pointer"
-                title="Eliminar producto"
-                onclick="eliminarProducto(${row.id})"></i>
-            `;
-          },
+            <i class="mdi mdi-delete mdi-18px text-danger ms-2"
+               style="cursor:pointer"
+               title="Eliminar producto"
+               onclick="eliminarProducto(${row.id})"></i>
+          `;
         },
       },
     ],
