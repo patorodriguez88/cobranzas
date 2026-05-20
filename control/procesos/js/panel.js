@@ -22,22 +22,46 @@ function vuelve(id) {
   });
 }
 function eliminar(id) {
-  // $.ajax({
-  //     data:{'Eliminar':1,'id_cobranza':id},
-  //     url:'control/procesos/php/panel.php',
-  //     type:'post',
-  //     success: function(response)
-  //      {
-  //         var jsonData = JSON.parse(response);
-  //         if(jsonData.success==1){
-  //             $.NotificationApp.send("Exito !", 'Registro Eliminado.', "bottom-right", "#FFFFFF", "success");
-  //             var datatable_seguimiento= $('#cobranzas_tabla').DataTable();
-  //             datatable_seguimiento.ajax.reload();
-  //         }
-  //      }
-  // });
-}
+  Swal.fire({
+    icon: "warning",
+    title: "¿Eliminar cobranza?",
+    text: "Si tiene ventas vinculadas, no se podrá eliminar.",
+    showCancelButton: true,
+    confirmButtonText: "Sí, eliminar",
+    cancelButtonText: "Cancelar",
+    confirmButtonColor: "#fa5c7c",
+  }).then((result) => {
+    if (!result.isConfirmed) return;
 
+    $.ajax({
+      data: {
+        Eliminar: 1,
+        id_cobranza: id,
+      },
+      url: "control/procesos/php/panel.php",
+      type: "post",
+      dataType: "json",
+      success: function (r) {
+        if (r.success == 1) {
+          Swal.fire({
+            icon: "success",
+            title: "Eliminado",
+            timer: 1200,
+            showConfirmButton: false,
+          });
+
+          $("#cobranzas_tabla").DataTable().ajax.reload(null, false);
+        } else {
+          Swal.fire("Error", r.error || "No se pudo eliminar.", "error");
+        }
+      },
+      error: function (xhr) {
+        console.log(xhr.responseText);
+        Swal.fire("Error", "Error eliminando cobranza.", "error");
+      },
+    });
+  });
+}
 function calcular_total(a) {
   $("#selectAll").prop("checked", false);
   let total = $('input[type="checkbox"]:checked').length;
@@ -274,7 +298,7 @@ function ver_tabla_conciliados(a) {
       { targets: 3, className: "col-banco" },
       { targets: 4, className: "col-importe" },
       { targets: 5, className: "col-estado" },
-      { targets: 7, className: "col-acciones" }
+      { targets: 7, className: "col-acciones" },
     ],
     ajax: {
       url: "control/procesos/php/panel.php",
@@ -472,62 +496,45 @@ function abrirAsignarPago(idCobranza) {
       id: idCobranza,
     },
     success: function (r) {
+      if (!r.data || !r.data[0]) {
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "No se encontró la cobranza.",
+        });
 
-  if (!r.data || !r.data[0]) {
+        return;
+      }
 
-    Swal.fire({
-      icon: "error",
-      title: "Error",
-      text: "No se encontró la cobranza.",
-    });
+      let c = r.data[0];
 
-    return;
-  }
+      let importeReal = parseFloat(c.ImporteReal || c.Importe || 0);
 
-  let c = r.data[0];
+      $("#asignar_id_cobranza").val(c.id);
 
-  let importeReal = parseFloat(
-    c.ImporteReal || c.Importe || 0
-  );
+      $("#asignar_cliente").val(c.NombreCliente);
 
-  $("#asignar_id_cobranza").val(c.id);
+      $("#asignar_numero_cliente").val(c.NumeroCliente);
 
-  $("#asignar_cliente").val(c.NombreCliente);
+      $("#asignar_importe_pago").val(importeReal.toFixed(2)).data("valor", importeReal);
 
-  $("#asignar_numero_cliente").val(c.NumeroCliente);
+      $("#asignar_banco_operacion").val(c.Banco + " / Op.: " + c.Operacion);
 
-  $("#asignar_importe_pago")
-    .val(importeReal.toFixed(2))
-    .data("valor", importeReal);
+      $("#resumen_pago").text(formatearMonedaAsignacion(importeReal));
 
-  $("#asignar_banco_operacion").val(
-    c.Banco + " / Op.: " + c.Operacion
-  );
+      $("#resumen_aplicado").text(formatearMonedaAsignacion(0));
 
-  $("#resumen_pago").text(
-    formatearMonedaAsignacion(importeReal)
-  );
+      $("#resumen_diferencia").text(formatearMonedaAsignacion(importeReal));
 
-  $("#resumen_aplicado").text(
-    formatearMonedaAsignacion(0)
-  );
+      window.idCobranzaActual = idCobranza;
 
-  $("#resumen_diferencia").text(
-    formatearMonedaAsignacion(importeReal)
-  );
+      cargarVentasPendientesAsignacion(c.NumeroCliente, importeReal);
 
-  window.idCobranzaActual = idCobranza;
+      cargarVentasAplicadas(idCobranza);
 
-  cargarVentasPendientesAsignacion(
-    c.NumeroCliente,
-    importeReal
-  );
-
-  cargarVentasAplicadas(idCobranza);
-
-  $("#modal_asignar_pago").modal("show");
-},
-error: function (xhr) {
+      $("#modal_asignar_pago").modal("show");
+    },
+    error: function (xhr) {
       console.log(xhr.responseText);
       Swal.fire({
         icon: "error",
@@ -539,7 +546,6 @@ error: function (xhr) {
 }
 
 function cargarVentasPendientesAsignacion(numeroCliente, importePago) {
-
   $("#tabla_asignar_ventas tbody").html(`
     <tr>
       <td colspan="6" class="text-center text-muted">
@@ -558,11 +564,9 @@ function cargarVentasPendientesAsignacion(numeroCliente, importePago) {
     },
 
     success: function (r) {
-
       let html = "";
 
       if (!r.success || !r.data || r.data.length === 0) {
-
         html = `
           <tr>
             <td colspan="6" class="text-center text-muted">
@@ -570,13 +574,10 @@ function cargarVentasPendientesAsignacion(numeroCliente, importePago) {
             </td>
           </tr>
         `;
-
       } else {
-
         let pagoDisponible = parseFloat(importePago || 0);
 
         r.data.forEach(function (v) {
-
           let saldo = parseFloat(v.Saldo || 0);
 
           let sugerido = Math.min(pagoDisponible, saldo);

@@ -82,12 +82,11 @@ if (isset($_POST['Conciliar'])) {
     if ($mysqli->query($sql)) {
 
         $mysqli->query("UPDATE Cobranza SET Conciliado=1 WHERE id='$_POST[id_cobranza]'");
-        
+
         recalcularVentasCobranza($mysqli, $_POST['id_cobranza']);
 
         echo json_encode(array('success' => 1, 'bloque' => 'Conciliar'));
-    
-        } else {
+    } else {
 
         echo json_encode(array('success' => 0));
     }
@@ -100,7 +99,7 @@ if (isset($_POST['Vuelve'])) {
     if ($mysqli->query($sql)) {
 
         $mysqli->query("DELETE FROM `Cobranza_conciliacion` WHERE id_cobranza='$_POST[id_cobranza]'");
-        
+
         recalcularVentasCobranza($mysqli, $_POST['id_cobranza']);
 
         echo json_encode(array('success' => 1, 'bloque' => 'Vuelve'));
@@ -118,7 +117,7 @@ if (isset($_POST['Rechazar'])) {
     if ($mysqli->query($sql)) {
 
         $mysqli->query("UPDATE Cobranza SET Conciliado=1 WHERE id='$_POST[id_cobranza]'");
-        
+
         recalcularVentasCobranza($mysqli, $_POST['id_cobranza']);
 
         echo json_encode(array('success' => 1, 'bloque' => 'Rechazar'));
@@ -141,7 +140,7 @@ if (isset($_POST['Conciliar_quik'])) {
     if ($mysqli->query($sql)) {
 
         $mysqli->query("UPDATE Cobranza SET Conciliado=1 WHERE id='$_POST[id_cobranza]'");
-        
+
         recalcularVentasCobranza($mysqli, $_POST['id_cobranza']);
 
         echo json_encode(array('success' => 1, 'bloque' => 'Conciliar_quik'));
@@ -155,7 +154,7 @@ if (isset($_POST['Conciliar_quik_cancel'])) {
 
     $mysqli->query("UPDATE Cobranza SET Conciliado=0 WHERE id='$_POST[id_cobranza]'");
     $mysqli->query("DELETE FROM Cobranza_conciliacion WHERE id_cobranza='$_POST[id_cobranza]'");
-    
+
     recalcularVentasCobranza($mysqli, $_POST['id_cobranza']);
 
     echo json_encode(array('success' => 1, 'bloque' => 'Conciliar_quik_cancel'));
@@ -417,6 +416,79 @@ if (isset($_POST['AsignarPagoVenta'])) {
         exit;
     }
 }
+if (isset($_POST['Eliminar'])) {
+
+    $idCobranza = isset($_POST['id_cobranza']) ? (int)$_POST['id_cobranza'] : 0;
+
+    if ($idCobranza <= 0) {
+        echo json_encode([
+            "success" => 0,
+            "error" => "Cobranza inválida."
+        ]);
+        exit;
+    }
+
+    $mysqli->begin_transaction();
+
+    try {
+
+        $sqlVinculos = "
+            SELECT COUNT(*) AS total
+            FROM CobranzasVentas
+            WHERE idCobranza = '$idCobranza'
+              AND IFNULL(Eliminado,0) = 0
+        ";
+
+        $resVinculos = $mysqli->query($sqlVinculos);
+
+        if (!$resVinculos) {
+            throw new Exception($mysqli->error);
+        }
+
+        $rowVinculos = $resVinculos->fetch_assoc();
+
+        if ((int)$rowVinculos['total'] > 0) {
+            throw new Exception("Esta cobranza tiene ventas vinculadas. Primero desvinculá el pago.");
+        }
+
+        $sqlDeleteConciliacion = "
+            DELETE FROM Cobranza_conciliacion
+            WHERE id_cobranza = '$idCobranza'
+        ";
+
+        if (!$mysqli->query($sqlDeleteConciliacion)) {
+            throw new Exception($mysqli->error);
+        }
+
+        $sqlDeleteCobranza = "
+            DELETE FROM Cobranza
+            WHERE id = '$idCobranza'
+            LIMIT 1
+        ";
+
+        if (!$mysqli->query($sqlDeleteCobranza)) {
+            throw new Exception($mysqli->error);
+        }
+
+        $mysqli->commit();
+
+        echo json_encode([
+            "success" => 1
+        ]);
+        exit;
+    } catch (Exception $e) {
+
+        $mysqli->rollback();
+
+        echo json_encode([
+            "success" => 0,
+            "error" => $e->getMessage()
+        ]);
+        exit;
+    }
+}
+
+
 function recalcularVentasCobranza($mysqli, $idCobranza)
 {
     $idCobranza = (int)$idCobranza;
