@@ -104,37 +104,37 @@ function crearServicioCaddy($mysqli, $venta, $detalle, $idVenta, $nroOrdenVenta)
     $token = obtenerTokenCaddy($credenciales);
 
     $payload = [
-        "NombreCompleto" => $venta["RazonSocial"] ?? "",
-        "Direccion" => $venta["Direccion"] ?? "",
-        "Ciudad" => $venta["Ciudad"] ?? "Cordoba",
-        "CodigoPostal" => "5000",
-        "Dni" => "",
-        "Telefono" => $venta["Celular"] ?? "",
-        "Mail" => "",
-        "Servicio" => 1,
-        "Cantidad" => 1,
-        "ValorDeclarado" => (float)($venta["Total"] ?? 0),
-        "Cobranza" => 0,
-        "Observaciones" => "OV Wepoint #" . $nroOrdenVenta,
-        "EnviarMail" => false,
-        "idProveedor" => "VENTA-" . $idVenta,
-        "WebHook" => "",
-        "Origen" => [
-            [
-                "idProveedor" => strtoupper($credenciales["empresa"]),
-                "Nombre" => $credenciales["empresa"],
-                "Direccion" => "Córdoba"
-            ]
-        ],
-        "Box" => [
-            [
-                "Length" => 30,
-                "Width" => 20,
-                "Height" => 15,
-                "Weight" => 2.5
-            ]
+    "NombreCompleto" => $venta["RazonSocial"] ?? "",
+    "Direccion" => $venta["Direccion"] ?? "",
+    "Ciudad" => $venta["Ciudad"] ?? "Córdoba",
+    "CodigoPostal" => "5000",
+    "Dni" => "0",
+    "EnviarMail" => true,
+    "Mail" => "",
+    "Telefono" => $venta["Celular"] ?? "",
+    "Cantidad" => "1",
+    "Servicio" => "3",
+    "ValorDeclarado" => (string)($venta["Total"] ?? "0"),
+    "Cobranza" => "0",
+    "idProveedor" => "VENTA-" . $idVenta,
+    "Observaciones" => "OV Wepoint " . $nroOrdenVenta,
+    "WebHook" => "https://www.dintersa.com.ar/cobranza/webhook_caddy.php",
+    "Origen" => [
+        [
+            "idProveedor" => "",
+            "Nombre" => "",
+            "Direccion" => ""
         ]
-    ];
+    ],
+    "Box" => [
+        [
+            "Length" => "10",
+            "Width" => "10",
+            "Height" => "10",
+            "Weight" => "10"
+        ]
+    ]
+];
 
     $data = enviarServicioCaddy($credenciales["base_url"], $token, $payload);
 
@@ -208,9 +208,8 @@ function enviarServicioCaddy($baseUrl, $token, $payload)
         CURLOPT_CUSTOMREQUEST => "POST",
         CURLOPT_POSTFIELDS => json_encode($payload, JSON_UNESCAPED_UNICODE),
         CURLOPT_HTTPHEADER => [
-            "Accept: application/json",
-            "Content-Type: application/json",
-            "X-Api-Token: Bearer " . $token
+            "X-Api-Token: Bearer " . $token,
+            "Content-Type: application/json"
         ],
     ]);
 
