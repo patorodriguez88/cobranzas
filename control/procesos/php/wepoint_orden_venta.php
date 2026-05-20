@@ -365,9 +365,9 @@ function obtenerCredencialesWepoint($distribuidora = 'Dinter')
         case 'MISAS':
 
             return [
-                "empresa" => "Misas",
-                "token" => 'TOKEN_MISAS',
-                "id_cliente_origen" => 999
+                "empresa" => "Dinter", //aca deberia ser misas
+                "token" => '1383|1w3olMBz6851a6JdfbA1GH0jdF5QdUnwUtAfehSL0f00e3a5',
+                "id_cliente_origen" => 219 //999
             ];
 
         case 'DINTER':
