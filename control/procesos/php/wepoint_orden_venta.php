@@ -203,20 +203,24 @@ function enviarServicioCaddy($baseUrl, $token, $payload)
             "X-Api-Token: " . $token
         ],
     ]);
-    file_put_contents(__DIR__ . "/debug_caddy.log",
-    "\n\nSERVICIOS CADDY\n" .
-    "HTTP: " . $httpCode . "\n" .
-    "ERROR: " . $error . "\n" .
-    "TOKEN: " . $token . "\n" .
-    "PAYLOAD: " . json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "\n" .
-    "RESPONSE: " . $response . "\n",
-    FILE_APPEND
-);
+
     $response = curl_exec($curl);
     $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
     $error = curl_error($curl);
 
     curl_close($curl);
+
+    file_put_contents(__DIR__ . "/debug_caddy.log",
+        "\n\nSERVICIOS CADDY\n" .
+        "FECHA: " . date("Y-m-d H:i:s") . "\n" .
+        "URL: " . $baseUrl . "/servicios\n" .
+        "HTTP: " . $httpCode . "\n" .
+        "ERROR: " . $error . "\n" .
+        "TOKEN: " . $token . "\n" .
+        "PAYLOAD: " . json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "\n" .
+        "RESPONSE: " . $response . "\n",
+        FILE_APPEND
+    );
 
     if ($error) {
         throw new Exception("Error cURL Caddy: " . $error);
@@ -231,11 +235,17 @@ function enviarServicioCaddy($baseUrl, $token, $payload)
         ];
     }
 
-    return [
-    "decoded" => $data,
-    "raw" => $response,
-    "http_code" => $httpCode
-];
+    if (!$data) {
+        return [
+            "status" => "error",
+            "http_code" => $httpCode,
+            "response" => $response
+        ];
+    }
+
+    $data["_http_code"] = $httpCode;
+
+    return $data;
 }
 
 function crearClienteWepointSiNoExiste($mysqli, $cliente, $token)
