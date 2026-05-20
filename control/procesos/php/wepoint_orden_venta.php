@@ -106,19 +106,19 @@ function crearServicioCaddy($mysqli, $venta, $detalle, $idVenta, $nroOrdenVenta)
     $payload = [
     "NombreCompleto" => $venta["RazonSocial"] ?? "",
     "Direccion" => $venta["Direccion"] ?? "",
-    "Ciudad" => $venta["Ciudad"] ?? "Córdoba",
+    "Ciudad" => "Córdoba",
     "CodigoPostal" => "5000",
-    "Dni" => "0",
+    "Dni" => "223334434",
     "EnviarMail" => true,
-    "Mail" => "",
+    "Mail" => "prodriguez@caddy.com.ar",
     "Telefono" => $venta["Celular"] ?? "",
-    "Cantidad" => "1",
-    "Servicio" => "3",
+    "Cantidad" => 1,
+    "Servicio" => 3,
     "ValorDeclarado" => (string)($venta["Total"] ?? "0"),
     "Cobranza" => "0",
-    "idProveedor" => "VENTA-" . $idVenta,
-    "Observaciones" => "OV Wepoint " . $nroOrdenVenta,
-    "WebHook" => "https://www.dintersa.com.ar/cobranza/webhook_caddy.php",
+    "idProveedor" => "VENTA" . $idVenta,
+    "Observaciones" => "Orden generada desde Wepoint",
+    "WebHook" => "https://mi-sistema.com/webhook/caddy",
     "Origen" => [
         [
             "idProveedor" => "",
@@ -237,24 +237,22 @@ function enviarServicioCaddy($baseUrl, $token, $payload)
 
     $data = json_decode($response, true);
 
-    if ($httpCode == 401 || $httpCode == 403) {
-        return [
-            "token_expired" => 1,
-            "response" => $response
-        ];
-    }
+if ($httpCode == 401 || $httpCode == 403) {
+    return [
+        "token_expired" => 1,
+        "response" => $response
+    ];
+}
 
-    if (!$data) {
-        return [
-            "status" => "error",
-            "http_code" => $httpCode,
-            "response" => $response
-        ];
-    }
+if ($httpCode < 200 || $httpCode >= 300) {
+    return [
+        "status" => "error",
+        "http_code" => $httpCode,
+        "response" => $response
+    ];
+}
 
-    $data["_http_code"] = $httpCode;
-
-    return $data;
+return $data;
 }
 
 function crearClienteWepointSiNoExiste($mysqli, $cliente, $token)
