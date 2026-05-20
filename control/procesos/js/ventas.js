@@ -1928,6 +1928,11 @@ function guardarDepositoVenta() {
         importe: importe,
         Usuario_obs: observaciones,
       },
+      beforeSend: function () {
+        $("#modalDepositoVenta .btn-success")
+          .prop("disabled", true)
+          .html('<i class="mdi mdi-loading mdi-spin"></i> Guardando...');
+      },
       success: function (r) {
         if (r.success) {
           idCobranzaPendienteComprobante = r.idCobranza || 0;
@@ -1962,6 +1967,11 @@ function guardarDepositoVenta() {
       error: function (xhr) {
         console.log(xhr.responseText);
         alerta("Error", "Error guardando depósito.", "error");
+      },
+      complete: function () {
+        $("#modalDepositoVenta .btn-success")
+          .prop("disabled", false)
+          .html('<i class="mdi mdi-content-save mdi-18px"></i> Guardar depósito');
       },
     });
   });
