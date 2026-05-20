@@ -564,11 +564,8 @@
                     <i class="mdi mdi-pencil"></i> OV
                   </button>
                 </div>
-                <div
-                  class="alert alert-info mt-3 d-flex justify-content-between align-items-center"
-                  id="card_turno"
-                ></div>
-                
+
+                <div id="card_turno" class="alert alert-info mt-3 d-flex justify-content-between align-items-center">
                   <div>
                     <small class="text-muted d-block mb-1">Turno acordado con el cliente</small>
                     <h6 id="texto_turno_retiro" class="mb-0">
@@ -580,38 +577,34 @@
                     <i class="mdi mdi-calendar-clock"></i> Turno
                   </button>
                 </div>
-                <div class="alert mt-3 d-none" id="card_caddy" style="background: #fff3cd; border: 1px solid #ffca2c">
+
+                <div id="card_caddy" class="alert mt-3 d-none" style="background: #fff3cd; border: 1px solid #ffca2c">
                   <div class="d-flex justify-content-between align-items-start">
                     <div>
                       <small class="text-muted d-block mb-1">Entrega Caddy</small>
 
-                      <h6 class="mb-2">
-                        <i class="mdi mdi-truck-fast me-1 text-warning"></i>
-
-                        <span id="caddy_servicio">-</span>
+                      <h6 class="mb-2 text-warning">
+                        <i class="mdi mdi-truck-fast me-1"></i>
+                        <span id="caddy_servicio">Entrega Caddy</span>
                       </h6>
 
                       <div class="small">
                         <div><b>Código:</b> <span id="caddy_codigo">-</span></div>
-
                         <div><b>Fecha prometida:</b> <span id="caddy_fecha">-</span></div>
-
                         <div><b>Tarifa:</b> <span id="caddy_tarifa">-</span></div>
-
-                        <div><b>Estado:</b> <span id="caddy_estado">Pendiente</span></div>
+                        <div><b>Estado:</b> <span id="caddy_estado">Generado</span></div>
                       </div>
                     </div>
 
                     <a href="#" target="_blank" id="btn_tracking_caddy" class="btn btn-warning btn-sm text-white">
-                      <i class="mdi mdi-map-marker-path"></i>
-
-                      Ver
+                      <i class="mdi mdi-map-marker-path"></i> Ver
                     </a>
                   </div>
                 </div>
               </div>
             </div>
           </div>
+
           <div class="modal fade" id="modal_orden_venta" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
               <div class="modal-content">
