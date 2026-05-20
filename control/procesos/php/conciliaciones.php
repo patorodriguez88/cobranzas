@@ -17,58 +17,33 @@ switch ($accion) {
 
         $idCobranza = isset($_POST['idCobranza']) ? (int)$_POST['idCobranza'] : 0;
 
-
         $sql = "SELECT 
-                CV.id AS id,
+                CV.id,
                 CV.idCobranza,
                 CV.idVenta,
-
-                CASE
-                    WHEN CC.Importe IS NOT NULL THEN CC.Importe
-                    ELSE CV.ImporteAplicado
-                END AS ImporteAplicado,
-
+                CV.ImporteAplicado,
                 CV.Fecha AS FechaAplicacion,
-
                 V.NumeroVenta,
                 V.NumeroOrdenVenta,
                 V.Fecha,
                 V.Total,
                 V.TotalPagado,
                 V.Saldo,
-                V.EstadoPago,
-
-                CASE
-                    WHEN CC.Importe IS NOT NULL THEN 1
-                    ELSE 0
-                END AS Conciliado
-
+                V.EstadoPago
             FROM CobranzasVentas CV
-
-            INNER JOIN Ventas V 
-                ON V.id = CV.idVenta
-
-            LEFT JOIN (
-            SELECT 
-                id_cobranza AS idCobranza,
-                MAX(Importe) AS Importe
-            FROM Cobranza_conciliacion
-            WHERE IFNULL(Eliminado,0)=0
-            GROUP BY id_cobranza
-        ) CC ON CC.idCobranza = CV.idCobranza
-
+            INNER JOIN Ventas V ON V.id = CV.idVenta
             WHERE CV.idCobranza = '$idCobranza'
-            AND IFNULL(CV.Eliminado,0) = 0
-            AND V.Eliminado = 0
+              AND IFNULL(CV.Eliminado,0) = 0
+              AND IFNULL(V.Eliminado,0) = 0
+            ORDER BY CV.id DESC";
 
-            ORDER BY CV.id DESC
-        ";
         $res = $mysqli->query($sql);
 
         if (!$res) {
             echo json_encode([
                 "success" => 0,
                 "error" => $mysqli->error,
+                "sql" => $sql,
                 "data" => []
             ]);
             exit;
@@ -82,10 +57,11 @@ switch ($accion) {
 
         echo json_encode([
             "success" => 1,
+            "idCobranza_recibido" => $idCobranza,
+            "total" => count($data),
             "data" => $data
         ]);
         break;
-
 
     case 'desvincular_pago_venta':
 
