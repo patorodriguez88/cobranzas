@@ -62,14 +62,23 @@ function cargarProductos() {
             ? '<span class="badge bg-success">Activo</span>'
             : '<span class="badge bg-danger">Inactivo</span>';
         },
-      },
-      {
-        data: null,
-        render: function (data) {
-          return `
-            <i class="mdi mdi-pencil mdi-18px text-warning ms-2" style="cursor:pointer" onclick="editarProducto(${data.id})"></i>
-            <i class="mdi mdi-delete mdi-18px text-danger ms-2" style="cursor:pointer" onclick="eliminarProducto(${data.id})"></i>
-          `;
+      },      
+        {
+          data: null,
+          orderable: false,
+          render: function (data, type, row) {
+            return `
+              <i class="mdi mdi-pencil mdi-18px text-warning ms-2"
+                style="cursor:pointer"
+                title="Editar producto"
+                onclick="editarProducto(${row.id})"></i>
+
+              <i class="mdi mdi-delete mdi-18px text-danger ms-2"
+                style="cursor:pointer"
+                title="Eliminar producto"
+                onclick="eliminarProducto(${row.id})"></i>
+            `;
+          },
         },
       },
     ],
@@ -171,7 +180,7 @@ $("#btn_nuevo_producto").click(function () {
   $("#producto_nombre").val("");
   $("#producto_categoria").val("");
   $("#producto_costo").val("");
-  $("#producto_precio_venta").val("");
+  $("#producto_venta").val("");
   $("#producto_stock").val("");
   $("#producto_descripcion").val("");
   $("#producto_venta_rapida").prop("checked", false);
