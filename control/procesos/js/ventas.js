@@ -845,12 +845,12 @@ function abrirEstadoVenta(idVenta) {
         </span>
 
         <span class="badge bg-light text-dark border">
-            [${v.Ncliente || 'S/N'}] ${v.RazonSocial || 'Consumidor Final'}
+            [${v.Ncliente || "S/N"}] ${v.RazonSocial || "Consumidor Final"}
         </span>
 
     </div>
 
-`);
+    `);
 
       $("#venta_estado_cuenta").html(`
         <div class="d-flex flex-wrap align-items-center gap-3 small mb-2">
@@ -925,12 +925,30 @@ function abrirEstadoVenta(idVenta) {
 
       $("#tabla_detalle_total_venta").html(htmlDetalleTotal);
 
-      if (v.TurnoRetiro && v.TurnoRetiro !== "") {
-        $("#texto_turno_retiro").html(`
-    <i class="mdi mdi-calendar-clock"></i> ${v.TurnoRetiro}
-  `);
+      let tieneCaddy = v.caddy_codigo_seguimiento && v.caddy_codigo_seguimiento !== "";
+
+      if (tieneCaddy) {
+        $("#card_turno").addClass("d-none");
+        $("#card_caddy").removeClass("d-none");
+
+        $("#caddy_codigo").text(v.caddy_codigo_seguimiento || "-");
+        $("#caddy_fecha").text(v.caddy_fecha_entrega || "-");
+        $("#caddy_servicio").text(v.caddy_titulo_servicio || "Entrega Caddy");
+        $("#caddy_tarifa").text(formatoMoneda(v.caddy_tarifa || 0));
+        $("#caddy_estado").text("Generado");
+
+        $("#btn_tracking_caddy").attr("href", "https://www.caddy.com.ar/seguimiento/" + v.caddy_codigo_seguimiento);
       } else {
-        $("#texto_turno_retiro").html(`<span class="text-muted">Sin turno asignado</span>`);
+        $("#card_caddy").addClass("d-none");
+        $("#card_turno").removeClass("d-none");
+
+        if (v.TurnoRetiro && v.TurnoRetiro !== "") {
+          $("#texto_turno_retiro").html(`
+      <i class="mdi mdi-calendar-clock"></i> ${v.TurnoRetiro}
+    `);
+        } else {
+          $("#texto_turno_retiro").html(`<span class="text-muted">Sin turno asignado</span>`);
+        }
       }
 
       if (v.NumeroOrdenVenta && v.NumeroOrdenVenta !== "") {
@@ -1314,27 +1332,27 @@ $(document).on("click", "#btn_guardar_turno_retiro", function () {
 
         if (r.whatsapp_url && r.whatsapp_url !== "") {
           htmlWp = `
-  <button type="button"
-          class="btn btn-success mt-2"
-          onclick="abrirWhatsappUnico('${r.whatsapp_url}')">
-    <i class="mdi mdi-whatsapp"></i> Enviar WhatsApp
-  </button>
-`;
+            <button type="button"
+                    class="btn btn-success mt-2"
+                    onclick="abrirWhatsappUnico('${r.whatsapp_url}')">
+              <i class="mdi mdi-whatsapp"></i> Enviar WhatsApp
+            </button>
+          `;
         } else {
           htmlWp = `
-    <div class="alert alert-warning mt-2 mb-0">
-      El cliente no tiene celular cargado.
-    </div>
-  `;
+            <div class="alert alert-warning mt-2 mb-0">
+              El cliente no tiene celular cargado.
+            </div>
+          `;
         }
 
         Swal.fire({
           icon: "success",
           title: "Turno asignado",
           html: `
-    <p>El turno fue generado correctamente.</p>
-    ${htmlWp}
-  `,
+          <p>El turno fue generado correctamente.</p>
+          ${htmlWp}
+        `,
           showConfirmButton: true,
           confirmButtonText: "Cerrar",
         });
@@ -1788,15 +1806,15 @@ function guardarAjustePago() {
     success: function (res) {
       if (res.success) {
         $("#modalAjustePago").modal("hide");
-        
+
         Swal.fire({
-            toast: true,
-            position: 'top-end',
-            icon: 'success',
-            title: 'Ajuste cargado correctamente',
-            showConfirmButton: false,
-            timer: 2500,
-            timerProgressBar: true
+          toast: true,
+          position: "top-end",
+          icon: "success",
+          title: "Ajuste cargado correctamente",
+          showConfirmButton: false,
+          timer: 2500,
+          timerProgressBar: true,
         });
 
         if ($.fn.DataTable.isDataTable("#tabla_ventas")) {
@@ -1914,15 +1932,15 @@ function guardarDepositoVenta() {
           }
 
           $("#modalDepositoVenta").modal("hide");
-          
+
           Swal.fire({
-              toast: true,
-              position: 'top-end',
-              icon: 'success',
-              title: 'Depósito cargado correctamente',
-              showConfirmButton: false,
-              timer: 2500,
-              timerProgressBar: true
+            toast: true,
+            position: "top-end",
+            icon: "success",
+            title: "Depósito cargado correctamente",
+            showConfirmButton: false,
+            timer: 2500,
+            timerProgressBar: true,
           });
 
           setTimeout(function () {
@@ -2040,15 +2058,14 @@ $(document).ready(function () {
 
         this.on("success", function () {
           Swal.fire({
-              toast: true,
-              position: 'top-end',
-              icon: 'success',
-              title: 'Comprobante subido correctamente',
-              showConfirmButton: false,
-              timer: 2500,
-              timerProgressBar: true
+            toast: true,
+            position: "top-end",
+            icon: "success",
+            title: "Comprobante subido correctamente",
+            showConfirmButton: false,
+            timer: 2500,
+            timerProgressBar: true,
           });
-          
 
           idCobranzaPendienteComprobante = 0;
         });
