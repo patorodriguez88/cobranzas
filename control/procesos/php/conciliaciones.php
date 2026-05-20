@@ -106,9 +106,7 @@ switch ($accion) {
             $idCobranza = (int)$aplicacion['idCobranza'];
             $idVenta = (int)$aplicacion['idVenta'];
 
-            $sqlEliminar = "
-                UPDATE CobranzasVentas
-                SET Eliminado = 1
+            $sqlEliminar = "UPDATE CobranzasVentas SET Eliminado = 1
                 WHERE id = '$idAplicacion'
                 LIMIT 1
             ";
@@ -125,18 +123,16 @@ switch ($accion) {
                         END
                     ),0) AS TotalPagado
                 FROM CobranzasVentas CV
-
                 LEFT JOIN (
                 SELECT 
-                    id_cobranza AS idCobranza,
-                    MAX(Importe) AS Importe
-                FROM Cobranza_conciliacion
-                WHERE IFNULL(Eliminado,0) = 0
+                        id_cobranza AS idCobranza,
+                        MAX(Importe) AS Importe
+                    FROM Cobranza_conciliacion
                 GROUP BY id_cobranza
-            ) CC ON CC.idCobranza = CV.idCobranza
+                ) CC ON CC.idCobranza = CV.idCobranza
                 WHERE CV.idVenta = '$idVenta'
-                AND IFNULL(CV.Eliminado,0) = 0
-            ";
+                AND IFNULL(CV.Eliminado,0) = 0";
+
             $resTotalPagado = $mysqli->query($sqlTotalPagado);
 
             if (!$resTotalPagado) {

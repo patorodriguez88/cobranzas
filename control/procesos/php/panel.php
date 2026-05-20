@@ -300,6 +300,7 @@ if (isset($_POST['Conciliar_quik_cancel'])) {
 
     $mysqli->query("UPDATE Cobranza SET Conciliado=0 WHERE id='$_POST[id_cobranza]'");
     $mysqli->query("DELETE FROM Cobranza_conciliacion WHERE id_cobranza='$_POST[id_cobranza]'");
+    $mysqli->query("UPDATE CobranzasVentas SET Eliminado = 1 WHERE idCobranza = '$_POST[id_cobranza]'");
 
     recalcularVentasCobranza($mysqli, $_POST['id_cobranza']);
 
