@@ -68,14 +68,6 @@ function obtenerTokenCaddy($credenciales)
 
     curl_close($curl);
 
-    file_put_contents(__DIR__ . "/debug_caddy.log",
-        "\n\nAUTH CADDY\n" .
-        "HTTP: " . $httpCode . "\n" .
-        "ERROR: " . $error . "\n" .
-        "PAYLOAD: " . $payload . "\n" .
-        "RESPONSE: " . $response . "\n",
-        FILE_APPEND
-    );
 
     if ($error) {
         throw new Exception("Error auth Caddy: " . $error);
@@ -104,42 +96,42 @@ function crearServicioCaddy($mysqli, $venta, $detalle, $idVenta, $nroOrdenVenta)
     $token = obtenerTokenCaddy($credenciales);
 
     $payload = [
-    "NombreCompleto" => $venta["RazonSocial"] ?? "",
-    "Direccion" => $venta["Direccion"] ?? "",
-    "Ciudad" => "Córdoba",
-    "CodigoPostal" => "5000",
-    "Dni" => "223334434",
-    "EnviarMail" => true,
-    "Mail" => "prodriguez@caddy.com.ar",
-    "Telefono" => $venta["Celular"] ?? "",
-    "Cantidad" => 1,
-    "Servicio" => 3,
-    "ValorDeclarado" => (string)($venta["Total"] ?? "0"),
-    "Cobranza" => "0",
-    "idProveedor" => "VENTA" . $idVenta,
-    "Observaciones" => "Orden generada desde Wepoint",
-    "WebHook" => "https://mi-sistema.com/webhook/caddy",
-    "Origen" => [
-        [
-            "idProveedor" => "",
-            "Nombre" => "",
-            "Direccion" => ""
+        "NombreCompleto" => $venta["RazonSocial"] ?? "",
+        "Direccion" => $venta["Direccion"] ?? "",
+        "Ciudad" => "Córdoba",
+        "CodigoPostal" => "5000",
+        "Dni" => "223334434",
+        "EnviarMail" => true,
+        "Mail" => "prodriguez@caddy.com.ar",
+        "Telefono" => $venta["Celular"] ?? "",
+        "Cantidad" => 1,
+        "Servicio" => 3,
+        "ValorDeclarado" => (string)($venta["Total"] ?? "0"),
+        "Cobranza" => "0",
+        "idProveedor" => "VENTA" . $idVenta,
+        "Observaciones" => "Orden generada desde Wepoint",
+        "WebHook" => "https://mi-sistema.com/webhook/caddy",
+        "Origen" => [
+            [
+                "idProveedor" => "",
+                "Nombre" => "",
+                "Direccion" => ""
+            ]
+        ],
+        "Box" => [
+            [
+                "Length" => "10",
+                "Width" => "10",
+                "Height" => "10",
+                "Weight" => "10"
+            ]
         ]
-    ],
-    "Box" => [
-        [
-            "Length" => "10",
-            "Width" => "10",
-            "Height" => "10",
-            "Weight" => "10"
-        ]
-    ]
-];
+    ];
 
     $data = enviarServicioCaddy($credenciales["base_url"], $token, $payload);
 
     if (isset($data["token_expired"]) && $data["token_expired"] == 1) {
-        $token = obtenerTokenCaddy($credenciales);        
+        $token = obtenerTokenCaddy($credenciales);
         $data = enviarServicioCaddy($credenciales["base_url"], $token, $payload);
     }
 
@@ -200,42 +192,41 @@ function enviarServicioCaddy($baseUrl, $token, $payload)
 {
     $curl = curl_init();
 
-$jsonPayload = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    $jsonPayload = json_encode(
+        $payload,
+        JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+    );
 
-curl_setopt_array($curl, [
-    CURLOPT_URL => $baseUrl . "/servicios",
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_ENCODING => '',
-    CURLOPT_MAXREDIRS => 10,
-    CURLOPT_TIMEOUT => 30,
-    CURLOPT_FOLLOWLOCATION => true,
-    CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-    CURLOPT_CUSTOMREQUEST => "POST",
-    CURLOPT_POSTFIELDS => $jsonPayload,
-    CURLOPT_HTTPHEADER => [
-        "X-Api-Token: Bearer " . $token,
-        "Content-Type: application/json",
-        "Content-Length: " . strlen($jsonPayload)
-    ],
-]);
+    curl_setopt_array($curl, [
+        CURLOPT_URL => $baseUrl . "/servicios",
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_ENCODING => '',
+        CURLOPT_MAXREDIRS => 10,
+        CURLOPT_TIMEOUT => 30,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+        CURLOPT_CUSTOMREQUEST => "POST",
+        CURLOPT_POSTFIELDS => $jsonPayload,
+        CURLOPT_SSL_VERIFYPEER => false,
+        CURLOPT_SSL_VERIFYHOST => false,
+
+        CURLOPT_HTTPHEADER => [
+            "X-Api-Token: Bearer " . trim($token),
+            "Content-Type: application/json",
+            "Accept: application/json",
+            "User-Agent: PostmanRuntime/7.36.0",
+            "Expect:",
+            "Content-Length: " . strlen($jsonPayload)
+        ],
+    ]);
 
     $response = curl_exec($curl);
+
     $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+
     $error = curl_error($curl);
 
     curl_close($curl);
-
-    file_put_contents(__DIR__ . "/debug_caddy.log",
-        "\n\nSERVICIOS CADDY\n" .
-        "FECHA: " . date("Y-m-d H:i:s") . "\n" .
-        "URL: " . $baseUrl . "/servicios\n" .
-        "HTTP: " . $httpCode . "\n" .
-        "ERROR: " . $error . "\n" .
-        "TOKEN: " . $token . "\n" .
-        "PAYLOAD: " . $jsonPayload . "\n" .
-        "RESPONSE: " . $response . "\n",
-        FILE_APPEND
-    );
 
     if ($error) {
         throw new Exception("Error cURL Caddy: " . $error);
@@ -243,22 +234,25 @@ curl_setopt_array($curl, [
 
     $data = json_decode($response, true);
 
-if ($httpCode == 401 || $httpCode == 403) {
-    return [
-        "token_expired" => 1,
-        "response" => $response
-    ];
-}
+    if ($httpCode == 401 || $httpCode == 403) {
 
-if ($httpCode < 200 || $httpCode >= 300) {
-    return [
-        "status" => "error",
-        "http_code" => $httpCode,
-        "response" => $response
-    ];
-}
+        return [
+            "token_expired" => 1,
+            "response" => $response
+        ];
+    }
 
-return $data;
+    if ($httpCode < 200 || $httpCode >= 300) {
+
+        return [
+            "status" => "error",
+            "http_code" => $httpCode,
+            "response" => $response,
+            "payload" => $payload
+        ];
+    }
+
+    return $data;
 }
 
 function crearClienteWepointSiNoExiste($mysqli, $cliente, $token)
