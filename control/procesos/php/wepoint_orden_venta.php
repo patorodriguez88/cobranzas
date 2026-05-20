@@ -139,8 +139,7 @@ function crearServicioCaddy($mysqli, $venta, $detalle, $idVenta, $nroOrdenVenta)
     $data = enviarServicioCaddy($credenciales["base_url"], $token, $payload);
 
     if (isset($data["token_expired"]) && $data["token_expired"] == 1) {
-        $token = obtenerTokenCaddy($credenciales);
-        $payload["token"] = $token;
+        $token = obtenerTokenCaddy($credenciales);        
         $data = enviarServicioCaddy($credenciales["base_url"], $token, $payload);
     }
 
@@ -201,17 +200,21 @@ function enviarServicioCaddy($baseUrl, $token, $payload)
 {
     $curl = curl_init();
 
-    curl_setopt_array($curl, [
-        CURLOPT_URL => $baseUrl . "/servicios",
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT => 30,
-        CURLOPT_CUSTOMREQUEST => "POST",
-        CURLOPT_POSTFIELDS => json_encode($payload, JSON_UNESCAPED_UNICODE),
-        CURLOPT_HTTPHEADER => [
-            "X-Api-Token: Bearer " . $token,
-            "Content-Type: application/json"
-        ],
-    ]);
+   curl_setopt_array($curl, [
+    CURLOPT_URL => $baseUrl . "/servicios",
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_ENCODING => '',
+    CURLOPT_MAXREDIRS => 10,
+    CURLOPT_TIMEOUT => 30,
+    CURLOPT_FOLLOWLOCATION => true,
+    CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+    CURLOPT_CUSTOMREQUEST => "POST",
+    CURLOPT_POSTFIELDS => json_encode($payload, JSON_UNESCAPED_UNICODE),
+    CURLOPT_HTTPHEADER => [
+        "X-Api-Token: Bearer " . $token,
+        "Content-Type: application/json"
+    ],
+]);
 
     $response = curl_exec($curl);
     $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
