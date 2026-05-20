@@ -362,6 +362,14 @@ function obtenerCredencialesWepoint($distribuidora = 'Dinter')
 
     switch ($distribuidora) {
 
+        case 'RAK':
+
+            return [
+                "empresa" => "Rak",
+                "token" => '',
+                "id_cliente_origen" => 219 //999
+            ];
+
         case 'MISAS':
 
             return [
