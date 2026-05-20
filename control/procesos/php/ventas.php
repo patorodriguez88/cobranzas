@@ -1686,138 +1686,254 @@ switch ($accion) {
 
         break;
 
-    // case 'actualizar_cantidad_producto_venta':
+    case 'actualizar_cantidad_producto_venta':
 
-    //     $idVenta = isset($_POST['idVenta']) ? (int)$_POST['idVenta'] : 0;
-    //     $ProductoNombre = isset($_POST['ProductoNombre']) ? trim($_POST['ProductoNombre']) : '';
-    //     $CantidadNueva = isset($_POST['Cantidad']) ? (float)$_POST['Cantidad'] : 0;
+        $idVenta = isset($_POST['idVenta']) ? (int)$_POST['idVenta'] : 0;
+        $ProductoNombre = isset($_POST['ProductoNombre']) ? trim($_POST['ProductoNombre']) : '';
+        $CantidadNueva = isset($_POST['Cantidad']) ? (float)$_POST['Cantidad'] : 0;
 
-    //     if ($idVenta <= 0 || $ProductoNombre == '') {
-    //         echo json_encode([
-    //             "success" => 0,
-    //             "error" => "Datos incompletos."
-    //         ]);
-    //         exit;
-    //     }
+        if ($idVenta <= 0 || $ProductoNombre == '' || $CantidadNueva < 0) {
+            echo json_encode([
+                "success" => 0,
+                "error" => "Datos incompletos."
+            ]);
+            exit;
+        }
 
-    //     $ProductoNombreSQL = $mysqli->real_escape_string($ProductoNombre);
+        $ProductoNombreSQL = $mysqli->real_escape_string($ProductoNombre);
 
-    //     $sqlVenta = "
-    //     SELECT EstadoPago
-    //     FROM Ventas
-    //     WHERE id = '$idVenta'
-    //       AND Eliminado = 0
-    //     LIMIT 1
-    //     ";
+        $mysqli->begin_transaction();
 
-    //     $resVenta = $mysqli->query($sqlVenta);
+        try {
 
-    //     if (!$resVenta || $resVenta->num_rows == 0) {
-    //         echo json_encode([
-    //             "success" => 0,
-    //             "error" => "Venta inexistente."
-    //         ]);
-    //         exit;
-    //     }
+            $sqlVenta = "
+            SELECT EstadoPago
+            FROM Ventas
+            WHERE id = '$idVenta'
+              AND Eliminado = 0
+            LIMIT 1
+            FOR UPDATE
+        ";
 
-    //     $venta = $resVenta->fetch_assoc();
+            $resVenta = $mysqli->query($sqlVenta);
 
-    //     if ($venta['EstadoPago'] !== 'PENDIENTE') {
-    //         echo json_encode([
-    //             "success" => 0,
-    //             "error" => "Solo se pueden editar cantidades en ventas pendientes."
-    //         ]);
-    //         exit;
-    //     }
+            if (!$resVenta || $resVenta->num_rows == 0) {
+                throw new Exception("Venta inexistente.");
+            }
 
-    //     $sqlDetalle = "
-    //     SELECT id, PrecioUnitario
-    //     FROM VentasDetalle
-    //     WHERE idVenta = '$idVenta'
-    //       AND ProductoNombre = '$ProductoNombreSQL'
-    //       AND Eliminado = 0
-    //     LIMIT 1
-    //     ";
+            $venta = $resVenta->fetch_assoc();
 
-    //     $resDetalle = $mysqli->query($sqlDetalle);
+            if ($venta['EstadoPago'] !== 'PENDIENTE') {
+                throw new Exception("Solo se pueden editar cantidades en ventas pendientes.");
+            }
 
-    //     if (!$resDetalle || $resDetalle->num_rows == 0) {
-    //         echo json_encode([
-    //             "success" => 0,
-    //             "error" => "Producto no encontrado en la venta."
-    //         ]);
-    //         exit;
-    //     }
+            $sqlDetalle = "
+            SELECT id, idProducto, PrecioUnitario
+            FROM VentasDetalle
+            WHERE idVenta = '$idVenta'
+              AND ProductoNombre = '$ProductoNombreSQL'
+              AND Eliminado = 0
+            LIMIT 1
+            FOR UPDATE
+        ";
 
-    //     $detalle = $resDetalle->fetch_assoc();
+            $resDetalle = $mysqli->query($sqlDetalle);
 
-    //     $idDetalle = (int)$detalle['id'];
-    //     $precioUnitario = (float)$detalle['PrecioUnitario'];
-    //     $subtotal = $CantidadNueva * $precioUnitario;
+            if (!$resDetalle || $resDetalle->num_rows == 0) {
+                throw new Exception("Producto no encontrado en la venta.");
+            }
 
-    //     $mysqli->begin_transaction();
+            $detalle = $resDetalle->fetch_assoc();
 
-    //     try {
+            $idDetalle = (int)$detalle['id'];
+            $idProducto = (int)$detalle['idProducto'];
+            $precioUnitario = (float)$detalle['PrecioUnitario'];
+            $subtotal = $CantidadNueva * $precioUnitario;
 
-    //         $sqlUpdateDetalle = "
-    //         UPDATE VentasDetalle
-    //         SET 
-    //             Cantidad = '$CantidadNueva',
-    //             Subtotal = '$subtotal'
-    //         WHERE id = '$idDetalle'
-    //         LIMIT 1
-    //     ";
+            // Libero el consumo FIFO anterior de esta línea
+            $sqlLiberarConsumo = "
+            UPDATE VentasConsumoStock
+            SET Eliminado = 1
+            WHERE idVenta = '$idVenta'
+              AND idVentaDetalle = '$idDetalle'
+        ";
 
-    //         if (!$mysqli->query($sqlUpdateDetalle)) {
-    //             throw new Exception($mysqli->error);
-    //         }
+            if (!$mysqli->query($sqlLiberarConsumo)) {
+                throw new Exception($mysqli->error);
+            }
 
-    //         $sqlTotal = "
-    //         SELECT IFNULL(SUM(Subtotal),0) AS Total
-    //         FROM VentasDetalle
-    //         WHERE idVenta = '$idVenta'
-    //           AND Eliminado = 0
-    //     ";
+            // Actualizo la línea de detalle
+            $sqlUpdateDetalle = "
+            UPDATE VentasDetalle
+            SET 
+                Cantidad = '$CantidadNueva',
+                Subtotal = '$subtotal'
+            WHERE id = '$idDetalle'
+            LIMIT 1
+        ";
 
-    //         $resTotal = $mysqli->query($sqlTotal);
-    //         $rowTotal = $resTotal->fetch_assoc();
+            if (!$mysqli->query($sqlUpdateDetalle)) {
+                throw new Exception($mysqli->error);
+            }
 
-    //         $totalVenta = (float)$rowTotal['Total'];
+            // Si la cantidad nueva es mayor a 0, vuelvo a consumir FIFO
+            if ($CantidadNueva > 0) {
 
-    //         $sqlUpdateVenta = "
-    //         UPDATE Ventas
-    //         SET 
-    //             Total = '$totalVenta',
-    //             Saldo = '$totalVenta' - IFNULL(TotalPagado,0),
-    //             EstadoPago = CASE
-    //                 WHEN IFNULL(TotalPagado,0) <= 0 THEN 'PENDIENTE'
-    //                 WHEN IFNULL(TotalPagado,0) >= '$totalVenta' THEN 'PAGADA'
-    //                 ELSE 'PARCIAL'
-    //             END
-    //         WHERE id = '$idVenta'
-    //         LIMIT 1
-    //     ";
+                $cantidadPendiente = $CantidadNueva;
 
-    //         if (!$mysqli->query($sqlUpdateVenta)) {
-    //             throw new Exception($mysqli->error);
-    //         }
+                $sqlStockOrdenes = "
+                SELECT 
+                    OCD.id AS idOrdenCompraDetalle,
+                    OCD.idOrdenCompra,
+                    OCD.idProducto,
+                    OCD.Cantidad AS CantidadIngresada,
+                    (
+                        OCD.Cantidad 
+                        - IFNULL((
+                            SELECT SUM(VCS.Cantidad)
+                            FROM VentasConsumoStock VCS
+                            INNER JOIN Ventas VCS_V 
+                                ON VCS_V.id = VCS.idVenta
+                            WHERE VCS.idOrdenCompraDetalle = OCD.id
+                              AND VCS.Eliminado = 0
+                              AND VCS_V.Eliminado = 0
+                        ),0)
+                    ) AS Disponible
+                FROM OrdenesCompraDetalle OCD
+                INNER JOIN OrdenesCompra OC 
+                    ON OC.id = OCD.idOrdenCompra
+                WHERE OCD.idProducto = '$idProducto'
+                  AND IFNULL(OCD.Eliminado,0) = 0
+                  AND IFNULL(OC.Eliminado,0) = 0
+                HAVING Disponible > 0
+                ORDER BY OC.Fecha ASC, OCD.id ASC
+            ";
 
-    //         $mysqli->commit();
+                $resStockOrdenes = $mysqli->query($sqlStockOrdenes);
 
-    //         echo json_encode([
-    //             "success" => 1
-    //         ]);
-    //     } catch (Exception $e) {
+                if (!$resStockOrdenes) {
+                    throw new Exception($mysqli->error);
+                }
 
-    //         $mysqli->rollback();
+                while ($cantidadPendiente > 0 && $stockRow = $resStockOrdenes->fetch_assoc()) {
 
-    //         echo json_encode([
-    //             "success" => 0,
-    //             "error" => $e->getMessage()
-    //         ]);
-    //     }
+                    $disponible = (float)$stockRow['Disponible'];
 
-    //     break;
+                    if ($disponible <= 0) {
+                        continue;
+                    }
+
+                    $cantidadConsumir = min($cantidadPendiente, $disponible);
+
+                    $idOrdenCompra = (int)$stockRow['idOrdenCompra'];
+                    $idOrdenCompraDetalle = (int)$stockRow['idOrdenCompraDetalle'];
+
+                    $sqlConsumo = "
+                    INSERT INTO VentasConsumoStock
+                    (
+                        idVenta,
+                        idVentaDetalle,
+                        idOrdenCompra,
+                        idOrdenCompraDetalle,
+                        idProducto,
+                        Cantidad,
+                        Eliminado
+                    )
+                    VALUES
+                    (
+                        '$idVenta',
+                        '$idDetalle',
+                        '$idOrdenCompra',
+                        '$idOrdenCompraDetalle',
+                        '$idProducto',
+                        '$cantidadConsumir',
+                        0
+                    )
+                ";
+
+                    if (!$mysqli->query($sqlConsumo)) {
+                        throw new Exception($mysqli->error);
+                    }
+
+                    $cantidadPendiente -= $cantidadConsumir;
+                }
+
+                if ($cantidadPendiente > 0) {
+                    throw new Exception("Stock insuficiente por orden de ingreso para el producto: " . $ProductoNombre);
+                }
+            }
+
+            // Recalculo total de la venta
+            $sqlTotal = "
+            SELECT IFNULL(SUM(Subtotal),0) AS Total
+            FROM VentasDetalle
+            WHERE idVenta = '$idVenta'
+              AND Eliminado = 0
+        ";
+
+            $resTotal = $mysqli->query($sqlTotal);
+
+            if (!$resTotal) {
+                throw new Exception($mysqli->error);
+            }
+
+            $rowTotal = $resTotal->fetch_assoc();
+            $totalVenta = (float)$rowTotal['Total'];
+
+            $sqlUpdateVenta = "
+            UPDATE Ventas
+            SET 
+                Total = '$totalVenta',
+                Saldo = (
+                    '$totalVenta'
+                    - IFNULL(TotalPagado,0)
+                    - IFNULL((
+                        SELECT SUM(AP.importe)
+                        FROM Ventas_Ajustes_Pago AP
+                        WHERE AP.idVenta = Ventas.id
+                          AND AP.eliminado = 0
+                    ),0)
+                ),
+                EstadoPago = CASE
+                    WHEN (
+                        '$totalVenta'
+                        - IFNULL(TotalPagado,0)
+                        - IFNULL((
+                            SELECT SUM(AP.importe)
+                            FROM Ventas_Ajustes_Pago AP
+                            WHERE AP.idVenta = Ventas.id
+                              AND AP.eliminado = 0
+                        ),0)
+                    ) <= 0 THEN 'PAGADA'
+                    WHEN IFNULL(TotalPagado,0) > 0 THEN 'PARCIAL'
+                    ELSE 'PENDIENTE'
+                END
+            WHERE id = '$idVenta'
+            LIMIT 1
+        ";
+
+            if (!$mysqli->query($sqlUpdateVenta)) {
+                throw new Exception($mysqli->error);
+            }
+
+            $mysqli->commit();
+
+            echo json_encode([
+                "success" => 1
+            ]);
+            exit;
+        } catch (Exception $e) {
+
+            $mysqli->rollback();
+
+            echo json_encode([
+                "success" => 0,
+                "error" => $e->getMessage()
+            ]);
+            exit;
+        }
+
+        break;
 
     case 'resumen_productos_ventas':
 
