@@ -22,7 +22,7 @@ function cargarProductos() {
       error: function (xhr) {
         console.log("ERROR listar:", xhr.responseText);
       },
-      dataSrc: "",
+      dataSrc: "data",
     },
     columns: [
       { data: "Codigo" },

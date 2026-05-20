@@ -14,35 +14,58 @@ switch ($accion) {
 
     case 'listar':
 
-    $sql = "SELECT 
-            P.*,
-
-            (
-                IFNULL((
-                    SELECT SUM(OCD.Cantidad)
-                    FROM OrdenesCompraDetalle OCD
-                    INNER JOIN OrdenesCompra OC 
-                        ON OC.id = OCD.idOrdenCompra
-                    WHERE OCD.idProducto = P.id
-                      AND IFNULL(OCD.Eliminado,0) = 0
-                      AND IFNULL(OC.Eliminado,0) = 0
-                ),0)
-                -
-                IFNULL((
-                    SELECT SUM(VCS.Cantidad)
-                    FROM VentasConsumoStock VCS
-                    INNER JOIN Ventas V 
-                        ON V.id = VCS.idVenta
-                    WHERE VCS.idProducto = P.id
-                      AND IFNULL(VCS.Eliminado,0) = 0
-                      AND IFNULL(V.Eliminado,0) = 0
-                ),0)
-            ) AS StockReal
-
-        FROM Productos P
-        WHERE P.Eliminado = 0
-        ORDER BY P.id DESC
+    $sql = "
+        SELECT 
+            id,
+            Codigo,
+            Nombre,
+            Categoria,
+            PrecioCosto,
+            PrecioVenta,
+            Stock,
+            StockMinimo,
+            Descripcion,
+            Activo,
+            MostrarEnVentaRapida
+        FROM Productos
+        WHERE IFNULL(Eliminado,0) = 0
+        ORDER BY id DESC
     ";
+
+    $res = $mysqli->query($sql);
+
+    if (!$res) {
+        echo json_encode([
+            "success" => 0,
+            "error" => $mysqli->error
+        ]);
+        exit;
+    }
+
+    $data = [];
+
+    while ($row = $res->fetch_assoc()) {
+        $data[] = [
+            "id" => $row["id"],
+            "Codigo" => $row["Codigo"],
+            "Nombre" => $row["Nombre"],
+            "Categoria" => $row["Categoria"],
+            "PrecioCosto" => $row["PrecioCosto"],
+            "PrecioVenta" => $row["PrecioVenta"],
+            "Stock" => $row["Stock"],
+            "StockMinimo" => $row["StockMinimo"],
+            "Descripcion" => $row["Descripcion"],
+            "Activo" => $row["Activo"],
+            "MostrarEnVentaRapida" => $row["MostrarEnVentaRapida"]
+        ];
+    }
+
+    echo json_encode([
+        "success" => 1,
+        "data" => $data
+    ]);
+
+    break;
 
     case 'guardar':
 
