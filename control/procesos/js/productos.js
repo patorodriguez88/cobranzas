@@ -122,14 +122,31 @@ function editarProducto(id) {
     data: { accion: "obtener", id: id },
     dataType: "json",
     success: function (r) {
+
+      console.log(r);
+
       $("#producto_id").val(r.id);
       $("#producto_codigo").val(r.Codigo);
       $("#producto_nombre").val(r.Nombre);
       $("#producto_categoria").val(r.Categoria);
       $("#producto_costo").val(r.PrecioCosto);
       $("#producto_venta").val(r.PrecioVenta);
-      $("#producto_stock").val(r.StockReal || 0);
+      $("#producto_stock").val(r.Stock || 0);
       $("#producto_descripcion").val(r.Descripcion);
+
+      $("#producto_venta_rapida").prop(
+        "checked",
+        parseInt(r.MostrarEnVentaRapida || 0) === 1
+      );
+
+      $("#producto_activo").prop(
+        "checked",
+        parseInt(r.Activo || 0) === 1
+      );
+
+      $("#modal_producto_titulo").text("Editar Producto");
+
+      $("#modal_producto").modal("show");
     },
     error: function (xhr) {
       console.log("ERROR obtener:", xhr.responseText);
