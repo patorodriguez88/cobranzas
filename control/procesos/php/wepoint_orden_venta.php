@@ -45,7 +45,7 @@ function obtenerTokenCaddy($credenciales)
         CURLOPT_TIMEOUT => 30,
         CURLOPT_CUSTOMREQUEST => "POST",
         CURLOPT_POSTFIELDS => json_encode([
-            "user" => $credenciales["usuario"],
+            "usuario" => $credenciales["usuario"],
             "password" => $credenciales["password"]
         ], JSON_UNESCAPED_UNICODE),
         CURLOPT_HTTPHEADER => [
