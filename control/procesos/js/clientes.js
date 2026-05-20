@@ -237,7 +237,7 @@ $(document).ready(function () {
         data: "Distribuidora",
         render: function (data, type, row) {
           let distribuidora = data || "Dinter";
-          let clase = distribuidora === "Misas" ? "bg-info" : "bg-primary";
+          let clase = distribuidora === "Misas" ? "bg-info" : distribuidora === "RAK" ? "bg-danger" : "bg-primary";
 
           return `
       <span class="badge ${clase}"
