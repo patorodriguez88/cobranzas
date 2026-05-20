@@ -23,9 +23,9 @@ function vuelve(id) {
 }
 function eliminar(id) {
   Swal.fire({
-    icon: "warning",
     title: "¿Eliminar cobranza?",
-    text: "Si tiene ventas vinculadas, no se podrá eliminar.",
+    text: "Solo se puede eliminar si no tiene ventas vinculadas.",
+    icon: "warning",
     showCancelButton: true,
     confirmButtonText: "Sí, eliminar",
     cancelButtonText: "Cancelar",
@@ -43,16 +43,11 @@ function eliminar(id) {
       dataType: "json",
       success: function (r) {
         if (r.success == 1) {
-          Swal.fire({
-            icon: "success",
-            title: "Eliminado",
-            timer: 1200,
-            showConfirmButton: false,
-          });
+          Swal.fire("Eliminado", "Registro eliminado correctamente.", "success");
 
           $("#cobranzas_tabla").DataTable().ajax.reload(null, false);
         } else {
-          Swal.fire("Error", r.error || "No se pudo eliminar.", "error");
+          Swal.fire("Atención", r.error || "No se pudo eliminar.", "warning");
         }
       },
       error: function (xhr) {

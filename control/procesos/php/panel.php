@@ -94,39 +94,185 @@ if (isset($_POST['Conciliar'])) {
 
 if (isset($_POST['Vuelve'])) {
 
-    $sql = "UPDATE `Cobranza` SET Conciliado=0 WHERE id='$_POST[id_cobranza]'";
+    $idCobranza = (int)$_POST['id_cobranza'];
 
-    if ($mysqli->query($sql)) {
+    $mysqli->begin_transaction();
 
-        $mysqli->query("DELETE FROM `Cobranza_conciliacion` WHERE id_cobranza='$_POST[id_cobranza]'");
+    try {
 
-        recalcularVentasCobranza($mysqli, $_POST['id_cobranza']);
+        $ventasAfectadas = [];
 
-        echo json_encode(array('success' => 1, 'bloque' => 'Vuelve'));
-    } else {
+        $resVentas = $mysqli->query("
+            SELECT DISTINCT idVenta
+            FROM CobranzasVentas
+            WHERE idCobranza = '$idCobranza'
+              AND IFNULL(Eliminado,0) = 0
+        ");
 
-        echo json_encode(array('success' => 0));
+        if (!$resVentas) {
+            throw new Exception($mysqli->error);
+        }
+
+        while ($v = $resVentas->fetch_assoc()) {
+            $ventasAfectadas[] = (int)$v['idVenta'];
+        }
+
+        if (!$mysqli->query("UPDATE Cobranza SET Conciliado = 0 WHERE id = '$idCobranza'")) {
+            throw new Exception($mysqli->error);
+        }
+
+        if (!$mysqli->query("DELETE FROM Cobranza_conciliacion WHERE id_cobranza = '$idCobranza'")) {
+            throw new Exception($mysqli->error);
+        }
+
+        if (!$mysqli->query("UPDATE CobranzasVentas SET Eliminado = 1 WHERE idCobranza = '$idCobranza'")) {
+            throw new Exception($mysqli->error);
+        }
+
+        foreach ($ventasAfectadas as $idVenta) {
+            recalcularVentaIndividual($mysqli, $idVenta);
+        }
+
+        $mysqli->commit();
+
+        echo json_encode([
+            'success' => 1,
+            'bloque' => 'Vuelve'
+        ]);
+    } catch (Exception $e) {
+
+        $mysqli->rollback();
+
+        echo json_encode([
+            'success' => 0,
+            'error' => $e->getMessage()
+        ]);
     }
+
+    exit;
 }
 
 if (isset($_POST['Rechazar'])) {
 
-    $sql = "INSERT INTO `Cobranza_conciliacion`(`id_cobranza`, `NombreCliente`, `NumeroCliente`, `Fecha`, `Hora`, `Banco`, `Operacion`, `Importe`, `Usuario`, `Observaciones`,`Estado`) VALUES 
-    ('{$_POST['id_cobranza']}','{$_POST['Nombre']}','{$_POST['Numero']}','{$_POST['Fecha']}','{$_POST['Hora']}','{$_POST['Banco']}','{$_POST['Operacion']}','{$_POST['Importe']}','{$_SESSION['user_control']}','{$_POST['Observaciones']}','Rechazado')";
+    $idCobranza = (int)$_POST['id_cobranza'];
 
-    if ($mysqli->query($sql)) {
+    $mysqli->begin_transaction();
 
-        $mysqli->query("UPDATE Cobranza SET Conciliado=1 WHERE id='$_POST[id_cobranza]'");
+    try {
 
-        recalcularVentasCobranza($mysqli, $_POST['id_cobranza']);
+        // =========================
+        // GUARDO VENTAS AFECTADAS
+        // =========================
 
-        echo json_encode(array('success' => 1, 'bloque' => 'Rechazar'));
-    } else {
+        $ventasAfectadas = [];
 
-        echo json_encode(array('success' => 0));
+        $resVentas = $mysqli->query("
+            SELECT DISTINCT idVenta
+            FROM CobranzasVentas
+            WHERE idCobranza = '$idCobranza'
+              AND IFNULL(Eliminado,0) = 0
+        ");
+
+        if (!$resVentas) {
+            throw new Exception($mysqli->error);
+        }
+
+        while ($v = $resVentas->fetch_assoc()) {
+            $ventasAfectadas[] = (int)$v['idVenta'];
+        }
+
+        // =========================
+        // INSERTO RECHAZO
+        // =========================
+
+        $sql = "
+            INSERT INTO Cobranza_conciliacion
+            (
+                id_cobranza,
+                NombreCliente,
+                NumeroCliente,
+                Fecha,
+                Hora,
+                Banco,
+                Operacion,
+                Importe,
+                Usuario,
+                Observaciones,
+                Estado
+            ) VALUES (
+                '{$_POST['id_cobranza']}',
+                '{$_POST['Nombre']}',
+                '{$_POST['Numero']}',
+                '{$_POST['Fecha']}',
+                '{$_POST['Hora']}',
+                '{$_POST['Banco']}',
+                '{$_POST['Operacion']}',
+                '{$_POST['Importe']}',
+                '{$_SESSION['user_control']}',
+                '{$_POST['Observaciones']}',
+                'Rechazado'
+            )
+        ";
+
+        if (!$mysqli->query($sql)) {
+            throw new Exception($mysqli->error);
+        }
+
+        // =========================
+        // MARCO COBRANZA CONCILIADA
+        // =========================
+
+        if (
+            !$mysqli->query("
+                UPDATE Cobranza
+                SET Conciliado = 1
+                WHERE id = '$idCobranza'
+            ")
+        ) {
+            throw new Exception($mysqli->error);
+        }
+
+        // =========================
+        // DESVINCULO VENTAS
+        // =========================
+
+        if (
+            !$mysqli->query("
+                UPDATE CobranzasVentas
+                SET Eliminado = 1
+                WHERE idCobranza = '$idCobranza'
+            ")
+        ) {
+            throw new Exception($mysqli->error);
+        }
+
+        // =========================
+        // RECALCULO VENTAS
+        // =========================
+
+        foreach ($ventasAfectadas as $idVenta) {
+
+            recalcularVentaIndividual($mysqli, $idVenta);
+        }
+
+        $mysqli->commit();
+
+        echo json_encode(array(
+            'success' => 1,
+            'bloque' => 'Rechazar'
+        ));
+    } catch (Exception $e) {
+
+        $mysqli->rollback();
+
+        echo json_encode(array(
+            'success' => 0,
+            'error' => $e->getMessage()
+        ));
     }
-}
 
+    exit;
+}
 
 
 if (isset($_POST['Conciliar_quik'])) {
@@ -586,4 +732,52 @@ function recalcularVentasCobranza($mysqli, $idCobranza)
 
         $mysqli->query($sqlUpdate);
     }
+}
+// FUNCION REACLCULAR VENTA INDIVIDUAL
+function recalcularVentaIndividual($mysqli, $idVenta)
+{
+    $idVenta = (int)$idVenta;
+
+    $sqlTotalPagado = "
+        SELECT IFNULL(SUM(CV.ImporteAplicado),0) AS TotalPagado
+        FROM CobranzasVentas CV
+        WHERE CV.idVenta = '$idVenta'
+          AND IFNULL(CV.Eliminado,0) = 0
+    ";
+
+    $resPagado = $mysqli->query($sqlTotalPagado);
+    $rowPagado = $resPagado->fetch_assoc();
+
+    $totalPagado = (float)$rowPagado['TotalPagado'];
+
+    $resVenta = $mysqli->query("
+        SELECT Total
+        FROM Ventas
+        WHERE id = '$idVenta'
+        LIMIT 1
+    ");
+
+    $venta = $resVenta->fetch_assoc();
+
+    $total = (float)$venta['Total'];
+    $saldo = $total - $totalPagado;
+
+    if ($saldo <= 0.01) {
+        $saldo = 0;
+        $estado = 'PAGADA';
+    } elseif ($totalPagado > 0) {
+        $estado = 'PARCIAL';
+    } else {
+        $estado = 'PENDIENTE';
+    }
+
+    $mysqli->query("
+        UPDATE Ventas
+        SET 
+            TotalPagado = '$totalPagado',
+            Saldo = '$saldo',
+            EstadoPago = '$estado'
+        WHERE id = '$idVenta'
+        LIMIT 1
+    ");
 }
