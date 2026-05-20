@@ -104,7 +104,6 @@ function crearServicioCaddy($mysqli, $venta, $detalle, $idVenta, $nroOrdenVenta)
     $token = obtenerTokenCaddy($credenciales);
 
     $payload = [
-        "token" => $token,
         "NombreCompleto" => $venta["RazonSocial"] ?? "",
         "Direccion" => $venta["Direccion"] ?? "",
         "Ciudad" => $venta["Ciudad"] ?? "Cordoba",
@@ -211,7 +210,7 @@ function enviarServicioCaddy($baseUrl, $token, $payload)
         CURLOPT_HTTPHEADER => [
             "Accept: application/json",
             "Content-Type: application/json",
-            "X-Api-Token: " . $token
+            "X-Api-Token: Bearer " . $token
         ],
     ]);
 
