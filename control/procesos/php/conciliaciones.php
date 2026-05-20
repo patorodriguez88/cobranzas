@@ -50,12 +50,12 @@ switch ($accion) {
 
             LEFT JOIN (
             SELECT 
-                id_cobranza,
+                id_cobranza AS idCobranza,
                 MAX(Importe) AS Importe
             FROM Cobranza_conciliacion
             WHERE IFNULL(Eliminado,0)=0
             GROUP BY id_cobranza
-        ) CC ON CC.id_cobranza = CV.idCobranza
+        ) CC ON CC.idCobranza = CV.idCobranza
 
             WHERE CV.idCobranza = '$idCobranza'
             AND IFNULL(CV.Eliminado,0) = 0
@@ -103,8 +103,7 @@ switch ($accion) {
 
         try {
 
-            $sqlAplicacion = "
-                SELECT 
+            $sqlAplicacion = "SELECT 
                     id,
                     idCobranza,
                     idVenta,
@@ -153,7 +152,7 @@ switch ($accion) {
 
                 LEFT JOIN (
                 SELECT 
-                    id_cobranza,
+                    id_cobranza AS idCobranza,
                     MAX(Importe) AS Importe
                 FROM Cobranza_conciliacion
                 WHERE IFNULL(Eliminado,0) = 0
