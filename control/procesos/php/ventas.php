@@ -506,13 +506,26 @@ switch ($accion) {
         $mysqli->begin_transaction();
 
         try {
+            $sqlCliente = "SELECT RazonSocial FROM Clientes WHERE id = '$idCliente' LIMIT 1";
+            $resCliente = $mysqli->query($sqlCliente);
+
+            $clienteNombre = '';
+
+            if ($resCliente && $resCliente->num_rows > 0) {
+                $rowCliente = $resCliente->fetch_assoc();
+                $clienteNombre = $mysqli->real_escape_string($rowCliente['RazonSocial']);
+            }
 
             if ($id == 0) {
                 $usuario = isset($_SESSION['user_name']) && $_SESSION['user_name'] != ''
                     ? $mysqli->real_escape_string($_SESSION['user_name'])
                     : 'Sistema';
-                $sqlVenta = "INSERT INTO Ventas (Fecha, idCliente, Observaciones, Total, TotalPagado, Saldo, EstadoPago, Usuario, Eliminado)
-                VALUES (NOW(), '$idCliente', '$Observaciones', '$total', 0, '$total', 'PENDIENTE', '$usuario', 0)";
+
+
+
+                $sqlVenta = "INSERT INTO Ventas (Fecha, idCliente,Cliente, Observaciones, Total, TotalPagado, Saldo, EstadoPago, Usuario, Eliminado)
+                VALUES (NOW(), '$idCliente','$clienteNombre','$Observaciones', '$total', 0, '$total', 'PENDIENTE', '$usuario', 0)";
+
 
                 if (!$mysqli->query($sqlVenta)) {
                     throw new Exception($mysqli->error);
@@ -531,8 +544,10 @@ switch ($accion) {
 
                 $sqlVenta = "UPDATE Ventas SET
                         idCliente = '$idCliente',
+                        Cliente = '$clienteNombre',
                         Observaciones = '$Observaciones',
-                        Total = '$total'
+                        Total = '$total',
+                        Saldo = ('$total' - IFNULL(TotalPagado,0))
                     WHERE id = '$id'
                     LIMIT 1
                 ";
@@ -867,7 +882,7 @@ switch ($accion) {
 
     case 'productos_venta_rapida':
 
-    $sql = "
+        $sql = "
         SELECT 
             P.id,
             P.Nombre,
@@ -902,24 +917,24 @@ switch ($accion) {
         ORDER BY P.Nombre ASC
     ";
 
-    $res = $mysqli->query($sql);
+        $res = $mysqli->query($sql);
 
-    if (!$res) {
-        echo json_encode([
-            "success" => 0,
-            "error" => $mysqli->error
-        ]);
-        exit;
-    }
+        if (!$res) {
+            echo json_encode([
+                "success" => 0,
+                "error" => $mysqli->error
+            ]);
+            exit;
+        }
 
-    $data = array();
+        $data = array();
 
-    while ($row = $res->fetch_assoc()) {
-        $data[] = $row;
-    }
+        while ($row = $res->fetch_assoc()) {
+            $data[] = $row;
+        }
 
-    echo json_encode($data);
-    break;
+        echo json_encode($data);
+        break;
 
     case 'ultimas_ventas':
 
@@ -2537,9 +2552,9 @@ switch ($accion) {
 
         break;
 
-case 'stock_por_orden_ingreso':
+    case 'stock_por_orden_ingreso':
 
-    $sql = "SELECT
+        $sql = "SELECT
             P.id AS idProducto,
             P.Nombre AS Producto,
             OC.id AS idOrdenCompra,
@@ -2584,49 +2599,49 @@ case 'stock_por_orden_ingreso':
         ORDER BY P.id ASC, OC.NumeroOrden ASC
     ";
 
-    $res = $mysqli->query($sql);
+        $res = $mysqli->query($sql);
 
-    if (!$res) {
+        if (!$res) {
 
-        echo json_encode([
-            "success" => 0,
-            "error" => $mysqli->error
-        ]);
+            echo json_encode([
+                "success" => 0,
+                "error" => $mysqli->error
+            ]);
 
-        exit;
-    }
+            exit;
+        }
 
-    $data = [
-        "FIGURITAS" => [],
-        "ALBUM" => [],
-        "VENDEDORES" => [
+        $data = [
             "FIGURITAS" => [],
-            "ALBUM" => []
-        ]
-    ];
-
-    while ($row = $res->fetch_assoc()) {
-
-        $tipo = ((int)$row['idProducto'] === 1)
-            ? "FIGURITAS"
-            : "ALBUM";
-
-        $data[$tipo][] = [
-            "idOrdenCompra" => (int)$row["idOrdenCompra"],
-            "NumeroOrden" => (int)$row["NumeroOrden"],
-            "StockIngresado" => (float)$row["StockIngresado"],
-            "StockAsignado" => (float)$row["StockAsignado"],
-            "StockDisponible" => (float)$row["StockDisponible"]
+            "ALBUM" => [],
+            "VENDEDORES" => [
+                "FIGURITAS" => [],
+                "ALBUM" => []
+            ]
         ];
-    }
 
-    /*
+        while ($row = $res->fetch_assoc()) {
+
+            $tipo = ((int)$row['idProducto'] === 1)
+                ? "FIGURITAS"
+                : "ALBUM";
+
+            $data[$tipo][] = [
+                "idOrdenCompra" => (int)$row["idOrdenCompra"],
+                "NumeroOrden" => (int)$row["NumeroOrden"],
+                "StockIngresado" => (float)$row["StockIngresado"],
+                "StockAsignado" => (float)$row["StockAsignado"],
+                "StockDisponible" => (float)$row["StockDisponible"]
+            ];
+        }
+
+        /*
     =====================================================
     VENTAS POR USUARIO
     =====================================================
     */
 
-    $sqlUsuarios = "
+        $sqlUsuarios = "
     SELECT
         VCS.idProducto,
         VCS.idOrdenCompra,
@@ -2652,38 +2667,38 @@ case 'stock_por_orden_ingreso':
         Total DESC
 ";
 
-    $resUsuarios = $mysqli->query($sqlUsuarios);
+        $resUsuarios = $mysqli->query($sqlUsuarios);
 
-    if (!$resUsuarios) {
+        if (!$resUsuarios) {
+
+            echo json_encode([
+                "success" => 0,
+                "error" => $mysqli->error
+            ]);
+
+            exit;
+        }
+
+        while ($u = $resUsuarios->fetch_assoc()) {
+
+            $tipo = ((int)$u['idProducto'] === 1)
+                ? "FIGURITAS"
+                : "ALBUM";
+
+            $data["VENDEDORES"][$tipo][] = [
+                "idOrdenCompra" => (int)$u["idOrdenCompra"],
+                "NumeroOrden"  => (int)$u["NumeroOrden"],
+                "Usuario"      => $u["Usuario"],
+                "Total"        => (float)$u["Total"]
+            ];
+        }
 
         echo json_encode([
-            "success" => 0,
-            "error" => $mysqli->error
+            "success" => 1,
+            "data" => $data
         ]);
 
-        exit;
-    }
-
-    while ($u = $resUsuarios->fetch_assoc()) {
-
-    $tipo = ((int)$u['idProducto'] === 1)
-        ? "FIGURITAS"
-        : "ALBUM";
-
-    $data["VENDEDORES"][$tipo][] = [
-        "idOrdenCompra" => (int)$u["idOrdenCompra"],
-        "NumeroOrden"  => (int)$u["NumeroOrden"],
-        "Usuario"      => $u["Usuario"],
-        "Total"        => (float)$u["Total"]
-    ];
-}
-
-    echo json_encode([
-        "success" => 1,
-        "data" => $data
-    ]);
-
-    break;
+        break;
 
     case 'importar_excel_preview':
 
