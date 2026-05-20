@@ -65,6 +65,13 @@ function obtenerTokenCaddy($credenciales)
     }
 
     $data = json_decode($response, true);
+    file_put_contents(__DIR__ . "/debug_caddy.log",
+    "\n\nAUTH CADDY\n" .
+    "HTTP: " . $httpCode . "\n" .
+    "ERROR: " . $error . "\n" .
+    "RESPONSE: " . $response . "\n",
+    FILE_APPEND
+);
 
     if ($httpCode < 200 || $httpCode >= 300) {
         throw new Exception("Caddy rechazó auth: " . $response);
@@ -196,13 +203,15 @@ function enviarServicioCaddy($baseUrl, $token, $payload)
             "X-Api-Token: " . $token
         ],
     ]);
-    file_put_contents(
-        __DIR__ . "/caddy_debug.txt",
-        json_encode([
-            "url" => $baseUrl . "/servicios",
-            "payload" => $payload
-        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
-    );
+    file_put_contents(__DIR__ . "/debug_caddy.log",
+    "\n\nSERVICIOS CADDY\n" .
+    "HTTP: " . $httpCode . "\n" .
+    "ERROR: " . $error . "\n" .
+    "TOKEN: " . $token . "\n" .
+    "PAYLOAD: " . json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "\n" .
+    "RESPONSE: " . $response . "\n",
+    FILE_APPEND
+);
     $response = curl_exec($curl);
     $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
     $error = curl_error($curl);
