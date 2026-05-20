@@ -152,21 +152,13 @@ switch ($accion) {
                 FROM CobranzasVentas CV
 
                 LEFT JOIN (
-
                 SELECT 
-
                     id_cobranza,
-
                     MAX(Importe) AS Importe
-
                 FROM Cobranza_conciliacion
-
                 WHERE IFNULL(Eliminado,0) = 0
-
                 GROUP BY id_cobranza
-
             ) CC ON CC.idCobranza = CV.idCobranza
-
                 WHERE CV.idVenta = '$idVenta'
                 AND IFNULL(CV.Eliminado,0) = 0
             ";
