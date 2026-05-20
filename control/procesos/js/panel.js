@@ -422,38 +422,71 @@ function ver_tabla_conciliados(a) {
       {
         data: null,
         render: function (data, type, row) {
+          let totalAplicado = parseFloat(row.TotalAplicado || 0);
+
+          // =========================
+          // RECHAZADO
+          // =========================
+
           if (row.Estado == "Rechazado") {
             return `
-        <i onclick="vuelve('${row.id_cobranza}')" 
-           class="mdi mdi-18px mdi-reload text-success ms-2" 
-           style="cursor:pointer"></i>
+                <i onclick="vuelve('${row.id_cobranza}')" 
+                   class="mdi mdi-18px mdi-reload text-success ms-2" 
+                   style="cursor:pointer"
+                   title="Volver a pendientes"></i>
 
-        <i onclick="eliminar('${row.id_cobranza}')" 
-           class="mdi mdi-18px mdi-trash-can-outline text-danger ms-2" 
-           style="cursor:pointer"></i>
-      `;
+                <i onclick="eliminar('${row.id_cobranza}')" 
+                   class="mdi mdi-18px mdi-trash-can-outline text-danger ms-2" 
+                   style="cursor:pointer"
+                   title="Eliminar"></i>
+            `;
           }
+
+          // =========================
+          // SIN VINCULAR
+          // =========================
+
+          if (totalAplicado <= 0) {
+            return `
+                <i class="mdi mdi-link-variant mdi-18px text-success ms-2" 
+                   title="Asignar pago a ventas"
+                   style="cursor:pointer" 
+                   onclick="abrirAsignarPago(${row.id_cobranza})"></i>
+
+                <i onclick="eliminar('${row.id_cobranza}')" 
+                   class="mdi mdi-18px mdi-trash-can-outline text-danger ms-2" 
+                   style="cursor:pointer"
+                   title="Eliminar"></i>
+            `;
+          }
+
+          // =========================
+          // VINCULADO
+          // =========================
 
           let checkboxExportar = "";
 
           if (row.Exportado == "") {
             checkboxExportar = `
-        <div class="form-check d-inline-block me-2">
-          <input value="${row.id_cobranza}" 
-                 type="checkbox" 
-                 class="form-check-input dt-checkboxes" 
-                 onclick="calcular_total(0)">
-          <label class="form-check-label">&nbsp;</label>
-        </div>
-      `;
+                <div class="form-check d-inline-block me-2">
+
+                    <input value="${row.id_cobranza}" 
+                           type="checkbox" 
+                           class="form-check-input dt-checkboxes" 
+                           onclick="calcular_total(0)">
+
+                    <label class="form-check-label">&nbsp;</label>
+
+                </div>
+            `;
           }
 
           let btnAsignar = `
-      <i class="mdi mdi-link-variant mdi-18px text-success ms-2" 
-         title="Asignar pago a ventas"
-         style="cursor:pointer" 
-         onclick="abrirAsignarPago(${row.id_cobranza})"></i>
-    `;
+            <i class="mdi mdi-link-variant mdi-18px text-success ms-2" 
+               title="Asignar pago a ventas"
+               style="cursor:pointer" 
+               onclick="abrirAsignarPago(${row.id_cobranza})"></i>
+        `;
 
           return checkboxExportar + btnAsignar;
         },
