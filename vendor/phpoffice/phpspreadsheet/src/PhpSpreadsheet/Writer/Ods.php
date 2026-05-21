@@ -12,28 +12,52 @@ use PhpOffice\PhpSpreadsheet\Writer\Ods\Settings;
 use PhpOffice\PhpSpreadsheet\Writer\Ods\Styles;
 use PhpOffice\PhpSpreadsheet\Writer\Ods\Thumbnails;
 use ZipStream\Exception\OverflowException;
+use ZipStream\Option\Archive;
 use ZipStream\ZipStream;
 
 class Ods extends BaseWriter
 {
     /**
      * Private PhpSpreadsheet.
+     *
+     * @var Spreadsheet
      */
-    private Spreadsheet $spreadSheet;
+    private $spreadSheet;
 
-    private Content $writerPartContent;
+    /**
+     * @var Content
+     */
+    private $writerPartContent;
 
-    private Meta $writerPartMeta;
+    /**
+     * @var Meta
+     */
+    private $writerPartMeta;
 
-    private MetaInf $writerPartMetaInf;
+    /**
+     * @var MetaInf
+     */
+    private $writerPartMetaInf;
 
-    private Mimetype $writerPartMimetype;
+    /**
+     * @var Mimetype
+     */
+    private $writerPartMimetype;
 
-    private Settings $writerPartSettings;
+    /**
+     * @var Settings
+     */
+    private $writerPartSettings;
 
-    private Styles $writerPartStyles;
+    /**
+     * @var Styles
+     */
+    private $writerPartStyles;
 
-    private Thumbnails $writerPartThumbnails;
+    /**
+     * @var Thumbnails
+     */
+    private $writerPartThumbnails;
 
     /**
      * Create a new Ods.
@@ -86,12 +110,6 @@ class Ods extends BaseWriter
         return $this->writerPartThumbnails;
     }
 
-    /** @param array<string, callable> $additionalNumberFormats */
-    public function useAdditionalNumberFormats(array $additionalNumberFormats): void
-    {
-        $this->writerPartContent->additionalNumberFormats = $additionalNumberFormats;
-    }
-
     /**
      * Save PhpSpreadsheet to file.
      *
@@ -120,7 +138,7 @@ class Ods extends BaseWriter
         // Close file
         try {
             $zip->finish();
-        } catch (OverflowException) {
+        } catch (OverflowException $e) {
             throw new WriterException('Could not close resource.');
         }
 
@@ -129,8 +147,10 @@ class Ods extends BaseWriter
 
     /**
      * Create zip object.
+     *
+     * @return ZipStream
      */
-    private function createZip(): ZipStream
+    private function createZip()
     {
         // Try opening the ZIP file
         if (!is_resource($this->fileHandle)) {
@@ -138,13 +158,19 @@ class Ods extends BaseWriter
         }
 
         // Create new ZIP stream
-        return ZipStream0::newZipStream($this->fileHandle);
+        $options = new Archive();
+        $options->setEnableZip64(false);
+        $options->setOutputStream($this->fileHandle);
+
+        return new ZipStream(null, $options);
     }
 
     /**
      * Get Spreadsheet object.
+     *
+     * @return Spreadsheet
      */
-    public function getSpreadsheet(): Spreadsheet
+    public function getSpreadsheet()
     {
         return $this->spreadSheet;
     }
@@ -156,7 +182,7 @@ class Ods extends BaseWriter
      *
      * @return $this
      */
-    public function setSpreadsheet(Spreadsheet $spreadsheet): static
+    public function setSpreadsheet(Spreadsheet $spreadsheet)
     {
         $this->spreadSheet = $spreadsheet;
 
