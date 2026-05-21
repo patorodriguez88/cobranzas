@@ -288,10 +288,12 @@ switch ($accion) {
 
             $textoCliente = "";
 
+            $distribuidora = !empty($row["Distribuidora"]) ? $row["Distribuidora"] : "DINTER";
+
             if (!empty($row["Ncliente"])) {
-                $textoCliente = "[" . $row["Ncliente"] . "] " . $row["RazonSocial"];
+                $textoCliente = "[" . $row["Ncliente"] . "] " . $row["RazonSocial"] . " (" . $distribuidora . ")";
             } else {
-                $textoCliente = $row["RazonSocial"];
+                $textoCliente = $row["RazonSocial"] . " (" . $distribuidora . ")";
             }
 
             $data[] = [
