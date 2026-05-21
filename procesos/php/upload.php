@@ -1,41 +1,62 @@
 <?php
 session_start();
 
+header('Content-Type: application/json; charset=utf-8');
+
 $idCobranza = isset($_POST['idCobranza']) ? (int)$_POST['idCobranza'] : 0;
 
-if ($idCobranza <= 0 && isset($_SESSION['NComprobante'])) {
-    $idCobranza = (int)$_SESSION['NComprobante'];
-}
-
 if ($idCobranza <= 0) {
-    echo 'sin_id';
+    echo json_encode([
+        "success" => 0,
+        "error" => "No se recibió idCobranza."
+    ]);
     exit;
 }
 
 if (!isset($_FILES["file"])) {
-    echo 'sin_archivo';
+    echo json_encode([
+        "success" => 0,
+        "error" => "No se recibió archivo."
+    ]);
     exit;
 }
 
-$permitidos = array(
+$permitidos = [
     "image/pjpeg",
     "image/jpeg",
     "image/png",
     "image/gif"
-);
+];
 
-if (in_array($_FILES["file"]["type"], $permitidos)) {
-    $tipoArchivo = strtolower(pathinfo($_FILES["file"]["name"], PATHINFO_EXTENSION));
-
-    $destino = __DIR__ . "/../../images/depositos/" . $idCobranza . "." . $tipoArchivo;
-
-    if (move_uploaded_file($_FILES["file"]["tmp_name"], $destino)) {
-        echo json_encode(array("success" => 1));
-    } else {
-        echo 'error_move';
-    }
-
+if (!in_array($_FILES["file"]["type"], $permitidos)) {
+    echo json_encode([
+        "success" => 0,
+        "error" => "Tipo de archivo no permitido."
+    ]);
     exit;
 }
 
-echo 'tipo_no_permitido';
+$extension = strtolower(pathinfo($_FILES["file"]["name"], PATHINFO_EXTENSION));
+
+$carpeta = __DIR__ . "/../../images/depositos/";
+
+if (!is_dir($carpeta)) {
+    mkdir($carpeta, 0755, true);
+}
+
+$destino = $carpeta . $idCobranza . "." . $extension;
+
+if (move_uploaded_file($_FILES["file"]["tmp_name"], $destino)) {
+    echo json_encode([
+        "success" => 1,
+        "archivo" => $idCobranza . "." . $extension,
+        "idCobranza" => $idCobranza
+    ]);
+} else {
+    echo json_encode([
+        "success" => 0,
+        "error" => "No se pudo mover el archivo."
+    ]);
+}
+
+exit;
