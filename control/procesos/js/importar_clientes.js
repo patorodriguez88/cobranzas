@@ -26,7 +26,7 @@ $("#btn_procesar_clientes").click(function () {
   formData.append("distribuidora", $("#importar_distribuidora").val());
 
   $.ajax({
-    url: "control/procesos/php/clientes.php",
+    url: "control/procesos/php/importar_clientes.php",
 
     type: "POST",
 
