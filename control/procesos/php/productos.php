@@ -1,8 +1,4 @@
 <?php
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-
-error_reporting(E_ALL);
 session_start();
 include_once __DIR__ . "/../../../conexion/conexioni.php";
 
@@ -14,7 +10,7 @@ switch ($accion) {
 
     case 'listar':
 
-    $sql = "
+        $sql = "
 SELECT 
     P.id,
     P.Codigo,
@@ -54,40 +50,40 @@ WHERE IFNULL(P.Eliminado,0) = 0
 ORDER BY P.id DESC
 ";
 
-    $res = $mysqli->query($sql);
+        $res = $mysqli->query($sql);
 
-    if (!$res) {
+        if (!$res) {
+            echo json_encode([
+                "success" => 0,
+                "error" => $mysqli->error
+            ]);
+            exit;
+        }
+
+        $data = [];
+
+        while ($row = $res->fetch_assoc()) {
+            $data[] = [
+                "id" => $row["id"],
+                "Codigo" => $row["Codigo"],
+                "Nombre" => $row["Nombre"],
+                "Categoria" => $row["Categoria"],
+                "PrecioCosto" => $row["PrecioCosto"],
+                "PrecioVenta" => $row["PrecioVenta"],
+                "StockReal" => $row["StockReal"],
+                "StockMinimo" => $row["StockMinimo"],
+                "Descripcion" => $row["Descripcion"],
+                "Activo" => $row["Activo"],
+                "MostrarEnVentaRapida" => $row["MostrarEnVentaRapida"]
+            ];
+        }
+
         echo json_encode([
-            "success" => 0,
-            "error" => $mysqli->error
+            "success" => 1,
+            "data" => $data
         ]);
-        exit;
-    }
 
-    $data = [];
-
-    while ($row = $res->fetch_assoc()) {
-        $data[] = [
-    "id" => $row["id"],
-    "Codigo" => $row["Codigo"],
-    "Nombre" => $row["Nombre"],
-    "Categoria" => $row["Categoria"],
-    "PrecioCosto" => $row["PrecioCosto"],
-    "PrecioVenta" => $row["PrecioVenta"],
-    "StockReal" => $row["StockReal"],
-    "StockMinimo" => $row["StockMinimo"],
-    "Descripcion" => $row["Descripcion"],
-    "Activo" => $row["Activo"],
-    "MostrarEnVentaRapida" => $row["MostrarEnVentaRapida"]
-];
-    }
-
-    echo json_encode([
-        "success" => 1,
-        "data" => $data
-    ]);
-
-    break;
+        break;
 
     case 'guardar':
 
