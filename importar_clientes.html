@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>Cobranzas | Importar Clientes</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="shortcut icon" href="img/favicon.png" />
+    <link href="saas/assets/css/vendor/dataTables.bootstrap5.css" rel="stylesheet" />
+    <link href="saas/assets/css/vendor/responsive.bootstrap5.css" rel="stylesheet" />
+    <link href="saas/assets/css/icons.min.css" rel="stylesheet" />
+    <link href="saas/assets/css/app.min.css" rel="stylesheet" id="app-style" />
+  </head>
+
+  <body
+    class="loading"
+    data-layout-color="light"
+    data-leftbar-theme="dark"
+    data-layout-mode="fluid"
+    data-leftbar-compact-mode="condensed"
+  >
+    <div class="wrapper">
+      <div class="leftside-menu">
+        <a href="pendientes.html" class="logo text-center logo-light">
+          <span class="logo-lg bg-light">
+            <img src="images/dinterDark.png" alt="" height="36" />
+          </span>
+          <span class="logo-sm bg-white">
+            <img src="img/icon_64.png" alt="" height="36" />
+          </span>
+        </a>
+
+        <div class="h-100 bg-light" id="leftside-menu-container" data-simplebar>
+          <ul class="side-nav">
+            <li class="side-nav-title side-nav-item">Datos</li>
+
+            <li class="side-nav-item">
+              <a href="Clientes.html" class="side-nav-link">
+                <i class="mdi mdi-account"></i>
+                <span> Clientes </span>
+              </a>
+            </li>
+
+            <li class="side-nav-item">
+              <a href="importar_clientes.html" class="side-nav-link">
+                <i class="mdi mdi-account-arrow-up"></i>
+                <span> Importar Clientes </span>
+              </a>
+            </li>
+
+            <li class="side-nav-item">
+              <a href="productos_ventas.html#productos" class="side-nav-link">
+                <i class="mdi mdi-package-variant"></i>
+                <span> Productos </span>
+              </a>
+            </li>
+
+            <li class="side-nav-title side-nav-item">Ventas</li>
+
+            <li class="side-nav-item">
+              <a href="importar_ventas.html" class="side-nav-link">
+                <i class="mdi mdi-file-excel"></i>
+                <span> Importar Ventas </span>
+              </a>
+            </li>
+
+            <li class="side-nav-item">
+              <a href="ventas.html#ventas" class="side-nav-link">
+                <i class="mdi mdi-cart-plus"></i>
+                <span> Nueva Venta </span>
+              </a>
+            </li>
+          </ul>
+
+          <div class="clearfix"></div>
+        </div>
+      </div>
+
+      <div class="content-page">
+        <div class="content">
+          <div class="navbar-custom">
+            <ul class="list-unstyled topbar-menu float-end mb-0">
+              <li class="dropdown notification-list">
+                <a class="nav-link dropdown-toggle nav-user arrow-none me-0" data-bs-toggle="dropdown" href="#">
+                  <span class="account-user-avatar">
+                    <div class="avatar-xs">
+                      <span id="avatar" class="avatar-title bg-warning rounded-circle"></span>
+                    </div>
+                  </span>
+                  <span>
+                    <span id="user_name" class="account-user-name"></span>
+                    <span id="user_perfil" class="account-position"></span>
+                  </span>
+                </a>
+              </li>
+            </ul>
+
+            <button class="button-menu-mobile open-left">
+              <i class="mdi mdi-menu"></i>
+            </button>
+          </div>
+
+          <div class="container-fluid">
+            <div class="row">
+              <div class="col-12">
+                <div class="page-title-box">
+                  <h4 class="page-title">Importar Clientes</h4>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <h4 class="header-title mb-0">Archivo Excel</h4>
+              </div>
+
+              <div class="card-body">
+                <div class="alert alert-info">
+                  El Excel debe tener las columnas:
+                  <strong>Distribuidora, Ncliente, RazonSocial, Cuit, Direccion, Ciudad, Telefono, Celular</strong>.
+                </div>
+
+                <div class="row">
+                  <div class="col-md-6 mb-2">
+                    <label class="form-label">Seleccionar archivo Excel</label>
+                    <input type="file" id="archivo_clientes" class="form-control" accept=".xlsx,.xls,.csv" />
+                  </div>
+
+                  <div class="col-md-6 mb-2 d-flex align-items-end">
+                    <button type="button" class="btn btn-primary me-2" id="btn_previsualizar_clientes">
+                      <i class="mdi mdi-eye"></i> Previsualizar
+                    </button>
+
+                    <button type="button" class="btn btn-success" id="btn_confirmar_importacion_clientes" disabled>
+                      <i class="mdi mdi-database-import"></i> Confirmar importación
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card mt-"></div>
+            <div class="card">
+              <div class="card-body">
+                <div class="row mb-3">
+                  <div class="col-md-3">
+                    <label class="form-label">Distribuidora</label>
+
+                    <select id="importar_distribuidora" class="form-select">
+                      <option value="DINTER">DINTER</option>
+                      <option value="RAK">RAK</option>
+                      <option value="MISAS">MISAS</option>
+                    </select>
+                  </div>
+
+                  <div class="col-md-6">
+                    <label class="form-label">Archivo Excel</label>
+
+                    <input type="file" id="excel_clientes" class="form-control" accept=".xlsx,.xls" />
+                  </div>
+
+                  <div class="col-md-3 d-flex align-items-end">
+                    <button class="btn btn-success w-100" id="btn_procesar_clientes">
+                      <i class="mdi mdi-file-excel"></i>
+                      Procesar Excel
+                    </button>
+                  </div>
+                </div>
+
+                <div class="table-responsive">
+                  <table class="table table-sm table-bordered align-middle" id="tabla_preview_clientes">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Estado</th>
+                        <th>N Cliente</th>
+                        <th>Razón Social</th>
+                        <th>CUIT</th>
+                        <th>Dirección</th>
+                        <th>Ciudad</th>
+                        <th>Teléfono</th>
+                        <th>Celular</th>
+                      </tr>
+                    </thead>
+
+                    <tbody></tbody>
+                  </table>
+                </div>
+
+                <div class="text-end mt-3">
+                  <button class="btn btn-primary" id="btn_importar_clientes" style="display: none">
+                    <i class="mdi mdi-content-save"></i>
+                    Importar Clientes
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
