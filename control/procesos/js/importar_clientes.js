@@ -1,5 +1,14 @@
 let clientesImportados = [];
 
+function alerta(titulo, mensaje, icono) {
+  Swal.fire({
+    title: titulo || "Atención",
+    text: mensaje || "",
+    icon: icono || "info",
+    confirmButtonText: "Aceptar",
+  });
+}
+
 $("#btn_procesar_clientes").click(function () {
   let archivo = $("#excel_clientes")[0].files[0];
 
