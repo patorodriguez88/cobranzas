@@ -495,18 +495,35 @@ try {
     ]);
 }
 
+// $sqlDetalle = "SELECT 
+//         VD.idProducto,
+//         VD.Cantidad,
+//         VD.PrecioUnitario,
+//         P.idProductoWepoint,
+//         P.Nombre
+//     FROM VentasDetalle VD
+//     INNER JOIN Productos P ON P.id = VD.idProducto
+//     WHERE VD.idVenta = ?
+//       AND VD.Eliminado = 0
+// ";
+$distribuidoraSql = $mysqli->real_escape_string(strtoupper($distribuidora));
+
 $sqlDetalle = "SELECT 
         VD.idProducto,
         VD.Cantidad,
         VD.PrecioUnitario,
-        P.idProductoWepoint,
-        P.Nombre
+        P.Nombre,
+        COALESCE(PWE.idProductoWepoint, P.idProductoWepoint) AS idProductoWepoint
     FROM VentasDetalle VD
-    INNER JOIN Productos P ON P.id = VD.idProducto
+    INNER JOIN Productos P 
+        ON P.id = VD.idProducto
+    LEFT JOIN ProductosWepointEmpresa PWE
+        ON PWE.idProducto = VD.idProducto
+       AND PWE.Distribuidora = '$distribuidoraSql'
+       AND PWE.Activo = 1
     WHERE VD.idVenta = ?
       AND VD.Eliminado = 0
 ";
-
 $stmtDet = $mysqli->prepare($sqlDetalle);
 
 if (!$stmtDet) {
@@ -537,7 +554,7 @@ while ($row = $resDetalle->fetch_assoc()) {
     if ($idProductoWepoint <= 0) {
         responder([
             "success" => false,
-            "message" => "El producto " . $row['Nombre'] . " no tiene idProductoWepoint configurado."
+            "message" => "El producto " . $row['Nombre'] . " no tiene idProductoWepoint configurado para " . $distribuidoraSql . "."
         ]);
     }
 
