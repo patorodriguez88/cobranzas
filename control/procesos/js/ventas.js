@@ -1019,15 +1019,18 @@ function abrirEstadoVenta(idVenta) {
 
           if (p.Imagen && p.Imagen !== "") {
             iconoImagen = `
-      <i class="mdi mdi-image-search mdi-18px text-primary"
-         style="cursor:pointer;"
-         title="Ver comprobante"
-         onclick="verComprobantePago('${p.Imagen}')"></i>
-    `;
+              <i class="mdi mdi-image-search mdi-18px text-primary"
+                style="cursor:pointer;"
+                title="Ver comprobante"
+                onclick="verComprobantePago('${p.Imagen}')"></i>
+            `;
           } else {
             iconoImagen = `
-      <span class="text-muted small">-</span>
-    `;
+              <i class="mdi mdi-cloud-upload-outline mdi-18px text-warning"
+                style="cursor:pointer;"
+                title="Subir comprobante"
+                onclick="abrirModalSubirComprobantePago(${p.idCobranza})"></i>
+            `;
           }
 
           htmlPagos += `
@@ -1968,7 +1971,7 @@ function guardarDepositoVenta() {
 
           setTimeout(function () {
             if (dropzoneDeposito) {
-              dropzoneDeposito.removeAllFiles(true);
+              dropzoneDeposito.removeAllFiles(false);
             }
           }, 1000);
 
@@ -2403,3 +2406,59 @@ function renderVendedoresResumen(vendedores) {
 
   return html;
 }
+
+let idCobranzaComprobanteManual = 0;
+let dropzoneComprobanteManual = null;
+
+function abrirModalSubirComprobantePago(idCobranza) {
+  idCobranzaComprobanteManual = idCobranza;
+
+  if (dropzoneComprobanteManual) {
+    dropzoneComprobanteManual.removeAllFiles(true);
+  }
+
+  $("#modalSubirComprobantePago").modal("show");
+}
+$(document).ready(function () {
+  if ($("#dropzoneComprobanteManual").length) {
+    dropzoneComprobanteManual = new Dropzone("#dropzoneComprobanteManual", {
+      url: "procesos/php/upload.php",
+      autoProcessQueue: true,
+      maxFiles: 1,
+      acceptedFiles: ".jpeg,.jpg,.png,.gif",
+      dictDefaultMessage: "Arrastrá una imagen o hacé click",
+
+      init: function () {
+        this.on("sending", function (file, xhr, formData) {
+          formData.append("idCobranza", idCobranzaComprobanteManual);
+        });
+
+        this.on("success", function (file, response) {
+          if (response.success == 1) {
+            Swal.fire({
+              toast: true,
+              position: "top-end",
+              icon: "success",
+              title: "Comprobante subido correctamente",
+              showConfirmButton: false,
+              timer: 2000,
+            });
+
+            $("#modalSubirComprobantePago").modal("hide");
+
+            if (ventaActualOffcanvas) {
+              abrirEstadoVenta(ventaActualOffcanvas);
+            }
+          } else {
+            alerta("Error", response.error || "No se pudo subir el comprobante.", "error");
+          }
+        });
+
+        this.on("error", function (file, errorMessage) {
+          console.log("ERROR COMPROBANTE MANUAL:", errorMessage);
+          alerta("Error", "No se pudo subir el comprobante.", "error");
+        });
+      },
+    });
+  }
+});
