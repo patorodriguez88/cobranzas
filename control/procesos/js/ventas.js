@@ -1951,9 +1951,10 @@ function guardarDepositoVenta() {
 
           if (dropzoneDeposito && dropzoneDeposito.getQueuedFiles().length > 0) {
             dropzoneDeposito.processQueue();
+          } else {
+            $("#modalDepositoVenta").modal("hide");
+            recargarListadoVentas();
           }
-
-          $("#modalDepositoVenta").modal("hide");
 
           Swal.fire({
             toast: true,
@@ -2050,10 +2051,15 @@ $(document).ready(function () {
   if ($("#dropzoneComprobanteDeposito").length) {
     dropzoneDeposito = new Dropzone("#dropzoneComprobanteDeposito", {
       url: "procesos/php/upload.php",
+
       autoProcessQueue: false,
+
       maxFiles: 1,
-      acceptedFiles: "image/jpeg,image/png,image/gif",
+
+      acceptedFiles: ".jpeg,.jpg,.png,.gif",
+
       dictDefaultMessage: "Arrastrá una imagen o hacé click",
+
       previewTemplate: `
       <div class="dz-preview dz-file-preview">
         <div class="dz-image">
@@ -2073,17 +2079,21 @@ $(document).ready(function () {
         </div>
       </div>
       `,
+
       init: function () {
         this.on("maxfilesexceeded", function (file) {
           this.removeAllFiles(true);
 
           this.addFile(file);
         });
+
         this.on("sending", function (file, xhr, formData) {
           formData.append("idCobranza", idCobranzaPendienteComprobante);
         });
 
-        this.on("success", function () {
+        this.on("success", function (file, response) {
+          console.log("UPLOAD OK:", response);
+
           Swal.fire({
             toast: true,
             position: "top-end",
@@ -2098,8 +2108,33 @@ $(document).ready(function () {
         });
 
         this.on("error", function (file, errorMessage) {
-          console.log(errorMessage);
-          alerta("Error", "No se pudo subir el comprobante.", "error");
+          console.log("ERROR UPLOAD:", errorMessage);
+
+          alerta(
+            "Error",
+            typeof errorMessage === "string" ? errorMessage : "No se pudo subir el comprobante.",
+            "error",
+          );
+        });
+
+        this.on("queuecomplete", function () {
+          console.log("QUEUE COMPLETA");
+
+          $("#modalDepositoVenta").modal("hide");
+
+          setTimeout(function () {
+            if (dropzoneDeposito) {
+              dropzoneDeposito.removeAllFiles(false);
+            }
+          }, 500);
+
+          if (typeof cargarVentas === "function") {
+            cargarVentas();
+          }
+        });
+
+        this.on("canceled", function () {
+          console.log("UPLOAD CANCELADO");
         });
       },
     });
