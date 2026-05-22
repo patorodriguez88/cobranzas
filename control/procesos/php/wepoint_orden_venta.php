@@ -366,7 +366,7 @@ function obtenerCredencialesWepoint($distribuidora = 'Dinter')
 
             return [
                 "empresa" => "Rak",
-                "token" => '1394|3QCpbqyDY3zqtEs3pEmUPopZ1ajKoMRurQQBmETh2e7810fc',
+                "token" => '1399|NSig5lAhgbqxjS7ColR2OLqe0d9GN0uZ6H9ZiJkW790b636e',
                 "id_cliente_origen" => 219 //999
             ];
 
