@@ -7,6 +7,18 @@ let turnoFechaSeleccionada = "";
 let turnoHoraSeleccionada = "";
 const URL_VENTAS = "control/procesos/php/ventas.php";
 
+function alerta(titulo, mensaje, icono) {
+  Swal.fire({
+    title: titulo || "Atención",
+
+    text: mensaje || "",
+
+    icon: icono || "info",
+
+    confirmButtonText: "Aceptar",
+  });
+}
+
 $(document).ready(function () {
   cargarProductosVenta();
   cargarVentas();
