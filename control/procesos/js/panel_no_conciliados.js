@@ -485,3 +485,53 @@ $("#centermodal").on("show.bs.modal", function () {
     probarSiguiente();
   }
 });
+function subirComprobanteConciliacion() {
+  let idCobranza = $("#id_cobranza").val();
+  let archivo = $("#archivo_comprobante_conciliacion")[0].files[0];
+
+  if (!idCobranza) {
+    Swal.fire("Error", "No se encontró el ID de cobranza.", "error");
+    return;
+  }
+
+  if (!archivo) {
+    Swal.fire("Atención", "Seleccioná una imagen.", "warning");
+    return;
+  }
+
+  let formData = new FormData();
+  formData.append("idCobranza", idCobranza);
+  formData.append("file", archivo);
+
+  $.ajax({
+    url: "procesos/php/upload.php",
+    type: "POST",
+    data: formData,
+    contentType: false,
+    processData: false,
+    dataType: "json",
+    success: function (r) {
+      if (r.success == 1) {
+        Swal.fire({
+          toast: true,
+          position: "top-end",
+          icon: "success",
+          title: "Comprobante subido correctamente",
+          showConfirmButton: false,
+          timer: 2000,
+        });
+
+        $("#img_deposito").attr("src", "images/depositos/" + r.archivo + "?t=" + new Date().getTime());
+
+        $("#archivo_comprobante_conciliacion").val("");
+      } else {
+        Swal.fire("Error", r.error || "No se pudo subir el comprobante.", "error");
+        console.log(r);
+      }
+    },
+    error: function (xhr) {
+      console.log(xhr.responseText);
+      Swal.fire("Error", "Error subiendo comprobante.", "error");
+    },
+  });
+}
