@@ -494,18 +494,6 @@ try {
         "message" => $e->getMessage()
     ]);
 }
-
-// $sqlDetalle = "SELECT 
-//         VD.idProducto,
-//         VD.Cantidad,
-//         VD.PrecioUnitario,
-//         P.idProductoWepoint,
-//         P.Nombre
-//     FROM VentasDetalle VD
-//     INNER JOIN Productos P ON P.id = VD.idProducto
-//     WHERE VD.idVenta = ?
-//       AND VD.Eliminado = 0
-// ";
 $distribuidoraSql = $mysqli->real_escape_string(strtoupper($distribuidora));
 
 $sqlDetalle = "SELECT 
@@ -586,10 +574,10 @@ if (isset($_SESSION['user_name']) && $_SESSION['user_name'] != '') {
 $referencia = "Venta #" . $numeroVenta;
 
 if ($ncliente != '') {
-    $referencia .= " | Cliente " . $ncliente;
+    $referencia .= "|Cte " . $ncliente;
 }
 
-$referencia .= " | Usuario " . $usuarioActual;
+$referencia .= "|User " . $usuarioActual;
 
 $notas = isset($venta['Observaciones']) ? trim($venta['Observaciones']) : '';
 
