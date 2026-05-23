@@ -46,8 +46,10 @@ if (isset($_POST['NuevoCliente'])) {
     }
 
 
-    if ($Distribuidora != 'Dinter' && $Distribuidora != 'Misas') {
-        $Distribuidora = 'Dinter';
+    $Distribuidora = strtoupper(trim($_POST['Distribuidora'] ?? 'DINTER'));
+
+    if (!in_array($Distribuidora, ['DINTER', 'MISAS', 'RAK'])) {
+        $Distribuidora = 'DINTER';
     }
     if ($id == 0) {
 
@@ -274,17 +276,18 @@ if (isset($_POST['Distribuidora_search'])) {
 
     echo json_encode([
         'success' => 1,
-        'Dato' => $row['Distribuidora'] ?? 'Dinter'
+        'Dato' => strtoupper($row['Distribuidora'] ?? 'DINTER')
     ]);
     exit;
 }
 
 if (isset($_POST['Distribuidora_update'])) {
     $id = (int)$_POST['id'];
-    $distribuidora = trim($_POST['Distribuidora_text'] ?? 'Dinter');
 
-    if ($distribuidora != 'Dinter' && $distribuidora != 'Misas') {
-        $distribuidora = 'Dinter';
+    $distribuidora = strtoupper(trim($_POST['Distribuidora_text'] ?? 'DINTER'));
+
+    if (!in_array($distribuidora, ['DINTER', 'MISAS', 'RAK'])) {
+        $distribuidora = 'DINTER';
     }
 
     $distribuidora = $mysqli->real_escape_string($distribuidora);
