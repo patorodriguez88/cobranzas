@@ -59,11 +59,7 @@ $sqlPagos = "
         C.Operacion,
         C.Conciliado,
         C.Usuario_obs,
-
-        (SELECT Imagen 
-         FROM CobranzaImagenes CI 
-         WHERE CI.idCobranza = CV.idCobranza 
-         LIMIT 1) AS Imagen
+        C.Imagen
 
     FROM CobranzasVentas CV
 
