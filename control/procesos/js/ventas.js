@@ -1919,7 +1919,7 @@ function guardarDepositoVenta() {
     banco = "CAJA";
     operacion = "Efectivo";
   }
-  if (!fecha || !tipoOperacion || !banco || !operacion || importe <= 0) {
+  if (!fecha || !tipoOperacion || !importe || (tipoOperacion.toLowerCase() !== "efectivo" && (!banco || !operacion))) {
     alerta("Atención", "Completá fecha, tipo, banco, operación e importe.", "warning");
     return;
   }
