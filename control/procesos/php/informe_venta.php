@@ -47,6 +47,34 @@ $stmt->bind_param("i", $id);
 $stmt->execute();
 $detalle = $stmt->get_result();
 
+$sqlPagos = "
+    SELECT
+        CV.ImporteAplicado,
+        C.Fecha,
+        C.Hora,
+        C.Banco,
+        C.Operacion,
+        C.Usuario_obs,
+        C.Conciliado,
+        C.Imagen,
+        C.Usuario,
+        C.ConciliadoPor,
+        C.FechaConciliado
+    FROM CobranzasVentas CV
+    INNER JOIN Cobranza C 
+        ON C.id = CV.idCobranza
+    WHERE CV.idVenta = ?
+      AND CV.Eliminado = 0
+    ORDER BY C.Fecha ASC, C.Hora ASC
+";
+
+$stmt = $mysqli->prepare($sqlPagos);
+$stmt->bind_param("i", $id);
+$stmt->execute();
+
+$pagos = $stmt->get_result();
+
+
 function money($n)
 {
     return '$ ' . number_format((float)$n, 2, ',', '.');
@@ -268,7 +296,106 @@ function fecha($f)
             <td class="text-end total-final"><?= money($venta['Saldo'] ?? 0) ?></td>
         </tr>
     </table>
+    <h3 style="margin-top:30px;">Pagos / Depósitos</h3>
 
+    <table>
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Banco</th>
+                <th>Operación</th>
+                <th>Importe</th>
+                <th>Conciliado</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            <?php
+            if ($pagos->num_rows == 0) {
+            ?>
+
+                <tr>
+                    <td colspan="5" style="text-align:center;">
+                        Sin pagos registrados
+                    </td>
+                </tr>
+
+                <?php
+            } else {
+
+                while ($p = $pagos->fetch_assoc()) {
+
+                    $conciliado = intval($p['Conciliado']) === 1
+                        ? 'SI'
+                        : 'NO';
+                ?>
+
+                    <tr>
+                        <td>
+                            <?= fecha($p['Fecha']) ?><br>
+                            <small><?= substr($p['Hora'], 0, 5) ?></small>
+                        </td>
+
+                        <td>
+                            <?= htmlspecialchars($p['Banco']) ?>
+                        </td>
+
+                        <td>
+                            <b><?= htmlspecialchars($p['Operacion']) ?></b>
+
+                            <?php if (!empty($p['Usuario_obs'])) { ?>
+                                <br>
+                                <small>
+                                    <?= nl2br(htmlspecialchars($p['Usuario_obs'])) ?>
+                                </small>
+                            <?php } ?>
+                        </td>
+
+                        <td class="text-end">
+                            <?= money($p['ImporteAplicado']) ?>
+                        </td>
+
+                        <td class="text-center">
+                            <?php if (intval($p['Conciliado']) === 1) { ?>
+                                <strong>SI</strong><br>
+                                <small>
+                                    <?= htmlspecialchars($p['ConciliadoPor'] ?? '') ?><br>
+                                    <?= !empty($p['FechaConciliado']) ? date('d/m/Y H:i', strtotime($p['FechaConciliado'])) : '' ?>
+                                </small>
+                            <?php } else { ?>
+                                NO
+                            <?php } ?>
+                        </td>
+                    </tr>
+
+                    <?php
+                    if (!empty($p['Imagen'])) {
+                    ?>
+
+                        <tr>
+                            <td colspan="5" style="text-align:center; padding:15px;">
+
+                                <img
+                                    src="<?= htmlspecialchars($p['Imagen']) ?>"
+                                    style="
+                max-width:500px;
+                max-height:400px;
+                border:1px solid #CCC;
+                border-radius:6px;
+            ">
+
+                            </td>
+                        </tr>
+
+            <?php
+                    }
+                }
+            }
+            ?>
+
+        </tbody>
+    </table>
     <script>
         window.onload = function() {
             // Si querés que abra e imprima directo, descomentá:
