@@ -1914,6 +1914,10 @@ function guardarDepositoVenta() {
   let importe = parseFloat($("#deposito_importe").val()) || 0;
   let observaciones = $("#deposito_observaciones").val().trim();
 
+  if (tipoOperacion === "Efectivo") {
+    banco = "CAJA";
+    operacion = "Efectivo";
+  }
   if (!fecha || !tipoOperacion || !banco || !operacion || importe <= 0) {
     alerta("Atención", "Completá fecha, tipo, banco, operación e importe.", "warning");
     return;
