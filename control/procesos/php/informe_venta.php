@@ -221,6 +221,13 @@ function fecha($f)
             cursor: pointer;
         }
 
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            align-items: stretch;
+        }
+
         @media print {
             .print-btn {
                 display: none;
@@ -277,42 +284,63 @@ function fecha($f)
         </div>
     </div>
 
-    <div class="box">
-        <div class="label">Estado de pago</div>
-        <div class="value"><?= htmlspecialchars($venta['EstadoPago'] ?? '') ?></div>
+    <div class="grid">
 
-        <div class="label">Usuario</div>
-        <div class="value"><?= htmlspecialchars($venta['Usuario'] ?? '') ?></div>
+        <!-- COLUMNA IZQUIERDA -->
+        <div class="box">
 
-        <?php if (!empty($venta['Observaciones'])) { ?>
-            <div class="label">Observaciones</div>
-            <div class="value"><?= nl2br(htmlspecialchars($venta['Observaciones'])) ?></div>
-        <?php } ?>
-        <div class="label">OV Wepoint</div>
-        <div class="value">
-            <?php if (!empty($venta['wepoint_nro_orden_venta'])) { ?>
-                #<?= htmlspecialchars($venta['wepoint_nro_orden_venta']) ?>
-                <?php if (!empty($venta['wepoint_estado'])) { ?>
-                    - <?= htmlspecialchars($venta['wepoint_estado']) ?>
-                <?php } ?>
-            <?php } else { ?>
-                Sin OV Wepoint generada
+            <div class="label">Estado de pago</div>
+            <div class="value">
+                <?= htmlspecialchars($venta['EstadoPago'] ?? '') ?>
+            </div>
+
+            <div class="label">Usuario</div>
+            <div class="value">
+                <?= htmlspecialchars($venta['Usuario'] ?? '') ?>
+            </div>
+
+            <?php if (!empty($venta['Observaciones'])) { ?>
+                <div class="label">Observaciones</div>
+                <div class="value">
+                    <?= nl2br(htmlspecialchars($venta['Observaciones'])) ?>
+                </div>
             <?php } ?>
+
         </div>
 
-        <?php if (!empty($venta['wepoint_created_at'])) { ?>
-            <div class="label">Fecha OV Wepoint</div>
-            <div class="value">
-                <?= date('d/m/Y H:i', strtotime($venta['wepoint_created_at'])) ?>
-            </div>
-        <?php } ?>
+        <!-- COLUMNA DERECHA -->
+        <div class="box">
 
-        <?php if (!empty($venta['caddy_codigo_seguimiento'])) { ?>
-            <div class="label">Seguimiento Caddy</div>
+            <div class="label">OV Wepoint</div>
             <div class="value">
-                <?= htmlspecialchars($venta['caddy_codigo_seguimiento']) ?>
+                <?php if (!empty($venta['wepoint_nro_orden_venta'])) { ?>
+                    #<?= htmlspecialchars($venta['wepoint_nro_orden_venta']) ?>
+
+                    <?php if (!empty($venta['wepoint_estado'])) { ?>
+                        - <?= htmlspecialchars($venta['wepoint_estado']) ?>
+                    <?php } ?>
+
+                <?php } else { ?>
+                    Sin OV Wepoint generada
+                <?php } ?>
             </div>
-        <?php } ?>
+
+            <?php if (!empty($venta['wepoint_created_at'])) { ?>
+                <div class="label">Fecha OV Wepoint</div>
+                <div class="value">
+                    <?= date('d/m/Y H:i', strtotime($venta['wepoint_created_at'])) ?>
+                </div>
+            <?php } ?>
+
+            <?php if (!empty($venta['caddy_codigo_seguimiento'])) { ?>
+                <div class="label">Seguimiento Caddy</div>
+                <div class="value">
+                    <?= htmlspecialchars($venta['caddy_codigo_seguimiento']) ?>
+                </div>
+            <?php } ?>
+
+        </div>
+
     </div>
 
     <table>
