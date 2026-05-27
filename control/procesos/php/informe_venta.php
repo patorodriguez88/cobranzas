@@ -261,269 +261,270 @@ function fecha($f)
 <body>
 
     <button class="print-btn" onclick="window.print()">Imprimir</button>
-
-    <div class="header">
-        <div>
-            <div class="title">Informe de Venta</div>
-            <div class="subtitle">Venta Nº <?= htmlspecialchars($venta['NumeroVenta'] ?? $id) ?></div>
-        </div>
-
-        <div class="text-end">
-            <strong>DINTER S.A.</strong><br>
-            Fecha: <?= fecha($venta['Fecha'] ?? date('Y-m-d')) ?><br>
-            Hora: <?= htmlspecialchars($venta['Hora'] ?? '') ?>
-        </div>
-    </div>
-
-    <div class="grid">
-        <div class="box">
-            <div class="label">Cliente</div>
-            <div class="value">
-                <?= htmlspecialchars($venta['RazonSocial'] ?? 'Sin cliente') ?>
+    <div class="page">
+        <div class="header">
+            <div>
+                <div class="title">Informe de Venta</div>
+                <div class="subtitle">Venta Nº <?= htmlspecialchars($venta['NumeroVenta'] ?? $id) ?></div>
             </div>
 
-            <div class="label">Nº Cliente</div>
-            <div class="value"><?= htmlspecialchars($venta['Ncliente'] ?? '') ?></div>
-
-            <div class="label">CUIT / DNI</div>
-            <div class="value"><?= htmlspecialchars($venta['Cuit'] ?? '') ?></div>
+            <div class="text-end">
+                <strong>DINTER S.A.</strong><br>
+                Fecha: <?= fecha($venta['Fecha'] ?? date('Y-m-d')) ?><br>
+                Hora: <?= htmlspecialchars($venta['Hora'] ?? '') ?>
+            </div>
         </div>
 
-        <div class="box">
-            <div class="label">Dirección</div>
-            <div class="value"><?= htmlspecialchars($venta['Direccion'] ?? '') ?></div>
-
-            <div class="label">Ciudad</div>
-            <div class="value"><?= htmlspecialchars($venta['Ciudad'] ?? '') ?></div>
-
-            <div class="label">Teléfono</div>
-            <div class="value"><?= htmlspecialchars($venta['Celular'] ?? '') ?></div>
-        </div>
-    </div>
-
-    <div class="grid">
-
-        <!-- COLUMNA IZQUIERDA -->
-        <div class="box">
-
-            <div class="label">Estado de pago</div>
-            <div class="value">
-                <?= htmlspecialchars($venta['EstadoPago'] ?? '') ?>
-            </div>
-
-            <div class="label">Usuario</div>
-            <div class="value">
-                <?= htmlspecialchars($venta['Usuario'] ?? '') ?>
-            </div>
-
-            <?php if (!empty($venta['Observaciones'])) { ?>
-                <div class="label">Observaciones</div>
+        <div class="grid">
+            <div class="box">
+                <div class="label">Cliente</div>
                 <div class="value">
-                    <?= nl2br(htmlspecialchars($venta['Observaciones'])) ?>
+                    <?= htmlspecialchars($venta['RazonSocial'] ?? 'Sin cliente') ?>
                 </div>
-            <?php } ?>
 
+                <div class="label">Nº Cliente</div>
+                <div class="value"><?= htmlspecialchars($venta['Ncliente'] ?? '') ?></div>
+
+                <div class="label">CUIT / DNI</div>
+                <div class="value"><?= htmlspecialchars($venta['Cuit'] ?? '') ?></div>
+            </div>
+
+            <div class="box">
+                <div class="label">Dirección</div>
+                <div class="value"><?= htmlspecialchars($venta['Direccion'] ?? '') ?></div>
+
+                <div class="label">Ciudad</div>
+                <div class="value"><?= htmlspecialchars($venta['Ciudad'] ?? '') ?></div>
+
+                <div class="label">Teléfono</div>
+                <div class="value"><?= htmlspecialchars($venta['Celular'] ?? '') ?></div>
+            </div>
         </div>
 
-        <!-- COLUMNA DERECHA -->
-        <div class="box">
+        <div class="grid">
 
-            <div class="label">OV Wepoint</div>
-            <div class="value">
-                <?php if (!empty($venta['wepoint_nro_orden_venta'])) { ?>
-                    #<?= htmlspecialchars($venta['wepoint_nro_orden_venta']) ?>
+            <!-- COLUMNA IZQUIERDA -->
+            <div class="box">
 
-                    <?php if (!empty($venta['wepoint_estado'])) { ?>
-                        - <?= htmlspecialchars($venta['wepoint_estado']) ?>
-                    <?php } ?>
+                <div class="label">Estado de pago</div>
+                <div class="value">
+                    <?= htmlspecialchars($venta['EstadoPago'] ?? '') ?>
+                </div>
 
-                <?php } else { ?>
-                    Sin OV Wepoint generada
+                <div class="label">Usuario</div>
+                <div class="value">
+                    <?= htmlspecialchars($venta['Usuario'] ?? '') ?>
+                </div>
+
+                <?php if (!empty($venta['Observaciones'])) { ?>
+                    <div class="label">Observaciones</div>
+                    <div class="value">
+                        <?= nl2br(htmlspecialchars($venta['Observaciones'])) ?>
+                    </div>
                 <?php } ?>
+
             </div>
 
-            <?php if (!empty($venta['wepoint_created_at'])) { ?>
-                <div class="label">Fecha OV Wepoint</div>
-                <div class="value">
-                    <?= date('d/m/Y H:i', strtotime($venta['wepoint_created_at'])) ?>
-                </div>
-            <?php } ?>
+            <!-- COLUMNA DERECHA -->
+            <div class="box">
 
-            <?php if (!empty($venta['caddy_codigo_seguimiento'])) { ?>
-                <div class="label">Seguimiento Caddy</div>
+                <div class="label">OV Wepoint</div>
                 <div class="value">
-                    <?= htmlspecialchars($venta['caddy_codigo_seguimiento']) ?>
+                    <?php if (!empty($venta['wepoint_nro_orden_venta'])) { ?>
+                        #<?= htmlspecialchars($venta['wepoint_nro_orden_venta']) ?>
+
+                        <?php if (!empty($venta['wepoint_estado'])) { ?>
+                            - <?= htmlspecialchars($venta['wepoint_estado']) ?>
+                        <?php } ?>
+
+                    <?php } else { ?>
+                        Sin OV Wepoint generada
+                    <?php } ?>
                 </div>
-            <?php } ?>
+
+                <?php if (!empty($venta['wepoint_created_at'])) { ?>
+                    <div class="label">Fecha OV Wepoint</div>
+                    <div class="value">
+                        <?= date('d/m/Y H:i', strtotime($venta['wepoint_created_at'])) ?>
+                    </div>
+                <?php } ?>
+
+                <?php if (!empty($venta['caddy_codigo_seguimiento'])) { ?>
+                    <div class="label">Seguimiento Caddy</div>
+                    <div class="value">
+                        <?= htmlspecialchars($venta['caddy_codigo_seguimiento']) ?>
+                    </div>
+                <?php } ?>
+
+            </div>
 
         </div>
 
-    </div>
-
-    <table>
-        <thead>
-            <tr>
-                <th>Producto</th>
-                <th class="text-end">Cantidad</th>
-                <th class="text-end">Precio Unit.</th>
-                <th class="text-end">Subtotal</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php while ($row = $detalle->fetch_assoc()) { ?>
+        <table>
+            <thead>
                 <tr>
-                    <td><?= htmlspecialchars($row['Producto'] ?? '') ?></td>
-                    <td class="text-end"><?= number_format((float)$row['Cantidad'], 0, ',', '.') ?></td>
-                    <td class="text-end"><?= money($row['PrecioUnitario'] ?? 0) ?></td>
-                    <td class="text-end"><?= money($row['Subtotal'] ?? 0) ?></td>
+                    <th>Producto</th>
+                    <th class="text-end">Cantidad</th>
+                    <th class="text-end">Precio Unit.</th>
+                    <th class="text-end">Subtotal</th>
                 </tr>
+            </thead>
+            <tbody>
+                <?php while ($row = $detalle->fetch_assoc()) { ?>
+                    <tr>
+                        <td><?= htmlspecialchars($row['Producto'] ?? '') ?></td>
+                        <td class="text-end"><?= number_format((float)$row['Cantidad'], 0, ',', '.') ?></td>
+                        <td class="text-end"><?= money($row['PrecioUnitario'] ?? 0) ?></td>
+                        <td class="text-end"><?= money($row['Subtotal'] ?? 0) ?></td>
+                    </tr>
+                <?php } ?>
+            </tbody>
+        </table>
+
+        <table class="totales">
+            <tr>
+                <td>Total</td>
+                <td class="text-end"><?= money($venta['Total'] ?? 0) ?></td>
+            </tr>
+            <tr>
+                <td>Pagado</td>
+                <td class="text-end"><?= money($venta['TotalPagado'] ?? 0) ?></td>
+            </tr>
+            <tr>
+                <td>Saldo</td>
+                <td class="text-end total-final"><?= money($venta['Saldo'] ?? 0) ?></td>
+            </tr>
+        </table>
+        <h3>
+            Pagos / Depósitos
+            <?php if (!empty($venta['wepoint_nro_orden_venta'])) { ?>
+                - OV Wepoint #<?= htmlspecialchars($venta['wepoint_nro_orden_venta']) ?>
             <?php } ?>
-        </tbody>
-    </table>
+        </h3>
 
-    <table class="totales">
-        <tr>
-            <td>Total</td>
-            <td class="text-end"><?= money($venta['Total'] ?? 0) ?></td>
-        </tr>
-        <tr>
-            <td>Pagado</td>
-            <td class="text-end"><?= money($venta['TotalPagado'] ?? 0) ?></td>
-        </tr>
-        <tr>
-            <td>Saldo</td>
-            <td class="text-end total-final"><?= money($venta['Saldo'] ?? 0) ?></td>
-        </tr>
-    </table>
-    <h3>
-        Pagos / Depósitos
-        <?php if (!empty($venta['wepoint_nro_orden_venta'])) { ?>
-            - OV Wepoint #<?= htmlspecialchars($venta['wepoint_nro_orden_venta']) ?>
-        <?php } ?>
-    </h3>
-
-    <table>
-        <thead>
-            <tr>
-                <th>Fecha</th>
-                <th>Tipo / Banco</th>
-                <th>Operación</th>
-                <th>Observaciones</th>
-                <th class="text-end">Importe</th>
-                <th>Conciliado</th>
-            </tr>
-        </thead>
-
-        <tbody>
-
-            <?php
-            if ($pagos->num_rows == 0) {
-            ?>
-
+        <table>
+            <thead>
                 <tr>
-                    <td colspan="6" style="text-align:center;">
-                        Sin pagos registrados
-                    </td>
+                    <th>Fecha</th>
+                    <th>Tipo / Banco</th>
+                    <th>Operación</th>
+                    <th>Observaciones</th>
+                    <th class="text-end">Importe</th>
+                    <th>Conciliado</th>
                 </tr>
+            </thead>
+
+            <tbody>
 
                 <?php
-            } else {
-
-                while ($p = $pagos->fetch_assoc()) {
-
-                    $conciliado = intval($p['Conciliado']) === 1
-                        ? 'SI'
-                        : 'NO';
-
-                    $tieneComprobante = false;
+                if ($pagos->num_rows == 0) {
                 ?>
 
                     <tr>
-
-                        <td style="width:50px;">
-                            <?= fecha($p['FechaAplicacion']) ?><br>
-
-                            <small>
-                                <?= !empty($p['FechaAplicacion'])
-                                    ? date('H:i', strtotime($p['FechaAplicacion']))
-                                    : '' ?>
-                            </small>
+                        <td colspan="6" style="text-align:center;">
+                            Sin pagos registrados
                         </td>
+                    </tr>
 
-                        <td style="width:70px;">
-                            <strong>
-                                <?= !empty($p['Banco']) ? htmlspecialchars($p['Banco']) : 'Sin banco informado' ?>
-                            </strong>
+                    <?php
+                } else {
 
-                            <?php if ($tieneComprobante) { ?>
-                                <br>
-                                <small style="color:green;">
-                                    📎 Comprobante adjunto
+                    while ($p = $pagos->fetch_assoc()) {
+
+                        $conciliado = intval($p['Conciliado']) === 1
+                            ? 'SI'
+                            : 'NO';
+
+                        $tieneComprobante = false;
+                    ?>
+
+                        <tr>
+
+                            <td style="width:50px;">
+                                <?= fecha($p['FechaAplicacion']) ?><br>
+
+                                <small>
+                                    <?= !empty($p['FechaAplicacion'])
+                                        ? date('H:i', strtotime($p['FechaAplicacion']))
+                                        : '' ?>
                                 </small>
-                            <?php } ?>
-                        </td>
+                            </td>
 
-                        <td style="width:180px;">
-                            <?= !empty($p['Operacion']) ? htmlspecialchars($p['Operacion']) : 'Sin número informado' ?>
+                            <td style="width:70px;">
+                                <strong>
+                                    <?= !empty($p['Banco']) ? htmlspecialchars($p['Banco']) : 'Sin banco informado' ?>
+                                </strong>
 
-                            <br>
+                                <?php if ($tieneComprobante) { ?>
+                                    <br>
+                                    <small style="color:green;">
+                                        📎 Comprobante adjunto
+                                    </small>
+                                <?php } ?>
+                            </td>
 
-                            <small style="color:#666;">
-                                Cobranza #<?= intval($p['idCobranza']) ?>
-                            </small>
-                        </td>
+                            <td style="width:180px;">
+                                <?= !empty($p['Operacion']) ? htmlspecialchars($p['Operacion']) : 'Sin número informado' ?>
 
-                        <td>
-                            <?= !empty($p['Usuario_obs']) ? nl2br(htmlspecialchars($p['Usuario_obs'])) : '-' ?>
-                            <br>
-                            <small>Usuario: <?= htmlspecialchars($p['UsuarioAplicacion'] ?? '-') ?></small>
-                        </td>
+                                <br>
 
-                        <td class="text-end" style="width:120px;">
-                            <strong>
-                                <?= money($p['ImporteAplicado']) ?>
-                            </strong>
-                        </td>
+                                <small style="color:#666;">
+                                    Cobranza #<?= intval($p['idCobranza']) ?>
+                                </small>
+                            </td>
 
-                        <td class="text-center" style="width:90px;">
+                            <td>
+                                <?= !empty($p['Usuario_obs']) ? nl2br(htmlspecialchars($p['Usuario_obs'])) : '-' ?>
+                                <br>
+                                <small>Usuario: <?= htmlspecialchars($p['UsuarioAplicacion'] ?? '-') ?></small>
+                            </td>
 
-                            <?php if ($conciliado === 'SI') { ?>
+                            <td class="text-end" style="width:120px;">
+                                <strong>
+                                    <?= money($p['ImporteAplicado']) ?>
+                                </strong>
+                            </td>
 
-                                <span style="
+                            <td class="text-center" style="width:90px;">
+
+                                <?php if ($conciliado === 'SI') { ?>
+
+                                    <span style="
                 color:green;
                 font-weight:bold;
             ">
-                                    SI
-                                </span>
+                                        SI
+                                    </span>
 
-                            <?php } else { ?>
+                                <?php } else { ?>
 
-                                <span style="
+                                    <span style="
                 color:#d39e00;
                 font-weight:bold;
             ">
-                                    NO
-                                </span>
+                                        NO
+                                    </span>
 
-                            <?php } ?>
+                                <?php } ?>
 
-                        </td>
+                            </td>
 
-                    </tr>
+                        </tr>
 
-            <?php
+                <?php
+                    }
                 }
-            }
-            ?>
+                ?>
 
-        </tbody>
-    </table>
-    <script>
-        window.onload = function() {
-            // Si querés que abra e imprima directo, descomentá:
-            // window.print();
-        };
-    </script>
+            </tbody>
+        </table>
+        <script>
+            window.onload = function() {
+                // Si querés que abra e imprima directo, descomentá:
+                // window.print();
+            };
+        </script>
+    </div>
 
 </body>
 
