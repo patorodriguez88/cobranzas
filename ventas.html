@@ -71,6 +71,33 @@
       margin: 6px !important;
       min-height: auto !important;
     }
+    .acciones-informe {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 15px;
+    }
+
+    .acciones-documento {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 10px;
+    }
+
+    .btn-informe {
+      border: 1px solid #495057;
+      background: #fff;
+      color: #343a40;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .btn-informe:hover {
+      background: #f8f9fa;
+    }
   </style>
   <body
     class="loading"
@@ -579,8 +606,14 @@
                       Turno
                     </button>
                   </div>
-                  <button type="button" id="btn_informe_venta_a4" class="btn btn-outline-dark btn-sm">
-                    <i class="mdi mdi-file-document-outline me-1"></i>
+                </div>
+                <div class="acciones-documento">
+                  <button
+                    class="btn-informe"
+                    onclick="window.open('control/procesos/php/informe_venta.php?id=<?= $id ?>')"
+                  >
+                    <i class="mdi mdi-file-document-outline"></i>
+
                     Informe A4
                   </button>
                 </div>
