@@ -136,12 +136,6 @@ function fecha($f)
             margin-bottom: 5px;
         }
 
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px;
-        }
-
         .label {
             font-size: 7.5px;
             color: #777;
@@ -226,6 +220,10 @@ function fecha($f)
             grid-template-columns: 1fr 1fr;
             gap: 6px;
             align-items: stretch;
+        }
+
+        .grid .box {
+            height: 100%;
         }
 
         @media print {
