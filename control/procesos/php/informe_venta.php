@@ -294,9 +294,10 @@ function fecha($f)
         <thead>
             <tr>
                 <th>Fecha</th>
-                <th>Banco</th>
+                <th>Tipo / Banco</th>
                 <th>Operación</th>
-                <th>Importe</th>
+                <th>Observaciones</th>
+                <th class="text-end">Importe</th>
                 <th>Conciliado</th>
             </tr>
         </thead>
@@ -308,7 +309,7 @@ function fecha($f)
             ?>
 
                 <tr>
-                    <td colspan="5" style="text-align:center;">
+                    <td colspan="6" style="text-align:center;">
                         Sin pagos registrados
                     </td>
                 </tr>
@@ -321,52 +322,88 @@ function fecha($f)
                     $conciliado = intval($p['Conciliado']) === 1
                         ? 'SI'
                         : 'NO';
+
+                    $tieneComprobante = !empty($p['Imagen']);
                 ?>
 
                     <tr>
-                        <td>
-                            <?= fecha($p['Fecha']) ?><br>
-                            <small><?= date('H:i', strtotime($p['Fecha'])) ?></small>
+
+                        <td style="width:110px;">
+                            <?= fecha($p['FechaAplicacion']) ?><br>
+
+                            <small>
+                                <?= !empty($p['FechaAplicacion'])
+                                    ? date('H:i', strtotime($p['FechaAplicacion']))
+                                    : '' ?>
+                            </small>
+                        </td>
+
+                        <td style="width:170px;">
+                            <strong>
+                                <?= htmlspecialchars($p['Banco'] ?? '-') ?>
+                            </strong>
+
+                            <?php if ($tieneComprobante) { ?>
+                                <br>
+                                <small style="color:green;">
+                                    📎 Comprobante adjunto
+                                </small>
+                            <?php } ?>
+                        </td>
+
+                        <td style="width:180px;">
+                            <?= htmlspecialchars($p['Operacion'] ?? '-') ?>
+
+                            <br>
+
+                            <small style="color:#666;">
+                                Cobranza #<?= intval($p['idCobranza']) ?>
+                            </small>
                         </td>
 
                         <td>
-                            Cobranza #<?= htmlspecialchars($p['idCobranza']) ?>
+                            <?= nl2br(htmlspecialchars($p['Usuario_obs'] ?? '-')) ?>
+
+                            <br>
+
+                            <small style="color:#666;">
+                                Usuario: <?= htmlspecialchars($p['Usuario'] ?? '-') ?>
+                            </small>
                         </td>
 
-                        <td>
-                            Aplicado por <?= htmlspecialchars($p['Usuario'] ?? '') ?>
+                        <td class="text-end" style="width:120px;">
+                            <strong>
+                                <?= money($p['ImporteAplicado']) ?>
+                            </strong>
                         </td>
 
-                        <td class="text-end">
-                            <?= money($p['ImporteAplicado']) ?>
+                        <td class="text-center" style="width:90px;">
+
+                            <?php if ($conciliado === 'SI') { ?>
+
+                                <span style="
+                color:green;
+                font-weight:bold;
+            ">
+                                    SI
+                                </span>
+
+                            <?php } else { ?>
+
+                                <span style="
+                color:#d39e00;
+                font-weight:bold;
+            ">
+                                    NO
+                                </span>
+
+                            <?php } ?>
+
                         </td>
 
-                        <td class="text-center">
-                            -
-                        </td>
                     </tr>
 
-                    <?php
-                    if (!empty($p['Imagen'])) {
-                    ?>
-
-                        <tr>
-                            <td colspan="5" style="text-align:center; padding:15px;">
-
-                                <img
-                                    src="<?= htmlspecialchars($p['Imagen']) ?>"
-                                    style="
-                max-width:500px;
-                max-height:400px;
-                border:1px solid #CCC;
-                border-radius:6px;
-            ">
-
-                            </td>
-                        </tr>
-
             <?php
-                    }
                 }
             }
             ?>
