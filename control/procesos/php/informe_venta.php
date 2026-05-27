@@ -50,6 +50,8 @@ $detalle = $stmt->get_result();
 $sqlPagos = "
     SELECT
         CV.ImporteAplicado,
+        CV.idCobranza,
+
         C.Fecha,
         C.Hora,
         C.Banco,
@@ -60,12 +62,16 @@ $sqlPagos = "
         C.Usuario,
         C.ConciliadoPor,
         C.FechaConciliado
+
     FROM CobranzasVentas CV
-    INNER JOIN Cobranza C 
+
+    LEFT JOIN Cobranza C 
         ON C.id = CV.idCobranza
+
     WHERE CV.idVenta = ?
       AND CV.Eliminado = 0
-    ORDER BY C.Fecha ASC, C.Hora ASC
+
+    ORDER BY CV.id ASC
 ";
 
 $stmt = $mysqli->prepare($sqlPagos);
