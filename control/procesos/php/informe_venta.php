@@ -62,8 +62,7 @@ $sqlPagos = "
         C.Banco,
         C.Operacion,
         C.Conciliado,
-        C.Usuario_obs,
-        C.Imagen
+        C.Usuario_obs
 
     FROM CobranzasVentas CV
 
@@ -361,7 +360,7 @@ function fecha($f)
                         ? 'SI'
                         : 'NO';
 
-                    $tieneComprobante = !empty($p['Imagen']);
+                    $tieneComprobante = false;
                 ?>
 
                     <tr>
