@@ -288,6 +288,31 @@ function fecha($f)
             <div class="label">Observaciones</div>
             <div class="value"><?= nl2br(htmlspecialchars($venta['Observaciones'])) ?></div>
         <?php } ?>
+        <div class="label">OV Wepoint</div>
+        <div class="value">
+            <?php if (!empty($venta['wepoint_nro_orden_venta'])) { ?>
+                #<?= htmlspecialchars($venta['wepoint_nro_orden_venta']) ?>
+                <?php if (!empty($venta['wepoint_estado'])) { ?>
+                    - <?= htmlspecialchars($venta['wepoint_estado']) ?>
+                <?php } ?>
+            <?php } else { ?>
+                Sin OV Wepoint generada
+            <?php } ?>
+        </div>
+
+        <?php if (!empty($venta['wepoint_created_at'])) { ?>
+            <div class="label">Fecha OV Wepoint</div>
+            <div class="value">
+                <?= date('d/m/Y H:i', strtotime($venta['wepoint_created_at'])) ?>
+            </div>
+        <?php } ?>
+
+        <?php if (!empty($venta['caddy_codigo_seguimiento'])) { ?>
+            <div class="label">Seguimiento Caddy</div>
+            <div class="value">
+                <?= htmlspecialchars($venta['caddy_codigo_seguimiento']) ?>
+            </div>
+        <?php } ?>
     </div>
 
     <table>
@@ -325,7 +350,12 @@ function fecha($f)
             <td class="text-end total-final"><?= money($venta['Saldo'] ?? 0) ?></td>
         </tr>
     </table>
-    <h3>Pagos / Depósitos</h3>
+    <h3>
+        Pagos / Depósitos
+        <?php if (!empty($venta['wepoint_nro_orden_venta'])) { ?>
+            - OV Wepoint #<?= htmlspecialchars($venta['wepoint_nro_orden_venta']) ?>
+        <?php } ?>
+    </h3>
 
     <table>
         <thead>
@@ -377,7 +407,7 @@ function fecha($f)
 
                         <td style="width:170px;">
                             <strong>
-                                <?= htmlspecialchars($p['Banco'] ?? '-') ?>
+                                <?= !empty($p['Banco']) ? htmlspecialchars($p['Banco']) : 'Sin banco informado' ?>
                             </strong>
 
                             <?php if ($tieneComprobante) { ?>
@@ -389,7 +419,7 @@ function fecha($f)
                         </td>
 
                         <td style="width:180px;">
-                            <?= htmlspecialchars($p['Operacion'] ?? '-') ?>
+                            <?= !empty($p['Operacion']) ? htmlspecialchars($p['Operacion']) : 'Sin número informado' ?>
 
                             <br>
 
@@ -401,7 +431,7 @@ function fecha($f)
                         <td>
                             <?= !empty($p['Usuario_obs']) ? nl2br(htmlspecialchars($p['Usuario_obs'])) : '-' ?>
                             <br>
-                            <small>Usuario: <?= htmlspecialchars($p['UsuarioAplicacion'] ?? $p['Usuario'] ?? '-') ?></small>
+                            <small>Usuario: <?= htmlspecialchars($p['UsuarioAplicacion'] ?? '-') ?></small>
                         </td>
 
                         <td class="text-end" style="width:120px;">
