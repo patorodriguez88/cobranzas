@@ -1002,6 +1002,12 @@ function abrirEstadoVenta(idVenta) {
         .on("click", function () {
           validarOrdenAntesDeTurno(v.id);
         });
+      $("#btn_informe_venta_a4")
+        .off("click")
+        .on("click", function () {
+          window.open("control/procesos/php/informe_venta.php?id=" + v.id, "_blank");
+        });
+
       let htmlPagos = "";
       let imagenPago = "";
 
