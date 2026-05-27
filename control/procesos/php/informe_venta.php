@@ -95,6 +95,10 @@ $ajustesRow = $stmt->get_result()->fetch_assoc();
 
 $totalAjustes = floatval($ajustesRow['TotalAjustes'] ?? 0);
 
+$totalVenta   = floatval($venta['Total'] ?? 0);
+$totalPagado  = floatval($venta['TotalPagado'] ?? 0);
+
+$saldoCalculado = $totalVenta - $totalPagado - $totalAjustes;
 
 function money($n)
 {
@@ -423,7 +427,7 @@ function fecha($f)
 
             <tr>
                 <td>Saldo</td>
-                <td class="text-end total-final"><?= money($venta['Saldo'] ?? 0) ?></td>
+                <td class="text-end total-final"><?= money($saldoCalculado) ?></td>
             </tr>
         </table>
         <h3>
