@@ -246,6 +246,20 @@ function fecha($f)
         }
 
         @media print {
+
+            body {
+                background: #FFF;
+                padding: 0;
+            }
+
+            .page {
+                box-shadow: none;
+                margin: 0;
+                width: auto;
+                min-height: auto;
+                padding: 0;
+            }
+
             .print-btn {
                 display: none;
             }
