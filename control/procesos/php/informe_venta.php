@@ -49,28 +49,14 @@ $detalle = $stmt->get_result();
 
 $sqlPagos = "
     SELECT
-        CV.ImporteAplicado,
+        CV.id,
         CV.idCobranza,
-
-        C.Fecha,
-        C.Hora,
-        C.Banco,
-        C.Operacion,
-        C.Usuario_obs,
-        C.Conciliado,
-        C.Imagen,
-        C.Usuario,
-        C.ConciliadoPor,
-        C.FechaConciliado
-
+        CV.ImporteAplicado,
+        CV.Usuario,
+        CV.Fecha
     FROM CobranzasVentas CV
-
-    LEFT JOIN Cobranza C 
-        ON C.id = CV.idCobranza
-
     WHERE CV.idVenta = ?
       AND CV.Eliminado = 0
-
     ORDER BY CV.id ASC
 ";
 
@@ -340,22 +326,15 @@ function fecha($f)
                     <tr>
                         <td>
                             <?= fecha($p['Fecha']) ?><br>
-                            <small><?= substr($p['Hora'], 0, 5) ?></small>
+                            <small><?= date('H:i', strtotime($p['Fecha'])) ?></small>
                         </td>
 
                         <td>
-                            <?= htmlspecialchars($p['Banco']) ?>
+                            Cobranza #<?= htmlspecialchars($p['idCobranza']) ?>
                         </td>
 
                         <td>
-                            <b><?= htmlspecialchars($p['Operacion']) ?></b>
-
-                            <?php if (!empty($p['Usuario_obs'])) { ?>
-                                <br>
-                                <small>
-                                    <?= nl2br(htmlspecialchars($p['Usuario_obs'])) ?>
-                                </small>
-                            <?php } ?>
+                            Aplicado por <?= htmlspecialchars($p['Usuario'] ?? '') ?>
                         </td>
 
                         <td class="text-end">
@@ -363,15 +342,7 @@ function fecha($f)
                         </td>
 
                         <td class="text-center">
-                            <?php if (intval($p['Conciliado']) === 1) { ?>
-                                <strong>SI</strong><br>
-                                <small>
-                                    <?= htmlspecialchars($p['ConciliadoPor'] ?? '') ?><br>
-                                    <?= !empty($p['FechaConciliado']) ? date('d/m/Y H:i', strtotime($p['FechaConciliado'])) : '' ?>
-                                </small>
-                            <?php } else { ?>
-                                NO
-                            <?php } ?>
+                            -
                         </td>
                     </tr>
 
