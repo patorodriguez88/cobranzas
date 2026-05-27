@@ -1893,6 +1893,7 @@ function abrirModalDepositoVenta(idVenta) {
       $("#deposito_tipo_operacion").val("");
       $("#deposito_banco").val("");
       $("#deposito_operacion").val("");
+      $("#deposito_tipo_operacion").trigger("change");
       $("#deposito_importe").val(v.Saldo || "");
       $("#deposito_observaciones").val("");
 
@@ -2470,5 +2471,22 @@ $(document).ready(function () {
         });
       },
     });
+  }
+});
+$(document).on("change", "#deposito_tipo_operacion", function () {
+  let tipo = ($(this).val() || "").toLowerCase();
+
+  if (tipo === "Efectivo") {
+    $("#grupo_banco_deposito").hide();
+    $("#grupo_operacion_deposito").hide();
+
+    $("#deposito_banco").val("CAJA");
+    $("#deposito_operacion").val("EFECTIVO");
+  } else {
+    $("#grupo_banco_deposito").show();
+    $("#grupo_operacion_deposito").show();
+
+    $("#deposito_banco").val("");
+    $("#deposito_operacion").val("");
   }
 });
