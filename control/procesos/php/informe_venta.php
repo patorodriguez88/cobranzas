@@ -81,6 +81,20 @@ $stmt->execute();
 
 $pagos = $stmt->get_result();
 
+$sqlAjustes = "
+    SELECT COALESCE(SUM(Importe), 0) AS TotalAjustes
+    FROM Ventas_Ajustes_Pago
+    WHERE idVenta = ?
+      AND Eliminado = 0
+";
+
+$stmt = $mysqli->prepare($sqlAjustes);
+$stmt->bind_param("i", $id);
+$stmt->execute();
+$ajustesRow = $stmt->get_result()->fetch_assoc();
+
+$totalAjustes = floatval($ajustesRow['TotalAjustes'] ?? 0);
+
 
 function money($n)
 {
@@ -401,6 +415,12 @@ function fecha($f)
                 <td>Pagado</td>
                 <td class="text-end"><?= money($venta['TotalPagado'] ?? 0) ?></td>
             </tr>
+
+            <tr>
+                <td>Ajustes</td>
+                <td class="text-end"><?= money($totalAjustes) ?></td>
+            </tr>
+
             <tr>
                 <td>Saldo</td>
                 <td class="text-end total-final"><?= money($venta['Saldo'] ?? 0) ?></td>

@@ -2418,6 +2418,7 @@ switch ($accion) {
         ));
 
         break;
+
     case 'guardar_deposito_venta':
 
         $idVenta = isset($_POST['idVenta']) ? (int)$_POST['idVenta'] : 0;
@@ -2434,11 +2435,26 @@ switch ($accion) {
 
         $hora = date("H:i:s");
 
-        if ($idVenta <= 0 || $fecha == '' || $tipoOperacion == '' || $banco == '' || $operacion == '' || $importe <= 0) {
-            echo json_encode(array(
-                "success" => 0,
-                "error" => "Datos incompletos."
-            ));
+        $tipoOperacion = isset($_POST['tipoOperacion']) ? trim($_POST['tipoOperacion']) : '';
+        $banco         = isset($_POST['banco']) ? trim($_POST['banco']) : '';
+        $operacion     = isset($_POST['operacion']) ? trim($_POST['operacion']) : '';
+
+        if (strtolower($tipoOperacion) === 'efectivo') {
+            $banco = 'CAJA';
+            $operacion = 'EFECTIVO';
+        }
+
+        if (
+            !$idVenta ||
+            !$fecha ||
+            !$tipoOperacion ||
+            $importe <= 0 ||
+            (
+                strtolower($tipoOperacion) !== 'efectivo' &&
+                (!$banco || !$operacion)
+            )
+        ) {
+            echo json_encode(["success" => false, "error" => "Datos incompletos."]);
             exit;
         }
 
