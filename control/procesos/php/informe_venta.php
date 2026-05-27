@@ -103,76 +103,76 @@ function fecha($f)
     <style>
         @page {
             size: A4;
-            margin: 8mm;
+            margin: 6mm;
         }
 
         body {
             font-family: Arial, sans-serif;
             color: #222;
-            font-size: 10px;
+            font-size: 8.5px;
         }
 
         .header {
             display: flex;
             justify-content: space-between;
             border-bottom: 2px solid #222;
-            padding-bottom: 6px;
-            margin-bottom: 10px;
+            padding-bottom: 4px;
+            margin-bottom: 6px;
         }
 
         .title {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
         }
 
         .subtitle {
             color: #666;
-            margin-top: 2px;
+            margin-top: 1px;
         }
 
         .box {
             border: 1px solid #ddd;
-            border-radius: 5px;
-            padding: 7px;
-            margin-bottom: 8px;
+            border-radius: 4px;
+            padding: 5px;
+            margin-bottom: 5px;
         }
 
         .grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 8px;
+            gap: 6px;
         }
 
         .label {
-            font-size: 9px;
+            font-size: 7.5px;
             color: #777;
             text-transform: uppercase;
         }
 
         .value {
-            font-size: 11px;
+            font-size: 9px;
             font-weight: bold;
-            margin-bottom: 3px;
+            margin-bottom: 1px;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 7px;
+            margin-top: 5px;
         }
 
         th {
             background: #f2f2f2;
             text-align: left;
             border: 1px solid #ccc;
-            padding: 4px;
-            font-size: 10px;
+            padding: 2px 3px;
+            font-size: 8px;
         }
 
         td {
             border: 1px solid #ccc;
-            padding: 4px;
-            font-size: 10px;
+            padding: 2px 3px;
+            font-size: 8px;
             vertical-align: top;
         }
 
@@ -185,29 +185,29 @@ function fecha($f)
         }
 
         .totales {
-            width: 38%;
+            width: 34%;
             margin-left: auto;
-            margin-top: 8px;
+            margin-top: 5px;
         }
 
         .totales td {
-            font-size: 10px;
-            padding: 4px;
+            font-size: 8px;
+            padding: 2px 3px;
         }
 
         .total-final {
-            font-size: 12px;
+            font-size: 9px;
             font-weight: bold;
         }
 
         h3 {
-            margin-top: 12px !important;
-            margin-bottom: 4px;
-            font-size: 13px;
+            margin-top: 7px !important;
+            margin-bottom: 3px;
+            font-size: 10px;
         }
 
         small {
-            font-size: 8px;
+            font-size: 6.8px;
         }
 
         .print-btn {
@@ -326,7 +326,7 @@ function fecha($f)
             <td class="text-end total-final"><?= money($venta['Saldo'] ?? 0) ?></td>
         </tr>
     </table>
-    <h3 style="margin-top:30px;">Pagos / Depósitos</h3>
+    <h3>Pagos / Depósitos</h3>
 
     <table>
         <thead>
