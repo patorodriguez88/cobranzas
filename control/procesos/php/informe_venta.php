@@ -226,6 +226,25 @@ function fecha($f)
             height: 100%;
         }
 
+        body {
+            font-family: Arial, sans-serif;
+            color: #222;
+            font-size: 8.5px;
+            background: #e9ecef;
+            margin: 0;
+            padding: 20px 0;
+        }
+
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            background: #FFF;
+            box-shadow: 0 0 15px rgba(0, 0, 0, .15);
+            padding: 6mm;
+            box-sizing: border-box;
+        }
+
         @media print {
             .print-btn {
                 display: none;
