@@ -109,6 +109,19 @@ function fecha($f)
             font-family: Arial, sans-serif;
             color: #222;
             font-size: 8.5px;
+            background: #e9ecef;
+            margin: 0;
+            padding: 20px 0;
+        }
+
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            background: #FFF;
+            box-shadow: 0 0 15px rgba(0, 0, 0, .15);
+            padding: 6mm;
+            box-sizing: border-box;
         }
 
         .header {
@@ -129,42 +142,59 @@ function fecha($f)
             margin-top: 1px;
         }
 
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            align-items: stretch;
+        }
+
+        .grid .box {
+            height: 100%;
+        }
+
         .box {
             border: 1px solid #ddd;
             border-radius: 4px;
             padding: 5px;
             margin-bottom: 5px;
+            box-sizing: border-box;
         }
 
         .label {
             font-size: 7.5px;
             color: #777;
             text-transform: uppercase;
+            letter-spacing: .4px;
         }
 
         .value {
             font-size: 9px;
             font-weight: bold;
             margin-bottom: 1px;
+            color: #111;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 5px;
+            border: 1px solid #e5e5e5;
         }
 
         th {
-            background: #f2f2f2;
+            background: #f5f5f5;
             text-align: left;
-            border: 1px solid #ccc;
-            padding: 2px 3px;
+            border-bottom: 1px solid #dcdcdc;
+            padding: 4px 5px;
             font-size: 8px;
+            font-weight: 700;
+            color: #444;
         }
 
         td {
-            border: 1px solid #ccc;
-            padding: 2px 3px;
+            border-bottom: 1px solid #ededed;
+            padding: 4px 5px;
             font-size: 8px;
             vertical-align: top;
         }
@@ -215,58 +245,25 @@ function fecha($f)
             cursor: pointer;
         }
 
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px;
-            align-items: stretch;
-        }
-
-        .grid .box {
-            height: 100%;
-        }
-
-        body {
-            font-family: Arial, sans-serif;
-            color: #222;
-            font-size: 8.5px;
-            background: #e9ecef;
-            margin: 0;
-            padding: 20px 0;
-        }
-
-        .page {
-            width: 210mm;
-            min-height: 297mm;
-            margin: 0 auto;
-            background: #FFF;
-            box-shadow: 0 0 15px rgba(0, 0, 0, .15);
-            padding: 6mm;
-            box-sizing: border-box;
-        }
-
         @media print {
-
             body {
                 background: #FFF;
                 padding: 0;
+                margin: 0;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
             }
 
             .page {
-                box-shadow: none;
-                margin: 0;
                 width: auto;
                 min-height: auto;
+                margin: 0;
                 padding: 0;
+                box-shadow: none;
             }
 
             .print-btn {
                 display: none;
-            }
-
-            body {
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
             }
         }
     </style>
