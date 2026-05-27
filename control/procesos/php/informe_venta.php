@@ -81,23 +81,55 @@ $stmt->execute();
 
 $pagos = $stmt->get_result();
 
-$sqlAjustes = "
-    SELECT COALESCE(SUM(Importe), 0) AS TotalAjustes
+$sqlDetalleAjustes = "
+
+    SELECT TipoAjuste, Observaciones, Importe
+
     FROM Ventas_Ajustes_Pago
+
     WHERE idVenta = ?
+
       AND Eliminado = 0
+
 ";
 
-$stmt = $mysqli->prepare($sqlAjustes);
-$stmt->bind_param("i", $id);
-$stmt->execute();
-$ajustesRow = $stmt->get_result()->fetch_assoc();
+$stmt = $mysqli->prepare($sqlDetalleAjustes);
 
-$totalAjustes = floatval($ajustesRow['TotalAjustes'] ?? 0);
+$stmt->bind_param("i", $id);
+
+$stmt->execute();
+
+$detalleAjustes = $stmt->get_result();
+
+$ajustesTexto = [];
+$totalAjustes = 0;
+
+while ($aj = $detalleAjustes->fetch_assoc()) {
+
+    $totalAjustes += floatval($aj['Importe'] ?? 0);
+
+    $texto = '';
+
+    if (!empty($aj['TipoAjuste'])) {
+        $texto = $aj['TipoAjuste'];
+    }
+
+    if (!empty($aj['Observaciones'])) {
+        if ($texto != '') {
+            $texto .= ': ';
+        }
+
+        $texto .= $aj['Observaciones'];
+    }
+
+    if ($texto != '') {
+        $ajustesTexto[] = $texto;
+    }
+}
+
 
 $totalVenta   = floatval($venta['Total'] ?? 0);
 $totalPagado  = floatval($venta['TotalPagado'] ?? 0);
-
 $saldoCalculado = $totalVenta - $totalPagado;
 
 function money($n)
@@ -421,7 +453,23 @@ function fecha($f)
             </tr>
 
             <tr>
-                <td>Ajustes Incluidos</td>
+                <td>
+
+                    Ajustes incluidos
+
+                    <?php if (!empty($ajustesTexto)) { ?>
+
+                        <br>
+
+                        <small>
+
+                            (<?= htmlspecialchars(implode(' | ', $ajustesTexto)) ?>)
+
+                        </small>
+
+                    <?php } ?>
+
+                </td>
                 <td class="text-end"><?= money($totalAjustes) ?></td>
             </tr>
 
