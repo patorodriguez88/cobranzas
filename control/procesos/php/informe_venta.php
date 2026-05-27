@@ -98,7 +98,7 @@ $totalAjustes = floatval($ajustesRow['TotalAjustes'] ?? 0);
 $totalVenta   = floatval($venta['Total'] ?? 0);
 $totalPagado  = floatval($venta['TotalPagado'] ?? 0);
 
-$saldoCalculado = $totalVenta - $totalPagado - $totalAjustes;
+$saldoCalculado = $totalVenta - $totalPagado;
 
 function money($n)
 {
@@ -421,7 +421,7 @@ function fecha($f)
             </tr>
 
             <tr>
-                <td>Ajustes</td>
+                <td>Ajustes Incluidos</td>
                 <td class="text-end"><?= money($totalAjustes) ?></td>
             </tr>
 
