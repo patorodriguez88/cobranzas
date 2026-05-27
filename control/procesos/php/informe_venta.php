@@ -421,7 +421,7 @@ function fecha($f)
 
                     <tr>
 
-                        <td style="width:110px;">
+                        <td style="width:50px;">
                             <?= fecha($p['FechaAplicacion']) ?><br>
 
                             <small>
@@ -431,7 +431,7 @@ function fecha($f)
                             </small>
                         </td>
 
-                        <td style="width:170px;">
+                        <td style="width:70px;">
                             <strong>
                                 <?= !empty($p['Banco']) ? htmlspecialchars($p['Banco']) : 'Sin banco informado' ?>
                             </strong>
