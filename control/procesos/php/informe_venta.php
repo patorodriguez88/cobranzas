@@ -52,11 +52,27 @@ $sqlPagos = "
         CV.id,
         CV.idCobranza,
         CV.ImporteAplicado,
-        CV.Usuario,
-        CV.Fecha
+        CV.Usuario AS UsuarioAplicacion,
+        CV.Fecha AS FechaAplicacion,
+
+        C.Banco,
+        C.Operacion,
+        C.Conciliado,
+        C.Usuario_obs,
+
+        (SELECT Imagen 
+         FROM CobranzaImagenes CI 
+         WHERE CI.idCobranza = CV.idCobranza 
+         LIMIT 1) AS Imagen
+
     FROM CobranzasVentas CV
+
+    LEFT JOIN Cobranza C 
+        ON C.id = CV.idCobranza
+
     WHERE CV.idVenta = ?
       AND CV.Eliminado = 0
+
     ORDER BY CV.id ASC
 ";
 
@@ -84,104 +100,121 @@ function fecha($f)
 <head>
     <meta charset="UTF-8">
     <title>Informe Venta #<?= $id ?></title>
-
     <style>
         @page {
             size: A4;
-            margin: 18mm;
+            margin: 8mm;
         }
 
         body {
             font-family: Arial, sans-serif;
             color: #222;
-            font-size: 13px;
+            font-size: 10px;
         }
 
         .header {
             display: flex;
             justify-content: space-between;
             border-bottom: 2px solid #222;
-            padding-bottom: 12px;
-            margin-bottom: 20px;
+            padding-bottom: 6px;
+            margin-bottom: 10px;
         }
 
         .title {
-            font-size: 22px;
+            font-size: 18px;
             font-weight: bold;
         }
 
         .subtitle {
             color: #666;
-            margin-top: 4px;
+            margin-top: 2px;
         }
 
         .box {
             border: 1px solid #ddd;
-            border-radius: 6px;
-            padding: 12px;
-            margin-bottom: 15px;
+            border-radius: 5px;
+            padding: 7px;
+            margin-bottom: 8px;
         }
 
         .grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 12px;
+            gap: 8px;
         }
 
         .label {
-            font-size: 11px;
+            font-size: 9px;
             color: #777;
             text-transform: uppercase;
         }
 
         .value {
-            font-size: 14px;
+            font-size: 11px;
             font-weight: bold;
-            margin-bottom: 7px;
+            margin-bottom: 3px;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 12px;
+            margin-top: 7px;
         }
 
         th {
             background: #f2f2f2;
             text-align: left;
             border: 1px solid #ccc;
-            padding: 8px;
+            padding: 4px;
+            font-size: 10px;
         }
 
         td {
             border: 1px solid #ccc;
-            padding: 8px;
+            padding: 4px;
+            font-size: 10px;
+            vertical-align: top;
         }
 
         .text-end {
             text-align: right;
         }
 
+        .text-center {
+            text-align: center;
+        }
+
         .totales {
-            width: 45%;
+            width: 38%;
             margin-left: auto;
-            margin-top: 20px;
+            margin-top: 8px;
         }
 
         .totales td {
-            font-size: 14px;
+            font-size: 10px;
+            padding: 4px;
         }
 
         .total-final {
-            font-size: 18px;
+            font-size: 12px;
             font-weight: bold;
+        }
+
+        h3 {
+            margin-top: 12px !important;
+            margin-bottom: 4px;
+            font-size: 13px;
+        }
+
+        small {
+            font-size: 8px;
         }
 
         .print-btn {
             position: fixed;
-            top: 15px;
-            right: 15px;
-            padding: 10px 18px;
+            top: 10px;
+            right: 10px;
+            padding: 8px 14px;
             border: none;
             background: #222;
             color: white;
@@ -192,6 +225,11 @@ function fecha($f)
         @media print {
             .print-btn {
                 display: none;
+            }
+
+            body {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
             }
         }
     </style>
@@ -362,13 +400,9 @@ function fecha($f)
                         </td>
 
                         <td>
-                            <?= nl2br(htmlspecialchars($p['Usuario_obs'] ?? '-')) ?>
-
+                            <?= !empty($p['Usuario_obs']) ? nl2br(htmlspecialchars($p['Usuario_obs'])) : '-' ?>
                             <br>
-
-                            <small style="color:#666;">
-                                Usuario: <?= htmlspecialchars($p['Usuario'] ?? '-') ?>
-                            </small>
+                            <small>Usuario: <?= htmlspecialchars($p['UsuarioAplicacion'] ?? $p['Usuario'] ?? '-') ?></small>
                         </td>
 
                         <td class="text-end" style="width:120px;">
