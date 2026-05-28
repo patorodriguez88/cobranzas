@@ -102,7 +102,6 @@ $stmt->execute();
 $detalleAjustes = $stmt->get_result();
 
 $ajustesTexto = [];
-$totalAjustes = 0;
 
 while ($aj = $detalleAjustes->fetch_assoc()) {
 
