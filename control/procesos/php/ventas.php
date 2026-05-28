@@ -2491,18 +2491,57 @@ switch ($accion) {
             $ncliente = $mysqli->real_escape_string($venta['Ncliente']);
             $nombreCliente = $mysqli->real_escape_string($venta['RazonSocial']);
 
-            $sqlDuplicado = "
-            SELECT id 
-            FROM Cobranza 
-            WHERE Fecha = '$fecha'
-              AND Operacion = '$operacion'
-              AND Banco = '$banco'
-              AND Importe = '$importe'
-            LIMIT 1
-        ";
+            //     $sqlDuplicado = "
+            //     SELECT id 
+            //     FROM Cobranza 
+            //     WHERE Fecha = '$fecha'
+            //       AND Operacion = '$operacion'
+            //       AND Banco = '$banco'
+            //       AND Importe = '$importe'
+            //     LIMIT 1
+            // ";
 
-            $resDuplicado = $mysqli->query($sqlDuplicado);
-            $alertaDuplicidad = ($resDuplicado && $resDuplicado->num_rows > 0) ? 1 : 0;
+            //     $resDuplicado = $mysqli->query($sqlDuplicado);
+            //     $alertaDuplicidad = ($resDuplicado && $resDuplicado->num_rows > 0) ? 1 : 0;
+
+            $alertaDuplicidad = 0;
+
+            if (strtolower($tipoOperacion) !== 'efectivo') {
+
+                $sqlDuplicado = "SELECT 
+                        C.id,
+                        C.Fecha,
+                        C.Banco,
+                        C.Operacion,
+                        C.Importe,
+                        C.Usuario,
+                        CV.idVenta
+                    FROM Cobranza C
+                    LEFT JOIN CobranzasVentas CV 
+                        ON CV.idCobranza = C.id
+                        AND IFNULL(CV.Eliminado,0) = 0
+                    WHERE C.Banco = '$banco'
+                    AND C.Operacion = '$operacion'
+                    AND C.Importe = '$importe'
+                    AND IFNULL(C.Eliminado,0) = 0
+                    LIMIT 1
+                ";
+
+                $resDuplicado = $mysqli->query($sqlDuplicado);
+
+                if ($resDuplicado && $resDuplicado->num_rows > 0) {
+
+                    $dup = $resDuplicado->fetch_assoc();
+
+                    throw new Exception(
+                        "Pago posiblemente duplicado. " .
+                            "Banco: " . $dup['Banco'] . " | " .
+                            "Operación: " . $dup['Operacion'] . " | " .
+                            "Importe: $ " . number_format((float)$dup['Importe'], 2, ',', '.') . " | " .
+                            "Venta vinculada: #" . $dup['idVenta']
+                    );
+                }
+            }
 
             $observacionFinal = $mysqli->real_escape_string(
                 "Carga operador desde Ventas. Venta #" . $venta['NumeroVenta'] . ". "
