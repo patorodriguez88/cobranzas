@@ -83,13 +83,13 @@ $pagos = $stmt->get_result();
 
 $sqlDetalleAjustes = "
 
-    SELECT TipoAjuste, Observaciones, Importe
+    SELECT tipo, observaciones, importe
 
     FROM Ventas_Ajustes_Pago
 
     WHERE idVenta = ?
 
-      AND Eliminado = 0
+      AND eliminado = 0
 
 ";
 
@@ -106,31 +106,35 @@ $totalAjustes = 0;
 
 while ($aj = $detalleAjustes->fetch_assoc()) {
 
-    $totalAjustes += floatval($aj['Importe'] ?? 0);
+    $totalAjustes += floatval($aj['importe'] ?? 0);
 
     $texto = '';
 
-    if (!empty($aj['TipoAjuste'])) {
-        $texto = $aj['TipoAjuste'];
+    if (!empty($aj['tipo'])) {
+
+        $texto = $aj['tipo'];
     }
 
-    if (!empty($aj['Observaciones'])) {
+    if (!empty($aj['observaciones'])) {
+
         if ($texto != '') {
+
             $texto .= ': ';
         }
 
-        $texto .= $aj['Observaciones'];
+        $texto .= $aj['observaciones'];
     }
 
     if ($texto != '') {
+
         $ajustesTexto[] = $texto;
     }
 }
 
-
 $totalVenta   = floatval($venta['Total'] ?? 0);
 $totalPagado  = floatval($venta['TotalPagado'] ?? 0);
-$saldoCalculado = $totalVenta - $totalPagado;
+
+$saldoCalculado = $totalVenta - $totalPagado - $totalAjustes;
 
 function money($n)
 {
