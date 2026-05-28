@@ -82,26 +82,20 @@ $stmt->execute();
 $pagos = $stmt->get_result();
 
 $sqlDetalleAjustes = "
-
     SELECT tipo, observaciones, importe
-
     FROM Ventas_Ajustes_Pago
-
     WHERE idVenta = ?
-
       AND eliminado = 0
-
 ";
 
 $stmt = $mysqli->prepare($sqlDetalleAjustes);
-
 $stmt->bind_param("i", $id);
-
 $stmt->execute();
 
 $detalleAjustes = $stmt->get_result();
 
 $ajustesTexto = [];
+$totalAjustes = 0;
 
 while ($aj = $detalleAjustes->fetch_assoc()) {
 
@@ -110,14 +104,11 @@ while ($aj = $detalleAjustes->fetch_assoc()) {
     $texto = '';
 
     if (!empty($aj['tipo'])) {
-
         $texto = $aj['tipo'];
     }
 
     if (!empty($aj['observaciones'])) {
-
         if ($texto != '') {
-
             $texto .= ': ';
         }
 
@@ -125,14 +116,12 @@ while ($aj = $detalleAjustes->fetch_assoc()) {
     }
 
     if ($texto != '') {
-
         $ajustesTexto[] = $texto;
     }
 }
 
 $totalVenta   = floatval($venta['Total'] ?? 0);
 $totalPagado  = floatval($venta['TotalPagado'] ?? 0);
-
 $saldoCalculado = $totalVenta - $totalPagado - $totalAjustes;
 
 function money($n)
