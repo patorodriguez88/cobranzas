@@ -2491,19 +2491,6 @@ switch ($accion) {
             $ncliente = $mysqli->real_escape_string($venta['Ncliente']);
             $nombreCliente = $mysqli->real_escape_string($venta['RazonSocial']);
 
-            //     $sqlDuplicado = "
-            //     SELECT id 
-            //     FROM Cobranza 
-            //     WHERE Fecha = '$fecha'
-            //       AND Operacion = '$operacion'
-            //       AND Banco = '$banco'
-            //       AND Importe = '$importe'
-            //     LIMIT 1
-            // ";
-
-            //     $resDuplicado = $mysqli->query($sqlDuplicado);
-            //     $alertaDuplicidad = ($resDuplicado && $resDuplicado->num_rows > 0) ? 1 : 0;
-
             $alertaDuplicidad = 0;
 
             if (strtolower($tipoOperacion) !== 'efectivo') {
