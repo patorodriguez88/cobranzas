@@ -1923,6 +1923,7 @@ function abrirModalDepositoVenta(idVenta) {
       $("#deposito_idCliente").val(v.idCliente);
       $("#deposito_ncliente").val(v.Ncliente || "");
       $("#deposito_cliente").val(v.RazonSocial || "");
+      $("#deposito_saldo").val(v.Saldo || 0);
 
       let hoy = new Date().toISOString().slice(0, 10);
 
@@ -1961,22 +1962,52 @@ function guardarDepositoVenta() {
     return;
   }
 
-  Swal.fire({
-    icon: "question",
-    title: "Confirmar depósito",
-    html: `
-      <div class="text-start">
-        <b>Banco:</b> ${banco}<br>
-        <b>Operación:</b> ${operacion}<br>
-        <b>Importe:</b> ${formatoMoneda(importe)}
-      </div>
-    `,
-    showCancelButton: true,
-    confirmButtonText: "Confirmar",
-    cancelButtonText: "Cancelar",
-  }).then((result) => {
-    if (!result.isConfirmed) return;
+  let saldo = parseFloat($("#deposito_saldo").val()) || 0;
 
+  function confirmarDeposito() {
+    Swal.fire({
+      icon: "question",
+      title: "Confirmar depósito",
+      html: `
+        <div class="text-start">
+          <b>Banco:</b> ${banco}<br>
+          <b>Operación:</b> ${operacion}<br>
+          <b>Importe:</b> ${formatoMoneda(importe)}
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: "Confirmar",
+      cancelButtonText: "Cancelar",
+    }).then((result) => {
+      if (!result.isConfirmed) return;
+      enviarDeposito();
+    });
+  }
+
+  if (importe > saldo) {
+    Swal.fire({
+      icon: "warning",
+      title: "El importe supera el saldo",
+      html: `
+        <div class="text-start">
+          <b>Saldo pendiente:</b> ${formatoMoneda(saldo)}<br>
+          <b>Importe ingresado:</b> ${formatoMoneda(importe)}<br>
+          <b>Diferencia:</b> ${formatoMoneda(importe - saldo)}
+        </div>
+        <p class="mt-2 mb-0">¿Querés continuar de todas formas?</p>
+      `,
+      showCancelButton: true,
+      confirmButtonText: "Sí, continuar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#f0ad4e",
+    }).then((result) => {
+      if (!result.isConfirmed) return;
+      confirmarDeposito();
+    });
+    return;
+  }
+
+  function enviarDeposito() {
     $.ajax({
       url: URL_VENTAS,
       type: "POST",
@@ -2038,7 +2069,9 @@ function guardarDepositoVenta() {
           .html('<i class="mdi mdi-content-save mdi-18px"></i> Guardar depósito');
       },
     });
-  });
+  }
+
+  confirmarDeposito();
 }
 function eliminarAjustePago(idVenta) {
   Swal.fire({
