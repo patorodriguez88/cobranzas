@@ -449,14 +449,7 @@ $rowConciliados = $resConciliados->fetch_assoc();
 $totalPagos = (int)($rowConciliados['TotalPagos'] ?? 0);
 $totalConciliados = (int)($rowConciliados['TotalConciliados'] ?? 0);
 
-if ($totalPagos === 0) {
-    responder([
-        "success" => false,
-        "message" => "La venta no tiene pagos registrados."
-    ]);
-}
-
-if ($totalConciliados < $totalPagos) {
+if ($totalPagos > 0 && $totalConciliados < $totalPagos) {
     responder([
         "success" => false,
         "message" => "Todos los pagos deben estar conciliados para generar la OV. Conciliados: {$totalConciliados} de {$totalPagos}."

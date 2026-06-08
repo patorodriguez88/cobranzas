@@ -1393,11 +1393,28 @@ switch ($accion) {
             $detalle[] = $row;
         }
 
+        $sqlAjustes = "
+            SELECT tipo, observaciones, importe
+            FROM Ventas_Ajustes_Pago
+            WHERE idVenta = '$idVenta'
+              AND eliminado = 0
+            ORDER BY id ASC
+        ";
+
+        $resAjustes = $mysqli->query($sqlAjustes);
+
+        $ajustes = array();
+
+        while ($row = $resAjustes->fetch_assoc()) {
+            $ajustes[] = $row;
+        }
+
         echo json_encode(array(
             "success" => 1,
             "venta" => $venta,
             "pagos" => $pagos,
-            "detalle" => $detalle
+            "detalle" => $detalle,
+            "ajustes" => $ajustes
         ));
 
         break;

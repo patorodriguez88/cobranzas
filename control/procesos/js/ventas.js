@@ -983,8 +983,8 @@ function abrirEstadoVenta(idVenta) {
           .off("click");
       } else if (v.EstadoPago === "PAGADA") {
         let todosConciliados =
-          r.pagos &&
-          r.pagos.length > 0 &&
+          !r.pagos ||
+          r.pagos.length === 0 ||
           r.pagos.every(function (p) {
             return parseInt(p.Conciliado || 0) === 1;
           });
@@ -1089,6 +1089,25 @@ function abrirEstadoVenta(idVenta) {
       }
 
       $("#tabla_pagos_venta").html(htmlPagos);
+
+      if (r.ajustes && r.ajustes.length > 0) {
+        let htmlAjustes = "";
+        r.ajustes.forEach(function (a) {
+          htmlAjustes += `
+            <tr>
+              <td>${a.tipo || "-"}</td>
+              <td>${a.observaciones || "-"}</td>
+              <td class="text-end">${formatoMoneda(a.importe)}</td>
+            </tr>
+          `;
+        });
+        $("#tabla_ajustes_venta").html(htmlAjustes);
+        $("#card_ajustes_venta").show();
+      } else {
+        $("#tabla_ajustes_venta").html("");
+        $("#card_ajustes_venta").hide();
+      }
+
       if (imagenPago !== "") {
         $("#btn_ver_comprobante_pago")
           .show()
