@@ -248,7 +248,15 @@ $(document).ready(function () {
       type: "post",
     },
     columns: [
-      { data: "id" },
+      {
+        data: null,
+        render: function (data, type, row) {
+          return (
+            `${row.id}` +
+            `<br><small class="text-muted">${row.Usuario || ""}</small>`
+          );
+        },
+      },
       {
         data: null,
         render: function (data, type, row) {
