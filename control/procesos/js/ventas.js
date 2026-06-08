@@ -982,19 +982,37 @@ function abrirEstadoVenta(idVenta) {
 
           .off("click");
       } else if (v.EstadoPago === "PAGADA") {
-        $("#btn_offcanvas_orden_venta")
-          .prop("disabled", false)
-          .removeClass("btn-outline-secondary")
-          .addClass("btn-outline-primary")
-          .off("click")
-          .on("click", function () {
-            generarOrdenVentaWepoint(v.id);
+        let todosConciliados =
+          r.pagos &&
+          r.pagos.length > 0 &&
+          r.pagos.every(function (p) {
+            return parseInt(p.Conciliado || 0) === 1;
           });
+
+        if (todosConciliados) {
+          $("#btn_offcanvas_orden_venta")
+            .prop("disabled", false)
+            .removeClass("btn-outline-secondary")
+            .addClass("btn-outline-primary")
+            .attr("title", "")
+            .off("click")
+            .on("click", function () {
+              generarOrdenVentaWepoint(v.id);
+            });
+        } else {
+          $("#btn_offcanvas_orden_venta")
+            .prop("disabled", true)
+            .removeClass("btn-outline-primary")
+            .addClass("btn-outline-secondary")
+            .attr("title", "Todos los pagos deben estar conciliados para generar la OV")
+            .off("click");
+        }
       } else {
         $("#btn_offcanvas_orden_venta")
           .prop("disabled", true)
           .removeClass("btn-outline-primary")
           .addClass("btn-outline-secondary")
+          .attr("title", "")
           .off("click");
       }
       $("#btn_offcanvas_turno_retiro")

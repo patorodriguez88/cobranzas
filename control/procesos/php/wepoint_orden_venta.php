@@ -425,7 +425,45 @@ if ($rowEstado['EstadoPago'] != 'PAGADA') {
     ]);
 }
 
-$sqlVenta = "SELECT 
+$sqlConciliados = "
+    SELECT
+        COUNT(*) AS TotalPagos,
+        SUM(CASE WHEN C.Conciliado = 1 THEN 1 ELSE 0 END) AS TotalConciliados
+    FROM CobranzasVentas CV
+    LEFT JOIN Cobranza C ON C.id = CV.idCobranza
+    WHERE CV.idVenta = '$idVenta'
+      AND CV.Eliminado = 0
+";
+
+$resConciliados = $mysqli->query($sqlConciliados);
+
+if (!$resConciliados) {
+    responder([
+        "success" => false,
+        "message" => "Error verificando conciliación de pagos.",
+        "mysql_error" => $mysqli->error
+    ]);
+}
+
+$rowConciliados = $resConciliados->fetch_assoc();
+$totalPagos = (int)($rowConciliados['TotalPagos'] ?? 0);
+$totalConciliados = (int)($rowConciliados['TotalConciliados'] ?? 0);
+
+if ($totalPagos === 0) {
+    responder([
+        "success" => false,
+        "message" => "La venta no tiene pagos registrados."
+    ]);
+}
+
+if ($totalConciliados < $totalPagos) {
+    responder([
+        "success" => false,
+        "message" => "Todos los pagos deben estar conciliados para generar la OV. Conciliados: {$totalConciliados} de {$totalPagos}."
+    ]);
+}
+
+$sqlVenta = "SELECT
         V.*,
         C.id AS idCliente,
         C.RazonSocial,
