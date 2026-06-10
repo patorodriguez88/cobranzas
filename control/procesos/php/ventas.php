@@ -940,7 +940,7 @@ switch ($accion) {
 
     case 'ultimas_ventas':
 
-        $sql = "SELECT 
+        $sql = "SELECT
         V.id,
         V.NumeroVenta,
         V.NumeroOrdenVenta,
@@ -948,6 +948,7 @@ switch ($accion) {
         V.idCliente,
         C.RazonSocial,
         C.Ncliente,
+        C.Celular,
         V.Total,
         V.Observaciones,
         V.Usuario,
@@ -1043,6 +1044,8 @@ switch ($accion) {
                 "NumeroOrdenVenta"  => $row["NumeroOrdenVenta"],
                 "Fecha"             => $row["Fecha"],
                 "Cliente"           => $cliente,
+                "RazonSocial"       => $row["RazonSocial"],
+                "Celular"           => $row["Celular"],
                 "Productos"         => $row["Productos"],
                 "Total"             => $total,
                 "TotalPagado"       => $totalPagado,
@@ -1062,7 +1065,7 @@ switch ($accion) {
 
     case 'listar_ventas':
 
-        $sql = "SELECT 
+        $sql = "SELECT
         V.id,
         V.NumeroVenta,
         V.NumeroOrdenVenta,
@@ -1070,6 +1073,7 @@ switch ($accion) {
         V.idCliente,
         C.RazonSocial,
         C.Ncliente,
+        C.Celular,
         V.Total,
         V.Observaciones,
         V.Usuario,
@@ -1205,6 +1209,8 @@ switch ($accion) {
                 "NumeroOrdenVenta"  => $row["NumeroOrdenVenta"],
                 "Fecha"             => $row["Fecha"],
                 "Cliente"           => $cliente,
+                "RazonSocial"       => $row["RazonSocial"],
+                "Celular"           => $row["Celular"],
                 "Productos"         => $row["Productos"],
                 "Total"             => $row["Total"],
                 "Observaciones"     => $row["Observaciones"],

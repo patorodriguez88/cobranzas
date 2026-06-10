@@ -261,6 +261,7 @@ function cargarVentas() {
         orderable: false,
         render: function (data) {
           return `
+        <i class='mdi mdi-whatsapp mdi-18px text-success ms-2' style='cursor:pointer' title='Enviar mensaje WhatsApp' onclick='abrirModalWhatsappVenta(${JSON.stringify(data).replace(/'/g, "&#39;")})'></i>
         <i class="mdi mdi-eye mdi-18px text-info ms-2" style="cursor:pointer" onclick="abrirEstadoVenta(${data.id})"></i>
         <i class="mdi mdi-cash-plus mdi-18px text-warning ms-2" style="cursor:pointer" title="Cargar ajuste de pago" onclick="abrirModalAjustePago(${data.id})"></i>
         <i class="mdi mdi-delete mdi-18px text-danger ms-2" style="cursor:pointer" onclick="eliminarVenta(${data.id})"></i>
@@ -759,6 +760,11 @@ function cargarListadoVentas() {
         className: "col-acciones",
         render: function (data) {
           return `
+          <i class='mdi mdi-whatsapp mdi-18px text-success ms-2'
+            style='cursor:pointer'
+            title='Enviar mensaje WhatsApp'
+            onclick='abrirModalWhatsappVenta(${JSON.stringify(data).replace(/'/g, "&#39;")})'></i>
+
           <i class="mdi mdi-eye mdi-18px text-info ms-2" style="cursor:pointer" onclick="abrirEstadoVenta(${data.id})"></i>
 
           <i class="mdi mdi-bank-plus mdi-18px text-success ms-2"
@@ -2122,6 +2128,75 @@ function eliminarAjustePago(idVenta) {
     });
   });
 }
+function abrirModalWhatsappVenta(venta) {
+  let celular = (venta.Celular || "").replace(/\D/g, "");
+
+  if (celular === "") {
+    Swal.fire({
+      icon: "warning",
+      title: "Cliente sin celular",
+      text: "El cliente no posee celular cargado.",
+    });
+    return;
+  }
+
+  let nombreCliente = venta.RazonSocial || venta.Cliente || "cliente";
+
+  let productosStr = "";
+  if (venta.Productos) {
+    let partes = venta.Productos.split("||").filter(function (p) {
+      return p.trim() !== "";
+    });
+    let formateados = partes.map(function (p) {
+      let match = p.trim().match(/^(.+?)\s+x(\d+(?:\.\d+)?)$/i);
+      if (match) {
+        return "*" + match[2] + " " + match[1] + "*";
+      }
+      return "*" + p.trim() + "*";
+    });
+    productosStr = formateados.join(", ");
+  }
+
+  let total = parseFloat(venta.Total || 0).toLocaleString("es-AR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
+  let mensaje =
+    "Estimado/a " +
+    nombreCliente +
+    ", ¡buenas tardes!\n\n" +
+    "Queremos informarle que ya le hemos asignado " +
+    productosStr +
+    " y el total para realizar el pago es de *$ " +
+    total +
+    "*.\n\n" +
+    "Le recordamos que deberá transferir ese importe a:\n" +
+    "Alias: *DINTER.PANINI*\n" +
+    "CBU: *2850331630094254579651*\n" +
+    "Banco Macro\n\n" +
+    "*Te Recordamos:*\n" +
+    "⏰ Si nos comparte el comprobante *antes de las 14 hs. del día Viernes*, podrá retirar la mercadería en nuestro establecimiento el día *Sábado*.\n\n" +
+    "En caso de informarnos el pago con posterioridad a ese día y horario, la mercadería estará disponible para su retiro el día *Lunes próximo*.\n\n" +
+    "¡Muchas gracias por su compra! 🙌\n" +
+    "¡Buenas ventas! 🎉";
+
+  $("#texto_whatsapp_venta").val(mensaje);
+
+  if (celular.startsWith("54")) {
+    celular = celular;
+  } else {
+    celular = "54" + celular;
+  }
+  celular = celular.replace("549549", "549").replace("5415", "549");
+
+  let textoEncoded = encodeURIComponent(mensaje);
+  let whatsappURL = "https://wa.me/" + celular + "?text=" + textoEncoded;
+
+  $("#btn_enviar_whatsapp_venta").attr("href", whatsappURL);
+  $("#modal_whatsapp_venta").modal("show");
+}
+
 function abrirWhatsappUnico(url) {
   window.open(url, "whatsapp_web_dinter");
 }
