@@ -457,9 +457,13 @@ switch ($accion) {
                 continue;
             }
 
-            $sqlStockDisponible = "SELECT 
+            // Al editar ($id > 0) excluimos el consumo actual de esta venta,
+            // porque se va a liberar en la transacción antes de re-consumir.
+            $excludeVentaActual = $id > 0 ? "AND VCS.idVenta != '$id'" : "";
+
+            $sqlStockDisponible = "SELECT
             IFNULL(SUM(
-                OCD.Cantidad 
+                OCD.Cantidad
                 - IFNULL((
                     SELECT SUM(VCS.Cantidad)
                     FROM VentasConsumoStock VCS
@@ -467,6 +471,7 @@ switch ($accion) {
                     WHERE VCS.idOrdenCompraDetalle = OCD.id
                       AND IFNULL(VCS.Eliminado,0) = 0
                       AND IFNULL(VCS_V.Eliminado,0) = 0
+                      $excludeVentaActual
                 ),0)
             ),0) AS Disponible
             FROM OrdenesCompraDetalle OCD

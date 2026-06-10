@@ -516,6 +516,7 @@ function eliminarVenta(id) {
           cargarProductosVenta();
           cargarProductosVentaRapida();
           cargarResumenVentas();
+          cargarResumenProductosVentas();
         } else {
           Swal.fire({
             icon: "error",
