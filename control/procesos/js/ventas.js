@@ -2133,17 +2133,17 @@ function eliminarAjustePago(idVenta) {
     });
   });
 }
-function abrirModalWhatsappVenta(venta) {
-  let celular = (venta.Celular || "").replace(/\D/g, "");
+function normalizarCelularWsp(cel) {
+  let c = (cel || "").replace(/\D/g, "");
+  if (c === "") return "";
+  if (!c.startsWith("54")) c = "54" + c;
+  c = c.replace("549549", "549").replace("5415", "549");
+  return c;
+}
 
-  if (celular === "") {
-    Swal.fire({
-      icon: "warning",
-      title: "Cliente sin celular",
-      text: "El cliente no posee celular cargado.",
-    });
-    return;
-  }
+function abrirModalWhatsappVenta(venta) {
+  let idCliente = venta.idCliente || 0;
+  let celularRaw = (venta.Celular || "").trim();
 
   let nombreCliente = venta.RazonSocial || venta.Cliente || "cliente";
 
@@ -2198,15 +2198,71 @@ function abrirModalWhatsappVenta(venta) {
 
   $("#texto_whatsapp_venta").val(mensaje);
 
-  if (!celular.startsWith("54")) {
-    celular = "54" + celular;
-  }
-  celular = celular.replace("549549", "549").replace("5415", "549");
+  // — campo celular —
+  let $box    = $("#wsp_venta_celular_box");
+  let $display = $("#wsp_venta_celular_display");
+  let $input   = $("#wsp_venta_celular_input");
+  let $edit    = $("#wsp_venta_celular_edit_btn");
+  let $save    = $("#wsp_venta_celular_save_btn");
+  let $cancel  = $("#wsp_venta_celular_cancel_btn");
+  let $spin    = $("#wsp_venta_celular_saving");
 
+  function mostrarDisplay(val) {
+    $display.text(val || "").show();
+    $input.hide().val(val || "");
+    $save.hide(); $cancel.hide(); $spin.hide();
+    $edit.show();
+    if (!val) {
+      $display.html('<span class="text-danger fst-italic">Sin celular — hacé clic en el lápiz para agregar</span>').show();
+      $box.addClass("border-danger");
+    } else {
+      $box.removeClass("border-danger");
+    }
+  }
+
+  mostrarDisplay(celularRaw);
+
+  $edit.off("click").on("click", function () {
+    $display.hide();
+    $input.val(celularRaw).show().focus();
+    $edit.hide(); $save.show(); $cancel.show();
+  });
+
+  $cancel.off("click").on("click", function () {
+    mostrarDisplay(celularRaw);
+  });
+
+  $save.off("click").on("click", function () {
+    let nuevo = $input.val().trim();
+    $save.hide(); $cancel.hide(); $spin.show();
+
+    $.ajax({
+      url: "control/procesos/php/clientes.php",
+      type: "POST",
+      dataType: "json",
+      data: { Celular: 1, id: idCliente, Celular_text: nuevo },
+      success: function () {
+        celularRaw = nuevo;
+        mostrarDisplay(celularRaw);
+        $.NotificationApp.send("Celular actualizado", nuevo || "Celular guardado.", "bottom-right", "#FFFFFF", "success");
+      },
+      error: function () {
+        $spin.hide(); $save.show(); $cancel.show();
+        alerta("Error", "No se pudo guardar el celular.", "error");
+      },
+    });
+  });
+
+  // — botón enviar: lee celular actual del campo —
   $("#btn_enviar_whatsapp_venta").off("click").on("click", function () {
+    let celActual = normalizarCelularWsp(celularRaw);
+    if (!celActual) {
+      alerta("Sin celular", "Ingresá el celular del cliente antes de enviar.", "warning");
+      $edit.trigger("click");
+      return;
+    }
     let textoFinal = $("#texto_whatsapp_venta").val();
-    let url = "https://wa.me/" + celular + "?text=" + encodeURIComponent(textoFinal);
-    abrirWhatsappUnico(url);
+    abrirWhatsappUnico("https://wa.me/" + celActual + "?text=" + encodeURIComponent(textoFinal));
   });
 
   $("#modal_whatsapp_venta").modal("show");

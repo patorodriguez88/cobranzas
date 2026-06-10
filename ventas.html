@@ -668,9 +668,18 @@
                   <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
+                  <div id="wsp_venta_celular_box" class="d-flex align-items-center gap-2 mb-3 px-3 py-2 rounded" style="border: 1px solid #dee2e6; background: #f8f9fa;">
+                    <i class="mdi mdi-cellphone mdi-18px text-muted"></i>
+                    <span id="wsp_venta_celular_display" class="flex-grow-1 fw-bold"></span>
+                    <input id="wsp_venta_celular_input" type="text" class="form-control form-control-sm flex-grow-1" style="display:none" placeholder="Ej: 1123456789" />
+                    <i id="wsp_venta_celular_edit_btn" class="mdi mdi-pencil mdi-18px text-primary" style="cursor:pointer" title="Editar celular"></i>
+                    <i id="wsp_venta_celular_save_btn" class="mdi mdi-check-circle mdi-18px text-success" style="cursor:pointer; display:none" title="Guardar"></i>
+                    <i id="wsp_venta_celular_cancel_btn" class="mdi mdi-close-circle mdi-18px text-secondary" style="cursor:pointer; display:none" title="Cancelar"></i>
+                    <span id="wsp_venta_celular_saving" class="spinner-border spinner-border-sm text-success" style="display:none"></span>
+                  </div>
                   <div class="mb-3">
                     <label class="form-label">Mensaje</label>
-                    <textarea id="texto_whatsapp_venta" class="form-control" rows="14"></textarea>
+                    <textarea id="texto_whatsapp_venta" class="form-control" rows="12"></textarea>
                   </div>
                 </div>
                 <div class="modal-footer">
