@@ -2191,24 +2191,24 @@ function abrirModalWhatsappVenta(venta) {
     "CBU: *2850331630094254579651*\n" +
     "Banco Macro\n\n" +
     "*Te Recordamos:*\n" +
-    "Si nos comparte el comprobante *antes de las 13 hs. del día Viernes*, podrá retirar la mercadería en nuestro establecimiento el día *Sábado*.\n\n" +
-    "En caso de informarnos el pago con posterioridad a ese día y horario, la mercadería estará disponible para su retiro el día *Lunes próximo a partir de las 15 hs.*.\n\n" +
+    "Si nos comparte el comprobante *antes de las 13 hs. del día Viernes*, podrá retirar la mercadería en nuestro establecimiento el día *Sábado* o en el caso de haber coordinado el envío, el mismo se realizara con normalidad el mismo día Sábado.\n\n" +
+    "En caso de informarnos el pago con posterioridad al día Viernes a las 13 hs., la mercadería estará disponible para su retiro el día *hábil próximo a partir de las 15 hs.*.\n\n" +
     "¡Muchas gracias por su compra! \n" +
     "¡Buenas ventas!";
 
   $("#texto_whatsapp_venta").val(mensaje);
 
-  if (celular.startsWith("54")) {
-    celular = celular;
-  } else {
+  if (!celular.startsWith("54")) {
     celular = "54" + celular;
   }
   celular = celular.replace("549549", "549").replace("5415", "549");
 
-  let textoEncoded = encodeURIComponent(mensaje);
-  let whatsappURL = "https://wa.me/" + celular + "?text=" + textoEncoded;
+  $("#btn_enviar_whatsapp_venta").off("click").on("click", function () {
+    let textoFinal = $("#texto_whatsapp_venta").val();
+    let url = "https://wa.me/" + celular + "?text=" + encodeURIComponent(textoFinal);
+    abrirWhatsappUnico(url);
+  });
 
-  $("#btn_enviar_whatsapp_venta").attr("href", whatsappURL);
   $("#modal_whatsapp_venta").modal("show");
 }
 
