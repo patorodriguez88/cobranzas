@@ -2191,7 +2191,7 @@ function abrirModalWhatsappVenta(venta) {
     "CBU: *2850331630094254579651*\n" +
     "Banco Macro\n\n" +
     "*Te Recordamos:*\n" +
-    "Si nos comparte el comprobante *antes de las 13 hs. del día Viernes*, podrá retirar la mercadería en nuestro establecimiento el día *Sábado* o en el caso de haber coordinado el envío, el mismo se realizara con normalidad el mismo día Sábado.\n\n" +
+    "Si nos comparte el comprobante *antes de las 13 hs. del día Viernes*, podrá retirar la mercadería en nuestro establecimiento el día *Sábado de 08:00 hs. a 10:30 hs.*  o en el caso de haber coordinado el envío, el mismo se realizara con normalidad el mismo día Sábado.\n\n" +
     "En caso de informarnos el pago con posterioridad al día Viernes a las 13 hs., la mercadería estará disponible para su retiro el día *hábil próximo a partir de las 15 hs.*.\n\n" +
     "¡Muchas gracias por su compra! \n" +
     "¡Buenas ventas!";
@@ -2199,21 +2199,25 @@ function abrirModalWhatsappVenta(venta) {
   $("#texto_whatsapp_venta").val(mensaje);
 
   // — campo celular —
-  let $box    = $("#wsp_venta_celular_box");
+  let $box = $("#wsp_venta_celular_box");
   let $display = $("#wsp_venta_celular_display");
-  let $input   = $("#wsp_venta_celular_input");
-  let $edit    = $("#wsp_venta_celular_edit_btn");
-  let $save    = $("#wsp_venta_celular_save_btn");
-  let $cancel  = $("#wsp_venta_celular_cancel_btn");
-  let $spin    = $("#wsp_venta_celular_saving");
+  let $input = $("#wsp_venta_celular_input");
+  let $edit = $("#wsp_venta_celular_edit_btn");
+  let $save = $("#wsp_venta_celular_save_btn");
+  let $cancel = $("#wsp_venta_celular_cancel_btn");
+  let $spin = $("#wsp_venta_celular_saving");
 
   function mostrarDisplay(val) {
     $display.text(val || "").show();
     $input.hide().val(val || "");
-    $save.hide(); $cancel.hide(); $spin.hide();
+    $save.hide();
+    $cancel.hide();
+    $spin.hide();
     $edit.show();
     if (!val) {
-      $display.html('<span class="text-danger fst-italic">Sin celular — hacé clic en el lápiz para agregar</span>').show();
+      $display
+        .html('<span class="text-danger fst-italic">Sin celular — hacé clic en el lápiz para agregar</span>')
+        .show();
       $box.addClass("border-danger");
     } else {
       $box.removeClass("border-danger");
@@ -2225,7 +2229,9 @@ function abrirModalWhatsappVenta(venta) {
   $edit.off("click").on("click", function () {
     $display.hide();
     $input.val(celularRaw).show().focus();
-    $edit.hide(); $save.show(); $cancel.show();
+    $edit.hide();
+    $save.show();
+    $cancel.show();
   });
 
   $cancel.off("click").on("click", function () {
@@ -2234,7 +2240,9 @@ function abrirModalWhatsappVenta(venta) {
 
   $save.off("click").on("click", function () {
     let nuevo = $input.val().trim();
-    $save.hide(); $cancel.hide(); $spin.show();
+    $save.hide();
+    $cancel.hide();
+    $spin.show();
 
     $.ajax({
       url: "control/procesos/php/clientes.php",
@@ -2244,26 +2252,50 @@ function abrirModalWhatsappVenta(venta) {
       success: function () {
         celularRaw = nuevo;
         mostrarDisplay(celularRaw);
-        $.NotificationApp.send("Celular actualizado", nuevo || "Celular guardado.", "bottom-right", "#FFFFFF", "success");
+        $.NotificationApp.send(
+          "Celular actualizado",
+          nuevo || "Celular guardado.",
+          "bottom-right",
+          "#FFFFFF",
+          "success",
+        );
       },
       error: function () {
-        $spin.hide(); $save.show(); $cancel.show();
+        $spin.hide();
+        $save.show();
+        $cancel.show();
         alerta("Error", "No se pudo guardar el celular.", "error");
       },
     });
   });
 
+  // — botón copiar —
+  $("#btn_copiar_mensaje_venta")
+    .off("click")
+    .on("click", function () {
+      let texto = $("#texto_whatsapp_venta").val();
+      navigator.clipboard.writeText(texto).then(function () {
+        let $btn = $("#btn_copiar_mensaje_venta");
+        $btn.html('<i class="mdi mdi-check"></i> ¡Copiado!').addClass("btn-secondary").removeClass("btn-outline-secondary");
+        setTimeout(function () {
+          $btn.html('<i class="mdi mdi-content-copy"></i> Copiar mensaje').addClass("btn-outline-secondary").removeClass("btn-secondary");
+        }, 2000);
+      });
+    });
+
   // — botón enviar: lee celular actual del campo —
-  $("#btn_enviar_whatsapp_venta").off("click").on("click", function () {
-    let celActual = normalizarCelularWsp(celularRaw);
-    if (!celActual) {
-      alerta("Sin celular", "Ingresá el celular del cliente antes de enviar.", "warning");
-      $edit.trigger("click");
-      return;
-    }
-    let textoFinal = $("#texto_whatsapp_venta").val();
-    abrirWhatsappUnico("https://wa.me/" + celActual + "?text=" + encodeURIComponent(textoFinal));
-  });
+  $("#btn_enviar_whatsapp_venta")
+    .off("click")
+    .on("click", function () {
+      let celActual = normalizarCelularWsp(celularRaw);
+      if (!celActual) {
+        alerta("Sin celular", "Ingresá el celular del cliente antes de enviar.", "warning");
+        $edit.trigger("click");
+        return;
+      }
+      let textoFinal = $("#texto_whatsapp_venta").val();
+      abrirWhatsappUnico("https://wa.me/" + celActual + "?text=" + encodeURIComponent(textoFinal));
+    });
 
   $("#modal_whatsapp_venta").modal("show");
 }
