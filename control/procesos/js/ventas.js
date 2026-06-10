@@ -260,8 +260,12 @@ function cargarVentas() {
         data: null,
         orderable: false,
         render: function (data) {
+          let btnWsp =
+            parseFloat(data.Saldo || 0) > 0
+              ? `<i class='mdi mdi-whatsapp mdi-18px text-success ms-2' style='cursor:pointer' title='Enviar mensaje WhatsApp' onclick='abrirModalWhatsappVenta(${JSON.stringify(data).replace(/'/g, "&#39;")})'></i>`
+              : "";
           return `
-        <i class='mdi mdi-whatsapp mdi-18px text-success ms-2' style='cursor:pointer' title='Enviar mensaje WhatsApp' onclick='abrirModalWhatsappVenta(${JSON.stringify(data).replace(/'/g, "&#39;")})'></i>
+        ${btnWsp}
         <i class="mdi mdi-eye mdi-18px text-info ms-2" style="cursor:pointer" onclick="abrirEstadoVenta(${data.id})"></i>
         <i class="mdi mdi-cash-plus mdi-18px text-warning ms-2" style="cursor:pointer" title="Cargar ajuste de pago" onclick="abrirModalAjustePago(${data.id})"></i>
         <i class="mdi mdi-delete mdi-18px text-danger ms-2" style="cursor:pointer" onclick="eliminarVenta(${data.id})"></i>
@@ -759,11 +763,12 @@ function cargarListadoVentas() {
         orderable: false,
         className: "col-acciones",
         render: function (data) {
+          let btnWsp =
+            parseFloat(data.Saldo || 0) > 0
+              ? `<i class='mdi mdi-whatsapp mdi-18px text-success ms-2' style='cursor:pointer' title='Enviar mensaje WhatsApp' onclick='abrirModalWhatsappVenta(${JSON.stringify(data).replace(/'/g, "&#39;")})'></i>`
+              : "";
           return `
-          <i class='mdi mdi-whatsapp mdi-18px text-success ms-2'
-            style='cursor:pointer'
-            title='Enviar mensaje WhatsApp'
-            onclick='abrirModalWhatsappVenta(${JSON.stringify(data).replace(/'/g, "&#39;")})'></i>
+          ${btnWsp}
 
           <i class="mdi mdi-eye mdi-18px text-info ms-2" style="cursor:pointer" onclick="abrirEstadoVenta(${data.id})"></i>
 
@@ -2162,24 +2167,34 @@ function abrirModalWhatsappVenta(venta) {
     maximumFractionDigits: 2,
   });
 
+  let saldo = parseFloat(venta.Saldo || 0).toLocaleString("es-AR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
+  let lineaSaldo =
+    parseFloat(venta.TotalPagado || 0) > 0
+      ? "El total de su pedido es de *$ " + total + "* y su *saldo pendiente a transferir es de $ " + saldo + "*."
+      : "El total a abonar es de *$ " + saldo + "*.";
+
   let mensaje =
     "Estimado/a " +
     nombreCliente +
     ", ¡buenas tardes!\n\n" +
     "Queremos informarle que ya le hemos asignado " +
     productosStr +
-    " y el total para realizar el pago es de *$ " +
-    total +
-    "*.\n\n" +
+    ". " +
+    lineaSaldo +
+    "\n\n" +
     "Le recordamos que deberá transferir ese importe a:\n" +
     "Alias: *DINTER.PANINI*\n" +
     "CBU: *2850331630094254579651*\n" +
     "Banco Macro\n\n" +
     "*Te Recordamos:*\n" +
-    "⏰ Si nos comparte el comprobante *antes de las 14 hs. del día Viernes*, podrá retirar la mercadería en nuestro establecimiento el día *Sábado*.\n\n" +
-    "En caso de informarnos el pago con posterioridad a ese día y horario, la mercadería estará disponible para su retiro el día *Lunes próximo*.\n\n" +
-    "¡Muchas gracias por su compra! 🙌\n" +
-    "¡Buenas ventas! 🎉";
+    "Si nos comparte el comprobante *antes de las 13 hs. del día Viernes*, podrá retirar la mercadería en nuestro establecimiento el día *Sábado*.\n\n" +
+    "En caso de informarnos el pago con posterioridad a ese día y horario, la mercadería estará disponible para su retiro el día *Lunes próximo a partir de las 15 hs.*.\n\n" +
+    "¡Muchas gracias por su compra! \n" +
+    "¡Buenas ventas!";
 
   $("#texto_whatsapp_venta").val(mensaje);
 
