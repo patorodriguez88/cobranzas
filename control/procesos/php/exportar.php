@@ -71,12 +71,16 @@ if (isset($_POST['Exportar'])) {
         // console.log('exportar',$name);
 
         $fichero = 'exportaciones/' . $filled_int . '.csv';
+        $actual = "";
 
         for ($i = 0; $i < count($_POST['id_cobranza']); $i++) {
 
             $dato = $_POST['id_cobranza'][$i];
 
-            $sql = $mysqli->query("SELECT Fecha,NumeroCliente,Importe,Banco,Operacion FROM Cobranza_conciliacion WHERE id_cobranza='$dato'");
+            $sql = $mysqli->query("SELECT Fecha,NumeroCliente,Importe,Banco,Operacion,
+                DATE_FORMAT(DATE_ADD(TimeStamp, INTERVAL 3 HOUR), '%d/%m/%Y') AS FechaCarga,
+                DATE_FORMAT(DATE_ADD(TimeStamp, INTERVAL 3 HOUR), '%H:%i:%s') AS HoraCarga
+                FROM Cobranza_conciliacion WHERE id_cobranza='$dato'");
             $row = $sql->fetch_array(MYSQLI_ASSOC);
 
             if ($row['Banco'] == 'Banco Macro') {
@@ -86,7 +90,7 @@ if (isset($_POST['Exportar'])) {
             }
 
             // Añade un nuevo dato al archivo
-            $actual .= $_POST['id_cobranza'][$i] . "," . $row['Fecha'] . "," . $row['NumeroCliente'] . "," . $Banco . "," . $row['Operacion'] . "," . $row['Importe'] . "\n";
+            $actual .= $_POST['id_cobranza'][$i] . "," . $row['Fecha'] . "," . $row['NumeroCliente'] . "," . $Banco . "," . $row['Operacion'] . "," . $row['Importe'] . "," . $row['FechaCarga'] . "," . $row['HoraCarga'] . "\n";
         }
 
         // Escribe el contenido al archivo
