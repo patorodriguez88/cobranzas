@@ -247,6 +247,25 @@ $("#btn_exportar").click(function (e) {
 });
 $(document).ready(function () {
   ver_tabla_conciliados(1);
+
+  // Registrado una sola vez aquí — jamás dentro de ver_tabla_conciliados()
+  // porque esa función se llama cada vez que cambia el filtro y apilaba handlers.
+  $("#selectAll").off("click").on("click", function (e) {
+    e.stopPropagation();
+    let $rowCheckboxes = $("input.dt-checkboxes", "#cobranzas_tabla");
+
+    if ($(this).hasClass("checkedAll")) {
+      $rowCheckboxes.prop("checked", false);
+      $(this).removeClass("checkedAll");
+      calcular_total_exportaciones(0);
+    } else {
+      $rowCheckboxes.prop("checked", true);
+      $(this).addClass("checkedAll");
+      let total = $rowCheckboxes.filter(":checked").length;
+      calcular_total_exportaciones(1);
+      $("#total_exportar").html(total);
+    }
+  });
 });
 
 $("#filtro_pendientes").click(function () {
@@ -494,24 +513,6 @@ function ver_tabla_conciliados(a) {
     ],
   });
 
-  $("#selectAll").click(function (e) {
-    if ($(this).hasClass("checkedAll")) {
-      $("input").prop("checked", false);
-      $(this).removeClass("checkedAll");
-
-      calcular_total_exportaciones(0);
-
-      //   $('#total_exportar').html('');
-    } else {
-      $("input").prop("checked", true);
-      $(this).addClass("checkedAll");
-
-      let total = $('input[type="checkbox"]:checked').length;
-
-      calcular_total_exportaciones(1);
-      $("#total_exportar").html(total);
-    }
-  });
 }
 
 function abrirAsignarPago(idCobranza) {
