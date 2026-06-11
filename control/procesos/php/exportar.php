@@ -110,6 +110,7 @@ if (isset($_POST['Exportar'])) {
                 $Banco,
                 '"' . str_replace('"', '""', $row['Operacion']) . '"',
                 $row['Importe'],
+                $row['Fecha'],
                 $row['Hora'],
             ];
             $actual .= implode(",", $campos) . "\n";
