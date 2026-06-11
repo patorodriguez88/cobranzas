@@ -9,14 +9,28 @@ if (isset($_POST['Anular'])) {
     $id = intval($_POST['id']);
     $filled_int = sprintf("%08d", $id);
 
+    // Debug: qué valores de Exportado existen para este id
+    $chk = $mysqli->query("SELECT DISTINCT Exportado FROM Cobranza_conciliacion WHERE id_cobranza IN (SELECT id_cobranza FROM Cobranza_conciliacion WHERE Exportado='$filled_int' OR Exportado='$id') LIMIT 10");
+    $vals = [];
+    if ($chk) { while ($r = $chk->fetch_assoc()) $vals[] = $r['Exportado']; }
+
+    $cnt = $mysqli->query("SELECT COUNT(*) as c FROM Cobranza_conciliacion WHERE Exportado='$filled_int'");
+    $cntRow = $cnt ? $cnt->fetch_assoc() : ['c' => -1];
+
     $r1 = $mysqli->query("UPDATE Cobranza_conciliacion SET Exportado='', Estado='Aceptado' WHERE Exportado='$filled_int'");
     $r2 = $mysqli->query("UPDATE Cobranza_exportados SET Estado='Anulado' WHERE id='$id'");
 
-    if ($r1 && $r2) {
-        echo json_encode(array('success' => 1));
-    } else {
-        echo json_encode(array('success' => 0, 'error' => $mysqli->error));
-    }
+    echo json_encode(array(
+        'success' => ($r1 && $r2) ? 1 : 0,
+        'error'   => $mysqli->error,
+        'debug'   => [
+            'id_recibido'  => $id,
+            'filled_int'   => $filled_int,
+            'match_count'  => $cntRow['c'],
+            'valores_exportado_encontrados' => $vals,
+            'r1_affected'  => $mysqli->affected_rows,
+        ]
+    ));
     exit;
 }
 

@@ -22,6 +22,7 @@ function anularExportacion(id, descargas) {
             dataType: 'json',
             success: function (r) {
                 console.log("Anular response:", r);
+                if (r.debug) console.table(r.debug);
                 if (r.success == 1) {
                     Swal.fire({ icon: 'success', title: 'Anulado', text: 'Los registros volvieron a Conciliados.', timer: 2000, showConfirmButton: false });
                     $('#exportaciones_tabla').DataTable().ajax.reload();
