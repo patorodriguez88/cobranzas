@@ -1,3 +1,40 @@
+function anularExportacion(id, descargas) {
+
+    let texto = descargas > 0
+        ? `Este archivo fue descargado ${descargas} vez/veces. Los registros volverán a Conciliados para poder re-exportarse.`
+        : `Los registros volverán a Conciliados para poder re-exportarse.`;
+
+    Swal.fire({
+        title: '¿Anular exportación #' + String(id).padStart(8, '0') + '?',
+        text: texto,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#fa5c7c',
+        confirmButtonText: 'Sí, anular',
+        cancelButtonText: 'Cancelar',
+    }).then((result) => {
+        if (!result.isConfirmed) return;
+
+        $.ajax({
+            data: { Anular: 1, id: id },
+            url: 'control/procesos/php/exportar.php',
+            type: 'post',
+            dataType: 'json',
+            success: function (r) {
+                if (r.success == 1) {
+                    $.NotificationApp.send("Anulado", "La exportación fue anulada y los registros volvieron a Conciliados.", "bottom-right", "#FFFFFF", "success");
+                    $('#exportaciones_tabla').DataTable().ajax.reload();
+                } else {
+                    Swal.fire("Error", r.error || "No se pudo anular.", "error");
+                }
+            },
+            error: function () {
+                Swal.fire("Error", "Error de comunicación con el servidor.", "error");
+            }
+        });
+    });
+}
+
 function download(file){
     
     fetch('https://www.dintersa.com.ar/cobranza/control/procesos/php/exportaciones/'+file+'.csv')
@@ -124,8 +161,15 @@ $( document ).ready(function() {
          {data:null,
             render: function(data,type,row){
 
-                return `<td><i onclick="download('${row.id}')" style="cursor:point" class="mdi mdi-18px mdi-arrow-down-bold-box-outline text-warning"></i></td>`;
-            
+                let btnDescargar = row.Estado !== 'Anulado'
+                    ? `<i onclick="download('${row.id}')" style="cursor:pointer" title="Descargar" class="mdi mdi-18px mdi-arrow-down-bold-box-outline text-warning me-2"></i>`
+                    : '';
+
+                let btnAnular = row.Estado !== 'Anulado'
+                    ? `<i onclick="anularExportacion(${row.id}, ${row.Descargas || 0})" style="cursor:pointer" title="Anular exportación" class="mdi mdi-18px mdi-undo-variant text-danger"></i>`
+                    : `<span class="badge badge-danger-lighten">Anulado</span>`;
+
+                return `<td>${btnDescargar}${btnAnular}</td>`;
             }
         },
         ]  

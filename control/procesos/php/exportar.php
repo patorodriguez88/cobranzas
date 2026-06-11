@@ -3,6 +3,23 @@ session_start();
 include_once "../../../conexion/conexioni.php";
 date_default_timezone_set("America/Argentina/Cordoba");
 
+//ANULAR EXPORTACION
+if (isset($_POST['Anular'])) {
+
+    $id = intval($_POST['id']);
+    $filled_int = sprintf("%08d", $id);
+
+    $r1 = $mysqli->query("UPDATE Cobranza_conciliacion SET Exportado='', Estado='Aceptado' WHERE Exportado='$filled_int'");
+    $r2 = $mysqli->query("UPDATE Cobranza_exportados SET Estado='Anulado' WHERE id='$id'");
+
+    if ($r1 && $r2) {
+        echo json_encode(array('success' => 1));
+    } else {
+        echo json_encode(array('success' => 0, 'error' => $mysqli->error));
+    }
+    exit;
+}
+
 //EXPORTADO
 if (isset($_POST['Exportado'])) {
 
