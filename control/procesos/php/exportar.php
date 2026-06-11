@@ -94,9 +94,7 @@ if (isset($_POST['Exportar'])) {
 
             $dato = $ids_unicos[$i];
 
-            $sql = $mysqli->query("SELECT Fecha,NumeroCliente,Importe,Banco,Operacion,
-                DATE_FORMAT(DATE_ADD(TimeStamp, INTERVAL 3 HOUR), '%d/%m/%Y') AS FechaCarga,
-                DATE_FORMAT(DATE_ADD(TimeStamp, INTERVAL 3 HOUR), '%H:%i:%s') AS HoraCarga
+            $sql = $mysqli->query("SELECT Fecha,Hora,NumeroCliente,Importe,Banco,Operacion
                 FROM Cobranza_conciliacion WHERE id_cobranza='$dato'
                 ORDER BY id DESC LIMIT 1");
             $row = $sql->fetch_array(MYSQLI_ASSOC);
@@ -105,7 +103,6 @@ if (isset($_POST['Exportar'])) {
 
             $Banco = ($row['Banco'] == 'Banco Macro') ? '03' : '04';
 
-            // Envuelve cada campo en comillas para manejar comas internas en los valores
             $campos = [
                 $dato,
                 $row['Fecha'],
@@ -113,8 +110,7 @@ if (isset($_POST['Exportar'])) {
                 $Banco,
                 '"' . str_replace('"', '""', $row['Operacion']) . '"',
                 $row['Importe'],
-                $row['FechaCarga'] ?? '',
-                $row['HoraCarga'] ?? '',
+                $row['Hora'],
             ];
             $actual .= implode(",", $campos) . "\n";
         }
