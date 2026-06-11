@@ -2160,7 +2160,7 @@ function abrirModalWhatsappVenta(venta) {
       }
       return "*" + p.trim() + "*";
     });
-    productosStr = formateados.join(", ");
+    productosStr = formateados.join("\n");
   }
 
   let total = parseFloat(venta.Total || 0).toLocaleString("es-AR", {
