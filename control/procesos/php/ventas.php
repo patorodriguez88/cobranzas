@@ -954,6 +954,7 @@ switch ($accion) {
         C.RazonSocial,
         C.Ncliente,
         C.Celular,
+        C.Distribuidora,
         V.Total,
         V.Observaciones,
         V.Usuario,
@@ -1059,7 +1060,8 @@ switch ($accion) {
                 "EstadoPago"        => $estado,
                 "Observaciones"     => $row["Observaciones"],
                 "Usuario"           => $row["Usuario"],
-                "TurnoRetiro"       => $row["TurnoRetiro"]
+                "TurnoRetiro"       => $row["TurnoRetiro"],
+                "Distribuidora"     => $row["Distribuidora"]
             );
         }
 
@@ -1080,6 +1082,7 @@ switch ($accion) {
         C.RazonSocial,
         C.Ncliente,
         C.Celular,
+        C.Distribuidora,
         V.Total,
         V.Observaciones,
         V.Usuario,
@@ -1228,7 +1231,8 @@ switch ($accion) {
                 "Usuario"           => $row["Usuario"],
                 "TurnoRetiro"       => $row["TurnoRetiro"],
                 "StockFiguritas"    => $row["StockFiguritas"],
-                "StockAlbum"        => $row["StockAlbum"]
+                "StockAlbum"        => $row["StockAlbum"],
+                "Distribuidora"     => $row["Distribuidora"]
             );
         }
 

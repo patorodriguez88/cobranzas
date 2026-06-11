@@ -2178,6 +2178,22 @@ function abrirModalWhatsappVenta(venta) {
       ? "El total de su pedido es de *$ " + total + "* y su *saldo pendiente a transferir es de $ " + saldo + "*."
       : "El total a abonar es de *$ " + saldo + "*.";
 
+  let distribuidoraVenta = (venta.Distribuidora || "").toString().trim().toUpperCase();
+
+  let datosBancarios;
+  if (distribuidoraVenta === "RAK") {
+    datosBancarios =
+      "Alias: *ELRAK.PANINI*\n" +
+      "CBU: *0200302101000001152701*\n" +
+      "Banco Córdoba\n" +
+      "CUIT: *30669104959*";
+  } else {
+    datosBancarios =
+      "Alias: *DINTER.PANINI*\n" +
+      "CBU: *2850331630094254579651*\n" +
+      "Banco Macro";
+  }
+
   let mensaje =
     "Estimado/a " +
     nombreCliente +
@@ -2188,9 +2204,8 @@ function abrirModalWhatsappVenta(venta) {
     lineaSaldo +
     "\n\n" +
     "Le recordamos que deberá transferir ese importe a:\n" +
-    "Alias: *DINTER.PANINI*\n" +
-    "CBU: *2850331630094254579651*\n" +
-    "Banco Macro\n\n" +
+    datosBancarios +
+    "\n\n" +
     "*Te Recordamos:*\n" +
     "Si nos comparte el comprobante *antes de las 13 hs. del día Viernes*, podrá retirar la mercadería en nuestro establecimiento el día *Sábado de 08:00 hs. a 10:30 hs.*  o en el caso de haber coordinado el envío, el mismo se realizara con normalidad el mismo día Sábado.\n\n" +
     "En caso de informarnos el pago con posterioridad al día Viernes a las 13 hs., la mercadería estará disponible para su retiro el día *hábil próximo a partir de las 15 hs.*.\n\n" +
