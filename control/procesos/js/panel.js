@@ -59,33 +59,26 @@ function eliminar(id) {
 }
 function calcular_total(a) {
   $("#selectAll").prop("checked", false);
-  let total = $('input[type="checkbox"]:checked').length;
   var oTable = $("#cobranzas_tabla").dataTable();
   var allPages = oTable.fnGetNodes();
-  //Creamos un array que almacenará los valores de los input "checked"
   var checked = [];
-  //Recorremos todos los input checkbox que se encuentren "checked"
   $("input.form-check-input:checked", allPages).each(function () {
-    //Mediante la función push agregamos al arreglo los values de los checkbox
     if ($(this).attr("value") != null) {
       checked.push($(this).attr("value"));
     }
   });
-  console.log("boton general", checked);
 
-  if (checked != 0) {
+  if (checked.length > 0) {
     $.ajax({
       data: { Exportar_ver: 1, id_cobranza: checked },
       url: "control/procesos/php/exportar.php",
       type: "post",
       success: function (response) {
         var jsonData = JSON.parse(response);
-
         if (jsonData.success == 1) {
           $(".modal-footer").css("display", "flex");
-
           $("#total_importe_exportar").html("$ " + jsonData.total);
-          $("#total_exportar").html(total - a);
+          $("#total_exportar").html(checked.length);
         }
       },
     });
@@ -96,33 +89,26 @@ function calcular_total(a) {
 }
 
 function calcular_total_exportaciones(a) {
-  let total = $('input[type="checkbox"]:checked').length;
   var oTable = $("#cobranzas_tabla").dataTable();
   var allPages = oTable.fnGetNodes();
-  //Creamos un array que almacenará los valores de los input "checked"
   var checked = [];
-  //Recorremos todos los input checkbox que se encuentren "checked"
   $("input.form-check-input:checked", allPages).each(function () {
-    //Mediante la función push agregamos al arreglo los values de los checkbox
     if ($(this).attr("value") != null) {
       checked.push($(this).attr("value"));
     }
   });
-  console.log("boton general", checked);
 
-  if (checked != 0) {
+  if (checked.length > 0) {
     $.ajax({
       data: { Exportar_ver: 1, id_cobranza: checked },
       url: "control/procesos/php/exportar.php",
       type: "post",
       success: function (response) {
         var jsonData = JSON.parse(response);
-
         if (jsonData.success == 1) {
           $(".modal-footer").css("display", "flex");
-
           $("#total_importe_exportar").html("$ " + jsonData.total);
-          $("#total_exportar").html(total - a);
+          $("#total_exportar").html(checked.length);
         }
       },
     });
@@ -262,9 +248,7 @@ $(document).ready(function () {
     } else {
       $rowCheckboxes.prop("checked", true);
       $(this).addClass("checkedAll");
-      let total = $rowCheckboxes.length;
       calcular_total_exportaciones(1);
-      $("#total_exportar").html(total);
     }
   });
 });
