@@ -252,7 +252,8 @@ $(document).ready(function () {
   // porque esa función se llama cada vez que cambia el filtro y apilaba handlers.
   $("#selectAll").off("click").on("click", function (e) {
     e.stopPropagation();
-    let $rowCheckboxes = $("input.dt-checkboxes", "#cobranzas_tabla");
+    var allNodes = $("#cobranzas_tabla").dataTable().fnGetNodes();
+    let $rowCheckboxes = $("input.dt-checkboxes", allNodes);
 
     if ($(this).hasClass("checkedAll")) {
       $rowCheckboxes.prop("checked", false);
@@ -261,7 +262,7 @@ $(document).ready(function () {
     } else {
       $rowCheckboxes.prop("checked", true);
       $(this).addClass("checkedAll");
-      let total = $rowCheckboxes.filter(":checked").length;
+      let total = $rowCheckboxes.length;
       calcular_total_exportaciones(1);
       $("#total_exportar").html(total);
     }
