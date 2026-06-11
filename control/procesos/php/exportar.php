@@ -9,10 +9,10 @@ if (isset($_POST['Anular'])) {
     $id = intval($_POST['id']);
     $filled_int = sprintf("%08d", $id);
 
-    // Debug: qué valores de Exportado existen para este id
-    $chk = $mysqli->query("SELECT DISTINCT Exportado FROM Cobranza_conciliacion WHERE id_cobranza IN (SELECT id_cobranza FROM Cobranza_conciliacion WHERE Exportado='$filled_int' OR Exportado='$id') LIMIT 10");
+    // Debug: qué valores de Exportado existen en la tabla (los no vacíos)
+    $chk = $mysqli->query("SELECT DISTINCT Exportado, COUNT(*) as cnt FROM Cobranza_conciliacion WHERE Exportado IS NOT NULL AND Exportado != '' GROUP BY Exportado ORDER BY cnt DESC LIMIT 10");
     $vals = [];
-    if ($chk) { while ($r = $chk->fetch_assoc()) $vals[] = $r['Exportado']; }
+    if ($chk) { while ($r = $chk->fetch_assoc()) $vals[] = $r['Exportado'] . ' (' . $r['cnt'] . ' registros)'; }
 
     $cnt = $mysqli->query("SELECT COUNT(*) as c FROM Cobranza_conciliacion WHERE Exportado='$filled_int'");
     $cntRow = $cnt ? $cnt->fetch_assoc() : ['c' => -1];
