@@ -18,17 +18,35 @@ if (isset($_POST['Anular'])) {
     $cntRow = $cnt ? $cnt->fetch_assoc() : ['c' => -1];
 
     $r1 = $mysqli->query("UPDATE Cobranza_conciliacion SET Exportado='', Estado='Aceptado' WHERE Exportado='$filled_int'");
+    $r1_affected = $mysqli->affected_rows;
+    $r1_error    = $mysqli->error;
+
     $r2 = $mysqli->query("UPDATE Cobranza_exportados SET Estado='Anulado' WHERE id='$id'");
+    $r2_affected = $mysqli->affected_rows;
+    $r2_error    = $mysqli->error;
+
+    // Ver columnas reales de Cobranza_exportados
+    $cols = $mysqli->query("SHOW COLUMNS FROM Cobranza_exportados");
+    $colNames = [];
+    if ($cols) { while ($c = $cols->fetch_assoc()) $colNames[] = $c['Field']; }
+
+    // Ver fila exacta del registro a anular
+    $rowCheck = $mysqli->query("SELECT * FROM Cobranza_exportados WHERE id='$id'");
+    $rowData = $rowCheck ? $rowCheck->fetch_assoc() : null;
 
     echo json_encode(array(
         'success' => ($r1 && $r2) ? 1 : 0,
-        'error'   => $mysqli->error,
+        'error'   => $r1_error ?: $r2_error,
         'debug'   => [
-            'id_recibido'  => $id,
-            'filled_int'   => $filled_int,
-            'match_count'  => $cntRow['c'],
-            'valores_exportado_encontrados' => $vals,
-            'r1_affected'  => $mysqli->affected_rows,
+            'id_recibido'    => $id,
+            'filled_int'     => $filled_int,
+            'match_count_cc' => $cntRow['c'],
+            'r1_affected'    => $r1_affected,
+            'r1_error'       => $r1_error,
+            'r2_affected'    => $r2_affected,
+            'r2_error'       => $r2_error,
+            'columnas_tabla' => $colNames,
+            'fila_exportado' => $rowData,
         ]
     ));
     exit;
