@@ -166,7 +166,7 @@ $( document ).ready(function() {
                     : '';
 
                 let btnAnular = row.Estado !== 'Anulado'
-                    ? `<i onclick="anularExportacion(${row.id}, ${row.Descargas || 0})" style="cursor:pointer" title="Anular exportación" class="mdi mdi-18px mdi-undo-variant text-danger"></i>`
+                    ? `<i onclick="anularExportacion('${row.id}', ${row.Descargas || 0})" style="cursor:pointer" title="Anular exportación" class="mdi mdi-18px mdi-undo-variant text-danger"></i>`
                     : `<span class="badge badge-danger-lighten">Anulado</span>`;
 
                 return `<td>${btnDescargar}${btnAnular}</td>`;
