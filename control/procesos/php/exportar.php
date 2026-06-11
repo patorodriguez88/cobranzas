@@ -9,46 +9,17 @@ if (isset($_POST['Anular'])) {
     $id = intval($_POST['id']);
     $filled_int = sprintf("%08d", $id);
 
-    // Debug: qué valores de Exportado existen en la tabla (los no vacíos)
-    $chk = $mysqli->query("SELECT DISTINCT Exportado, COUNT(*) as cnt FROM Cobranza_conciliacion WHERE Exportado IS NOT NULL AND Exportado != '' GROUP BY Exportado ORDER BY cnt DESC LIMIT 10");
-    $vals = [];
-    if ($chk) { while ($r = $chk->fetch_assoc()) $vals[] = $r['Exportado'] . ' (' . $r['cnt'] . ' registros)'; }
+    // Libera los registros de Cobranza_conciliacion que fueron marcados con este export
+    $mysqli->query("UPDATE Cobranza_conciliacion SET Exportado='', Estado='Aceptado' WHERE Exportado='$filled_int'");
 
-    $cnt = $mysqli->query("SELECT COUNT(*) as c FROM Cobranza_conciliacion WHERE Exportado='$filled_int'");
-    $cntRow = $cnt ? $cnt->fetch_assoc() : ['c' => -1];
-
-    $r1 = $mysqli->query("UPDATE Cobranza_conciliacion SET Exportado='', Estado='Aceptado' WHERE Exportado='$filled_int'");
-    $r1_affected = $mysqli->affected_rows;
-    $r1_error    = $mysqli->error;
-
+    // Marca el export como Anulado
     $r2 = $mysqli->query("UPDATE Cobranza_exportados SET Estado='Anulado' WHERE id='$id'");
-    $r2_affected = $mysqli->affected_rows;
-    $r2_error    = $mysqli->error;
 
-    // Ver columnas reales de Cobranza_exportados
-    $cols = $mysqli->query("SHOW COLUMNS FROM Cobranza_exportados");
-    $colNames = [];
-    if ($cols) { while ($c = $cols->fetch_assoc()) $colNames[] = $c['Field']; }
-
-    // Ver fila exacta del registro a anular
-    $rowCheck = $mysqli->query("SELECT * FROM Cobranza_exportados WHERE id='$id'");
-    $rowData = $rowCheck ? $rowCheck->fetch_assoc() : null;
-
-    echo json_encode(array(
-        'success' => ($r1 && $r2) ? 1 : 0,
-        'error'   => $r1_error ?: $r2_error,
-        'debug'   => [
-            'id_recibido'    => $id,
-            'filled_int'     => $filled_int,
-            'match_count_cc' => $cntRow['c'],
-            'r1_affected'    => $r1_affected,
-            'r1_error'       => $r1_error,
-            'r2_affected'    => $r2_affected,
-            'r2_error'       => $r2_error,
-            'columnas_tabla' => $colNames,
-            'fila_exportado' => $rowData,
-        ]
-    ));
+    if ($r2) {
+        echo json_encode(array('success' => 1));
+    } else {
+        echo json_encode(array('success' => 0, 'error' => $mysqli->error));
+    }
     exit;
 }
 

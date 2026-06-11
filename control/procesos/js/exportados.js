@@ -21,17 +21,14 @@ function anularExportacion(id, descargas) {
             type: 'post',
             dataType: 'json',
             success: function (r) {
-                console.log("Anular response:", r);
-                if (r.debug) console.table(r.debug);
                 if (r.success == 1) {
-                    Swal.fire({ icon: 'success', title: 'Anulado', text: 'Los registros volvieron a Conciliados.', timer: 2000, showConfirmButton: false });
-                    $('#exportaciones_tabla').DataTable().ajax.reload();
+                    Swal.fire({ icon: 'success', title: 'Anulado', text: 'Los registros volvieron a Conciliados.', timer: 2000, showConfirmButton: false })
+                        .then(function() { location.reload(); });
                 } else {
                     Swal.fire("Error", r.error || "No se pudo anular.", "error");
                 }
             },
             error: function (xhr) {
-                console.log("Anular error:", xhr.status, xhr.responseText);
                 Swal.fire("Error", "Error de comunicación con el servidor.", "error");
             }
         });
