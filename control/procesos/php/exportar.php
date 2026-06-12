@@ -111,7 +111,7 @@ if (isset($_POST['Exportar'])) {
                 $row['Fecha'],
                 $row['NumeroCliente'],
                 $Banco,
-                '"' . str_replace('"', '""', $row['Operacion']) . '"',
+                $row['Operacion'],
                 $row['Importe'],
                 $row['Fecha'],
                 $row['Hora'],
