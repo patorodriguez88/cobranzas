@@ -577,9 +577,15 @@ while ($row = $resDetalle->fetch_assoc()) {
         ]);
     }
 
+    $cantidad = (float)$row['Cantidad'];
+
+    if ($cantidad <= 0) {
+        continue;
+    }
+
     $detalle[] = [
         "id_producto" => $idProductoWepoint,
-        "cantidad" => (float)$row['Cantidad'],
+        "cantidad" => $cantidad,
         "precio" => (float)$row['PrecioUnitario']
     ];
 }
