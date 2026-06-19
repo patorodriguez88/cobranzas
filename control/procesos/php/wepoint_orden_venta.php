@@ -393,9 +393,17 @@ function obtenerCredencialesWepoint($distribuidora = 'Dinter')
 
 
 $sqlEstado = "
-    SELECT EstadoPago
-    FROM Ventas
-    WHERE id = '$idVenta'
+    SELECT
+        V.Total,
+        IFNULL(V.TotalPagado, 0) AS TotalPagado,
+        IFNULL((
+            SELECT SUM(AP.importe)
+            FROM Ventas_Ajustes_Pago AP
+            WHERE AP.idVenta = V.id
+              AND AP.eliminado = 0
+        ), 0) AS Ajustes
+    FROM Ventas V
+    WHERE V.id = '$idVenta'
     LIMIT 1
 ";
 
@@ -418,12 +426,23 @@ if (!$rowEstado) {
     ]);
 }
 
-if ($rowEstado['EstadoPago'] != 'PAGADA') {
+$saldoReal = (float)$rowEstado['Total'] - (float)$rowEstado['TotalPagado'] - (float)$rowEstado['Ajustes'];
+
+if ($saldoReal > 0) {
     responder([
         "success" => false,
         "message" => "La venta debe estar PAGADA para generar la OV."
     ]);
 }
+
+// Si llegó hasta acá, saldo es 0 — corregir EstadoPago en DB si todavía dice PARCIAL
+$mysqli->query("
+    UPDATE Ventas
+    SET Saldo = 0, EstadoPago = 'PAGADA'
+    WHERE id = '$idVenta'
+      AND EstadoPago != 'PAGADA'
+    LIMIT 1
+");
 
 $sqlConciliados = "
     SELECT
