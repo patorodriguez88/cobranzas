@@ -2,6 +2,19 @@
 session_start();
 include_once "../../../conexion/conexioni.php";
 
+$accionesQueRequierenSesion = [
+    'Conciliar', 'Rechazar', 'Conciliar_quik', 'Conciliar_quik_cancel',
+    'Vuelve', 'Eliminar', 'AsignarPagoVenta', 'Observaciones_Usuario'
+];
+
+$accionActual = array_keys(array_filter($_POST, fn($v) => $v !== null, ARRAY_FILTER_USE_KEY));
+$requiereSesion = !empty(array_intersect($accionActual, $accionesQueRequierenSesion));
+
+if ($requiereSesion && empty($_SESSION['user_control'])) {
+    echo json_encode(['session_expired' => 1]);
+    exit;
+}
+
 //OBSERVACIONES
 if (isset($_POST['Observaciones_search'])) {
     $sql = $mysqli->query("SELECT Usuario_obs FROM Cobranza WHERE id='$_POST[id]'");

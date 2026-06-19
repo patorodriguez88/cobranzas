@@ -993,7 +993,7 @@ function abrirEstadoVenta(idVenta) {
           .attr("title", "La OV ya fue generada")
 
           .off("click");
-      } else if (v.EstadoPago === "PAGADA") {
+      } else if (parseFloat(v.Saldo || 0) <= 0) {
         let todosConciliados =
           !r.pagos ||
           r.pagos.length === 0 ||
