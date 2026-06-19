@@ -1,3 +1,9 @@
+function normalizarFecha(valor) {
+  var formatos = ["DD/MM/YYYY", "MM/DD/YYYY", "YYYY-MM-DD", "D/M/YYYY", "M/D/YYYY"];
+  var m = moment(valor, formatos, true);
+  return m.isValid() ? m.format("YYYY-MM-DD") : valor;
+}
+
 function ver_duplicados(i) {
   var datatable = $("#duplicados-datatable").DataTable();
   datatable.destroy();
@@ -141,7 +147,7 @@ function conciliar(id) {
 $("#btn_conciliar").click(function () {
   let id = $("#id_cobranza").val();
   let Nombre = $("#nombre_cobranza").val();
-  let Fecha = $("#fecha_cobranza").val();
+  let Fecha = normalizarFecha($("#fecha_cobranza").val());
   let Hora = $("#hora_cobranza").val();
   let Banco = $("#banco_cobranza").val();
   let Observaciones = $("#obs_cobranza").val();
@@ -182,7 +188,7 @@ $("#btn_conciliar").click(function () {
 $("#btn_rechazar").click(function () {
   let id = $("#id_cobranza").val();
   let Nombre = $("#nombre_cobranza").val();
-  let Fecha = $("#fecha_cobranza").val();
+  let Fecha = normalizarFecha($("#fecha_cobranza").val());
   let Hora = $("#hora_cobranza").val();
   let Banco = $("#banco_cobranza").val();
   let Observaciones = $("#obs_cobranza").val();
