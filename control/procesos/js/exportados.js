@@ -74,6 +74,119 @@ function download(file){
 
 }
 
+$("#btn_verificar_duplicados").on("click", function () {
+  var btn = $(this);
+  btn.prop("disabled", true).html('<i class="mdi mdi-loading mdi-spin me-1"></i> Verificando...');
+
+  $.ajax({
+    url: "control/procesos/php/exportar.php",
+    type: "POST",
+    dataType: "json",
+    data: { duplicados_exportados: 1 },
+    success: function (r) {
+      btn.prop("disabled", false).html('<i class="mdi mdi-magnify me-1"></i> Verificar duplicados');
+
+      if (!r.success) {
+        Swal.fire("Error", r.error || "No se pudo verificar.", "error");
+        return;
+      }
+
+      $("#resultado_duplicados").show();
+
+      if (r.total === 0) {
+        $("#resumen_duplicados").html(
+          '<span class="badge bg-success fs-6"><i class="mdi mdi-check-circle me-1"></i> Sin duplicados encontrados</span>'
+        );
+        $("#tabla_duplicados").hide();
+        $("#btn_limpiar_duplicados").hide();
+        return;
+      }
+
+      $("#btn_limpiar_duplicados").show();
+      $("#resumen_duplicados").html(
+        '<span class="badge bg-danger fs-6"><i class="mdi mdi-alert me-1"></i> ' +
+          r.total +
+          " grupo(s) de pagos duplicados detectados</span>"
+      );
+
+      var html = "";
+      var fmt = $.fn.dataTable.render.number(".", ",", 2, "$ ").display;
+
+      r.data.forEach(function (row) {
+        html +=
+          "<tr>" +
+          "<td>" + (row.NumeroCliente || "") + "</td>" +
+          "<td>" + (row.NombreCliente || "") + "</td>" +
+          "<td>" + (row.Fecha || "") + "</td>" +
+          "<td>" + (row.Hora || "") + "</td>" +
+          "<td>" + (row.Banco || "") + "</td>" +
+          "<td>" + (row.Operacion || "") + "</td>" +
+          "<td>" + fmt(row.Importe) + "</td>" +
+          "<td><small>" + (row.ids_cobranza || "") + "</small></td>" +
+          "<td><small>" + (row.exportaciones || '<span class="text-muted">Sin exportar</span>') + "</small></td>" +
+          '<td><span class="badge bg-danger">' + row.veces + "</span></td>" +
+          "</tr>";
+      });
+
+      $("#body_duplicados").html(html);
+      $("#tabla_duplicados").show();
+    },
+    error: function () {
+      btn.prop("disabled", false).html('<i class="mdi mdi-magnify me-1"></i> Verificar duplicados');
+      Swal.fire("Error", "Error de comunicación con el servidor.", "error");
+    },
+  });
+});
+
+$("#btn_limpiar_duplicados").on("click", function () {
+  Swal.fire({
+    title: "¿Limpiar duplicados?",
+    text: "Se va a eliminar el duplicado más reciente de cada grupo, conservando el registro original. Esta acción no se puede deshacer.",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#fa5c7c",
+    confirmButtonText: "Sí, limpiar",
+    cancelButtonText: "Cancelar",
+  }).then(function (result) {
+    if (!result.isConfirmed) return;
+
+    var btn = $("#btn_limpiar_duplicados");
+    btn.prop("disabled", true).html('<i class="mdi mdi-loading mdi-spin me-1"></i> Limpiando...');
+
+    $.ajax({
+      url: "control/procesos/php/exportar.php",
+      type: "POST",
+      dataType: "json",
+      data: { limpiar_duplicados: 1 },
+      success: function (r) {
+        btn.prop("disabled", false).html('<i class="mdi mdi-delete-sweep me-1"></i> Limpiar duplicados');
+
+        if (!r.success) {
+          Swal.fire("Error", r.error || "No se pudo limpiar.", "error");
+          return;
+        }
+
+        if (r.eliminados === 0) {
+          Swal.fire("Sin cambios", "No se encontraron duplicados para eliminar.", "info");
+        } else {
+          Swal.fire(
+            "Listo",
+            r.eliminados + " registro(s) duplicado(s) eliminado(s).",
+            "success"
+          );
+        }
+
+        btn.hide();
+        $("#btn_verificar_duplicados").trigger("click");
+      },
+      error: function () {
+        btn.prop("disabled", false).html('<i class="mdi mdi-delete-sweep me-1"></i> Limpiar duplicados');
+        Swal.fire("Error", "Error de comunicación con el servidor.", "error");
+      },
+    });
+  });
+});
+
 $( document ).ready(function() {
     
     var datatable_exportaciones= $('#exportaciones_tabla').DataTable({

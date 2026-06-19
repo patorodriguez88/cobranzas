@@ -101,6 +101,13 @@ if (isset($_POST['Tabla_no_conciliados'])) {
 
 if (isset($_POST['Conciliar'])) {
 
+    $idCobConciliar = (int)($_POST['id_cobranza'] ?? 0);
+    $yaExiste = $mysqli->query("SELECT id FROM Cobranza_conciliacion WHERE id_cobranza = '$idCobConciliar' LIMIT 1");
+    if ($yaExiste && $yaExiste->num_rows > 0) {
+        echo json_encode(['success' => 0, 'error' => 'Este pago ya fue conciliado.']);
+        exit;
+    }
+
     $fechaConciliar = normalizarFecha($_POST['Fecha'] ?? '');
     if (!$fechaConciliar) {
         echo json_encode(['success' => 0, 'error' => 'Fecha inválida.']);
@@ -314,7 +321,14 @@ if (isset($_POST['Rechazar'])) {
 
 if (isset($_POST['Conciliar_quik'])) {
 
-    $sql = $mysqli->query("SELECT * FROM Cobranza WHERE id='$_POST[id_cobranza]'");
+    $idCobQuik = (int)($_POST['id_cobranza'] ?? 0);
+    $yaExisteQuik = $mysqli->query("SELECT id FROM Cobranza_conciliacion WHERE id_cobranza = '$idCobQuik' LIMIT 1");
+    if ($yaExisteQuik && $yaExisteQuik->num_rows > 0) {
+        echo json_encode(['success' => 0, 'error' => 'Este pago ya fue conciliado.']);
+        exit;
+    }
+
+    $sql = $mysqli->query("SELECT * FROM Cobranza WHERE id='$idCobQuik'");
     $row = $sql->fetch_array(MYSQLI_ASSOC);
 
     $sql = "INSERT INTO `Cobranza_conciliacion`(`id_cobranza`, `NombreCliente`, `NumeroCliente`, `Fecha`, `Hora`, `Banco`, `Operacion`, `Importe`, `Usuario`, `Observaciones`) VALUES 

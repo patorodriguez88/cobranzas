@@ -327,6 +327,54 @@
               </div>
             </div>
 
+            <!-- CARD DUPLICADOS -->
+            <div class="row mb-3">
+              <div class="col-12">
+                <div class="card">
+                  <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                      <h5 class="card-title mb-0">
+                        <i class="mdi mdi-content-duplicate me-1 text-danger"></i>
+                        Control de Pagos Duplicados
+                      </h5>
+                      <div class="d-flex gap-2">
+                        <button id="btn_verificar_duplicados" class="btn btn-outline-danger btn-sm">
+                          <i class="mdi mdi-magnify me-1"></i> Verificar duplicados
+                        </button>
+                        <button id="btn_limpiar_duplicados" class="btn btn-danger btn-sm" style="display:none">
+                          <i class="mdi mdi-delete-sweep me-1"></i> Limpiar duplicados
+                        </button>
+                      </div>
+                    </div>
+
+                    <div id="resultado_duplicados" style="display:none">
+                      <div id="resumen_duplicados" class="mb-2"></div>
+                      <div class="table-responsive">
+                        <table id="tabla_duplicados" class="table table-sm table-bordered" style="font-size:12px; display:none">
+                          <thead class="table-danger">
+                            <tr>
+                              <th>N° Cliente</th>
+                              <th>Nombre</th>
+                              <th>Fecha</th>
+                              <th>Hora</th>
+                              <th>Banco</th>
+                              <th>Operación</th>
+                              <th>Importe</th>
+                              <th>IDs Cobranza</th>
+                              <th>Exportaciones</th>
+                              <th>Veces</th>
+                            </tr>
+                          </thead>
+                          <tbody id="body_duplicados"></tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- FIN CARD DUPLICADOS -->
+
             <div class="row">
               <div class="col-12">
                 <div class="card">

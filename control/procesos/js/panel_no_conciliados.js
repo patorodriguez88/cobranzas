@@ -145,6 +145,10 @@ function conciliar(id) {
 }
 
 $("#btn_conciliar").click(function () {
+  var $btn = $(this);
+  if ($btn.data("enviando")) return;
+  $btn.data("enviando", true).prop("disabled", true);
+
   let id = $("#id_cobranza").val();
   let Nombre = $("#nombre_cobranza").val();
   let Fecha = normalizarFecha($("#fecha_cobranza").val());
@@ -175,17 +179,25 @@ $("#btn_conciliar").click(function () {
 
       if (jsonData.success == 1) {
         var datatable_seguimiento = $("#cobranzas_tabla").DataTable();
-
         datatable_seguimiento.ajax.reload();
-
         $("#centermodal").modal("hide");
+      } else {
+        $btn.data("enviando", false).prop("disabled", false);
+        Swal.fire("Error", jsonData.error || "No se pudo conciliar.", "error");
       }
+    },
+    error: function () {
+      $btn.data("enviando", false).prop("disabled", false);
     },
   });
 });
 
 //RECHAZAR
 $("#btn_rechazar").click(function () {
+  var $btn = $(this);
+  if ($btn.data("enviando")) return;
+  $btn.data("enviando", true).prop("disabled", true);
+
   let id = $("#id_cobranza").val();
   let Nombre = $("#nombre_cobranza").val();
   let Fecha = normalizarFecha($("#fecha_cobranza").val());
@@ -199,7 +211,7 @@ $("#btn_rechazar").click(function () {
   $.ajax({
     type: "POST",
     url: "control/procesos/php/panel.php",
-    dataType: "json", // ✅ clave
+    dataType: "json",
     data: {
       Rechazar: 1,
       id_cobranza: id,
@@ -213,8 +225,6 @@ $("#btn_rechazar").click(function () {
       Importe: Importe,
     },
     success: function (jsonData) {
-      // var jsonData = JSON.parse(response);
-
       if (jsonData.success == 1) {
         $.NotificationApp.send(
           "Rechazado !",
@@ -223,18 +233,16 @@ $("#btn_rechazar").click(function () {
           "#FFFFFF",
           "warning",
         );
-
         var datatable_seguimiento = $("#cobranzas_tabla").DataTable();
-
         datatable_seguimiento.ajax.reload();
-
         $("#centermodal").modal("hide");
+      } else {
+        $btn.data("enviando", false).prop("disabled", false);
+        Swal.fire("Error", jsonData.error || "No se pudo rechazar.", "error");
       }
     },
-    error: function (xhr) {
-      console.log("Error en la solicitud AJAX:", xhr.responseText);
-      console.log("STATUS:", xhr.status);
-      console.log("RESPONSE TEXT:", xhr.responseText);
+    error: function () {
+      $btn.data("enviando", false).prop("disabled", false);
     },
   });
 });
@@ -328,7 +336,11 @@ $(document).ready(function () {
     ],
   });
 });
+var _conciliandoQuik = {};
 function conciliar_quik(i) {
+  if (_conciliandoQuik[i]) return;
+  _conciliandoQuik[i] = true;
+
   $.ajax({
     type: "POST",
     url: "control/procesos/php/panel.php",
@@ -338,9 +350,7 @@ function conciliar_quik(i) {
 
       if (jsonData.success == 1) {
         var datatable_seguimiento = $("#cobranzas_tabla").DataTable();
-
         datatable_seguimiento.ajax.reload();
-
         $.NotificationApp.send(
           "Exito !",
           `Registro Conciliado. <a onclick='cancelar(${i})' style='cursor:pointer'>cancelar</a> `,
@@ -348,7 +358,13 @@ function conciliar_quik(i) {
           "#FFFFFF",
           "success",
         );
+      } else {
+        delete _conciliandoQuik[i];
+        Swal.fire("Error", jsonData.error || "No se pudo conciliar.", "error");
       }
+    },
+    error: function () {
+      delete _conciliandoQuik[i];
     },
   });
 }
