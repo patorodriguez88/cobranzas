@@ -1,3 +1,20 @@
+$(document).ajaxSuccess(function (event, xhr, settings) {
+  try {
+    var r = typeof xhr.responseJSON !== "undefined" ? xhr.responseJSON : JSON.parse(xhr.responseText);
+    if (r && r.session_expired == 1) {
+      Swal.fire({
+        icon: "warning",
+        title: "Sesión terminada",
+        text: "Tu sesión expiró. Serás redirigido al inicio.",
+        confirmButtonText: "Aceptar",
+        allowOutsideClick: false,
+      }).then(function () {
+        window.location.href = "inicio_control.html";
+      });
+    }
+  } catch (e) {}
+});
+
 let tablaVentas;
 let productosVenta = [];
 let ventaActualOffcanvas = 0;

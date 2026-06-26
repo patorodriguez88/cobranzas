@@ -241,6 +241,18 @@ date_default_timezone_set('America/Argentina/Cordoba');
 
 $accion = isset($_POST['accion']) ? $_POST['accion'] : '';
 
+$accionesQueRequierenSesion = [
+    'guardar', 'eliminar', 'guardar_orden_venta', 'guardar_turno_retiro',
+    'guardar_observaciones_venta', 'actualizar_cantidad_producto_venta',
+    'guardar_ajuste_pago', 'guardar_deposito_venta', 'eliminar_ajuste_pago',
+    'confirmar_importacion_excel',
+];
+
+if (in_array($accion, $accionesQueRequierenSesion) && empty($_SESSION['user_name'])) {
+    echo json_encode(['session_expired' => 1]);
+    exit;
+}
+
 function normalizarNumeroCliente($valor)
 {
     $valor = trim((string)$valor);
