@@ -183,6 +183,7 @@ $("#btn_conciliar").click(function () {
         var datatable_seguimiento = $("#cobranzas_tabla").DataTable();
         datatable_seguimiento.ajax.reload();
         $("#centermodal").modal("hide");
+        $btn.data("enviando", false).prop("disabled", false);
       } else {
         $btn.data("enviando", false).prop("disabled", false);
         Swal.fire("Error", jsonData.error || "No se pudo conciliar.", "error");
@@ -238,6 +239,7 @@ $("#btn_rechazar").click(function () {
         var datatable_seguimiento = $("#cobranzas_tabla").DataTable();
         datatable_seguimiento.ajax.reload();
         $("#centermodal").modal("hide");
+        $btn.data("enviando", false).prop("disabled", false);
       } else {
         $btn.data("enviando", false).prop("disabled", false);
         Swal.fire("Error", jsonData.error || "No se pudo rechazar.", "error");
