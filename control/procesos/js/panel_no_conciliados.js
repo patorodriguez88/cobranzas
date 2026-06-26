@@ -123,7 +123,8 @@ function conciliar(id) {
       console.log("datos", jsonData.data[0].NombreCliente);
 
       $("#nombre_cobranza").val(jsonData.data[0].NombreCliente);
-      $("#fecha_cobranza").val(jsonData.data[0].Fecha);
+      var fechaM = moment(jsonData.data[0].Fecha, ["YYYY-MM-DD", "DD/MM/YYYY"]);
+      $("#fecha_cobranza").val(fechaM.isValid() ? fechaM.format("DD/MM/YYYY") : jsonData.data[0].Fecha);
       $("#fecha_original_cobranza").val(jsonData.data[0].Fecha);
       $("#hora_cobranza").val(jsonData.data[0].Hora);
       $("#hora_original_cobranza").val(jsonData.data[0].Hora);
