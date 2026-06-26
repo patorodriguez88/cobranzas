@@ -125,7 +125,8 @@ function conciliar(id) {
       $("#nombre_cobranza").val(jsonData.data[0].NombreCliente);
       var fechaM = moment(jsonData.data[0].Fecha, ["YYYY-MM-DD", "DD/MM/YYYY"]);
       $("#fecha_cobranza").val(fechaM.isValid() ? fechaM.format("DD/MM/YYYY") : jsonData.data[0].Fecha);
-      $("#fecha_original_cobranza").val(jsonData.data[0].Fecha);
+      var fechaOrigM = moment(jsonData.data[0].Fecha, ["YYYY-MM-DD", "DD/MM/YYYY"]);
+      $("#fecha_original_cobranza").val(fechaOrigM.isValid() ? fechaOrigM.format("DD/MM/YYYY") : jsonData.data[0].Fecha);
       $("#hora_cobranza").val(jsonData.data[0].Hora);
       $("#hora_original_cobranza").val(jsonData.data[0].Hora);
       $("#banco_cobranza").val(jsonData.data[0].Banco);
