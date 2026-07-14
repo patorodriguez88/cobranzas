@@ -184,11 +184,15 @@ if (isset($_GET['accion']) && $_GET['accion'] === 'exportar_ventas_excel') {
             V.EstadoPago,
             V.NumeroOrdenVenta,
             (
-                SELECT GROUP_CONCAT(DISTINCT OC.NumeroOrden ORDER BY OC.NumeroOrden SEPARATOR ', ')
-                FROM VentasConsumoStock VCS
-                INNER JOIN OrdenesCompra OC ON OC.id = VCS.idOrdenCompra
-                WHERE VCS.idVenta = V.id
-                AND IFNULL(VCS.Eliminado,0) = 0
+                SELECT GROUP_CONCAT(CONCAT(T.NumeroOrden, '(', T.Cantidad, ')') ORDER BY T.NumeroOrden SEPARATOR ', ')
+                FROM (
+                    SELECT OC.NumeroOrden AS NumeroOrden, SUM(VCS.Cantidad) AS Cantidad
+                    FROM VentasConsumoStock VCS
+                    INNER JOIN OrdenesCompra OC ON OC.id = VCS.idOrdenCompra
+                    WHERE VCS.idVenta = V.id
+                    AND IFNULL(VCS.Eliminado,0) = 0
+                    GROUP BY OC.id, OC.NumeroOrden
+                ) T
             ) AS OrdenesIngreso
         FROM Ventas V
         LEFT JOIN Clientes C ON C.id = V.idCliente
