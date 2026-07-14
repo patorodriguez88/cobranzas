@@ -162,7 +162,7 @@ if (isset($_GET['accion']) && $_GET['accion'] === 'exportar_ventas_excel') {
     echo "\xEF\xBB\xBF";
 
     $sql = "
-        SELECT 
+        SELECT
             V.id,
             V.NumeroVenta,
             DATE_FORMAT(V.Fecha, '%d/%m/%Y') AS Fecha,
@@ -181,7 +181,15 @@ if (isset($_GET['accion']) && $_GET['accion'] === 'exportar_ventas_excel') {
             AND AP.eliminado = 0
             ), 0) AS Ajustes,
             V.Saldo,
-            V.EstadoPago
+            V.EstadoPago,
+            V.NumeroOrdenVenta,
+            (
+                SELECT GROUP_CONCAT(DISTINCT OC.NumeroOrden ORDER BY OC.NumeroOrden SEPARATOR ', ')
+                FROM VentasConsumoStock VCS
+                INNER JOIN OrdenesCompra OC ON OC.id = VCS.idOrdenCompra
+                WHERE VCS.idVenta = V.id
+                AND IFNULL(VCS.Eliminado,0) = 0
+            ) AS OrdenesIngreso
         FROM Ventas V
         LEFT JOIN Clientes C ON C.id = V.idCliente
         LEFT JOIN VentasDetalle VD ON VD.idVenta = V.id AND VD.Eliminado = 0
@@ -209,10 +217,15 @@ if (isset($_GET['accion']) && $_GET['accion'] === 'exportar_ventas_excel') {
             <th>Ajustes</th>
             <th>Saldo</th>
             <th>Estado</th>
+            <th>Orden(es) de Ingreso</th>
+            <th>Orden de Egreso</th>
         </tr>
     ";
 
     while ($row = $res->fetch_assoc()) {
+        $ordenEgreso = !empty($row['NumeroOrdenVenta']) ? $row['NumeroOrdenVenta'] : 'No generada';
+        $ordenesIngreso = !empty($row['OrdenesIngreso']) ? $row['OrdenesIngreso'] : '-';
+
         echo "<tr>";
         echo "<td>{$row['id']}</td>";
         echo "<td>{$row['NumeroVenta']}</td>";
@@ -228,6 +241,8 @@ if (isset($_GET['accion']) && $_GET['accion'] === 'exportar_ventas_excel') {
         echo "<td>{$row['Ajustes']}</td>";
         echo "<td>{$row['Saldo']}</td>";
         echo "<td>{$row['EstadoPago']}</td>";
+        echo "<td>{$ordenesIngreso}</td>";
+        echo "<td>{$ordenEgreso}</td>";
         echo "</tr>";
     }
 
