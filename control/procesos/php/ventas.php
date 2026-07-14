@@ -184,15 +184,19 @@ if (isset($_GET['accion']) && $_GET['accion'] === 'exportar_ventas_excel') {
             V.EstadoPago,
             V.NumeroOrdenVenta,
             (
-                SELECT GROUP_CONCAT(CONCAT(T.NumeroOrden, '(', T.Cantidad, ')') ORDER BY T.NumeroOrden SEPARATOR ', ')
-                FROM (
-                    SELECT OC.NumeroOrden AS NumeroOrden, SUM(VCS.Cantidad) AS Cantidad
-                    FROM VentasConsumoStock VCS
-                    INNER JOIN OrdenesCompra OC ON OC.id = VCS.idOrdenCompra
-                    WHERE VCS.idVenta = V.id
-                    AND IFNULL(VCS.Eliminado,0) = 0
-                    GROUP BY OC.id, OC.NumeroOrden
-                ) T
+                SELECT GROUP_CONCAT(DISTINCT CONCAT(
+                    OC.NumeroOrden, '(', (
+                        SELECT SUM(VCS2.Cantidad)
+                        FROM VentasConsumoStock VCS2
+                        WHERE VCS2.idVenta = V.id
+                        AND VCS2.idOrdenCompra = OC.id
+                        AND IFNULL(VCS2.Eliminado,0) = 0
+                    ), ')'
+                ) ORDER BY OC.NumeroOrden SEPARATOR ', ')
+                FROM VentasConsumoStock VCS
+                INNER JOIN OrdenesCompra OC ON OC.id = VCS.idOrdenCompra
+                WHERE VCS.idVenta = V.id
+                AND IFNULL(VCS.Eliminado,0) = 0
             ) AS OrdenesIngreso
         FROM Ventas V
         LEFT JOIN Clientes C ON C.id = V.idCliente
@@ -203,6 +207,11 @@ if (isset($_GET['accion']) && $_GET['accion'] === 'exportar_ventas_excel') {
     ";
 
     $res = $mysqli->query($sql);
+
+    if (!$res) {
+        echo "Error al generar el reporte: " . $mysqli->error;
+        exit;
+    }
 
     echo "<table border='1'>";
     echo "
