@@ -544,18 +544,19 @@ function abrir_modal_whatsapp(cliente) {
     return;
   }
 
-  let mensaje = `Estimado cliente,
+  const nombreCliente = String(cliente.RazonSocial || "cliente").trim();
+  let mensaje = `Estimado ${nombreCliente}:
 
 A los efectos de mejorar nuestro servicio, hemos implementado un acceso para que Ud. pueda cargar automáticamente los pagos realizados en nuestro sistema.
 
-🔗 Acceso:
+Acceso al sistema:
 https://www.dintersa.com.ar/pagos
 
 Desde allí podrá seguir los pasos para informar el comprobante de pago y dejarlo automáticamente registrado en nuestro sistema.
 
 También puede guardar esta página en su teléfono móvil para futuras transacciones.
 
-🔐 Clave de acceso:
+Clave de acceso:
 ${cliente.Dni || "-"}
 
 Muchas gracias.

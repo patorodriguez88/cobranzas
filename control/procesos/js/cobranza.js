@@ -29,17 +29,19 @@ function abrirWhatsAppCobranza(fila) {
     return;
   }
 
-  const mensaje = `Estimado cliente,
+  const nombreCliente = String(fila.RazonSocial || "cliente").trim();
+  const mensaje = `Estimado ${nombreCliente}:
 
 Queremos informarle que su exigible del día ${fechaArgentina(fila.Fecha)} es de ${importeArgentina(fila.Exigible)}.
 
 Una vez realizado el pago, tenga a bien informarlo a través de nuestro sistema de gestión de cobranzas:
 
-🔗 https://www.dintersa.com.ar/pagos
+Acceso al sistema:
+https://www.dintersa.com.ar/pagos
 
 Desde allí podrá informar el comprobante y dejarlo registrado en nuestro sistema.
 
-🔐 Clave de acceso: ${fila.Dni || "-"}
+Clave de acceso: ${fila.Dni || "-"}
 
 Muchas gracias.
 
