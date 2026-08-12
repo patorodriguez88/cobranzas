@@ -73,6 +73,11 @@ function prepararCargaComprobante() {
     dictInvalidFileType: "El formato de la imagen no es compatible. Use JPG, PNG o WebP.",
     dictFileTooBig: "La imagen supera el máximo permitido de 10 MB.",
     init: function () {
+      this.on("sending", function (archivo, xhr, formData) {
+        // Se agrega explícitamente; evita diferencias de serialización entre
+        // Safari/iOS, Chrome/Android y los campos internos de Dropzone.
+        formData.set("idCobranza", $("#id_cobranza_comprobante").val());
+      });
       this.on("addedfile", function () {
         if (this.files.length > 1) this.removeFile(this.files[0]);
         $("#btn_aceptar_comprobante").prop("disabled", true);
