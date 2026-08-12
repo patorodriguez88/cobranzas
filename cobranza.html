@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Cobranzas | Cobranza</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="shortcut icon" href="img/favicon.png" />
+  <link href="saas/assets/css/vendor/dataTables.bootstrap5.css" rel="stylesheet" />
+  <link href="saas/assets/css/vendor/responsive.bootstrap5.css" rel="stylesheet" />
+  <link href="saas/assets/css/icons.min.css" rel="stylesheet" />
+  <link href="saas/assets/css/app.min.css" rel="stylesheet" id="app-style" />
+</head>
+<body class="loading" data-layout-color="light" data-leftbar-theme="dark" data-layout-mode="fluid" data-leftbar-compact-mode="condensed">
+  <div class="modal fade" id="modal_whatsapp_cobranza" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered"><div class="modal-content">
+      <div class="modal-header"><h4 class="modal-title"><i class="mdi mdi-whatsapp text-success me-1"></i>Aviso de exigible</h4><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body"><label class="form-label" for="texto_whatsapp_cobranza">Mensaje</label><textarea id="texto_whatsapp_cobranza" class="form-control" rows="13"></textarea></div>
+      <div class="modal-footer"><button class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button><a id="btn_enviar_whatsapp_cobranza" target="_blank" rel="noopener" class="btn btn-success"><i class="mdi mdi-whatsapp me-1"></i>Enviar WhatsApp</a></div>
+    </div></div>
+  </div>
+  <div class="wrapper">
+    <div class="leftside-menu">
+      <a href="pendientes.html" class="logo text-center logo-light"><span class="logo-lg bg-light"><img src="images/dinterDark.png" alt="Dinter" height="36" /></span><span class="logo-sm bg-white"><img src="img/icon_64.png" alt="Dinter" height="36" /></span></a>
+      <div class="h-100 bg-light" id="leftside-menu-container" data-simplebar><ul class="side-nav">
+        <li class="side-nav-title side-nav-item">Datos</li>
+        <li class="side-nav-item"><a href="Clientes.html" class="side-nav-link"><i class="mdi mdi-account"></i><span> Clientes </span></a></li>
+        <li class="side-nav-item menuitem-active"><a href="cobranza.html" class="side-nav-link active"><i class="mdi mdi-cash-multiple"></i><span> Cobranza </span></a></li>
+        <li class="side-nav-item"><a href="productos_ventas.html#productos" class="side-nav-link"><i class="mdi mdi-package-variant"></i><span> Productos </span></a></li>
+        <li class="side-nav-item"><a href="turnos.html" class="side-nav-link"><i class="mdi mdi-calendar-clock"></i><span> Turnos de Retiro </span></a></li>
+        <li class="side-nav-title side-nav-item">Compras</li><li class="side-nav-item"><a href="compras.html" class="side-nav-link"><i class="mdi mdi-view-dashboard-outline"></i><span> Orden de Ingreso</span></a></li>
+        <li class="side-nav-title side-nav-item">Ventas</li><li class="side-nav-item"><a href="productos_ventas.html#dashboard" class="side-nav-link"><i class="mdi mdi-view-dashboard-outline"></i><span> Dashboard </span></a></li><li class="side-nav-item"><a href="ventas.html#ventas" class="side-nav-link"><i class="mdi mdi-cart-plus"></i><span> Nueva Venta </span></a></li><li class="side-nav-item"><a href="ventas.html#listado_ventas" class="side-nav-link"><i class="mdi mdi-format-list-bulleted"></i><span> Ventas Cargadas </span></a></li>
+        <li class="side-nav-title side-nav-item">Admin</li><li class="side-nav-item"><a href="pendientes.html" class="side-nav-link"><i class="mdi mdi-archive-cancel-outline"></i><span id="total_no_conciliados" class="badge bg-danger float-end"></span><span> Pendientes </span></a></li><li class="side-nav-item"><a href="conciliados.html" class="side-nav-link"><i class="mdi mdi-archive-check-outline"></i><span id="total_conciliados" class="badge bg-success float-end"></span><span> Conciliados </span></a></li><li class="side-nav-item"><a href="exportados.html" class="side-nav-link"><i class="mdi mdi-cloud-download-outline"></i><span id="total_exportados" class="badge bg-warning float-end"></span><span> Exportados </span></a></li>
+      </ul><div class="clearfix"></div></div>
+    </div>
+    <div class="content-page"><div class="content">
+      <div class="navbar-custom"><ul class="list-unstyled topbar-menu float-end mb-0"><li class="dropdown notification-list"><a class="nav-link dropdown-toggle nav-user arrow-none me-0" data-bs-toggle="dropdown" href="#"><span class="account-user-avatar"><span id="avatar" class="avatar-title bg-warning rounded-circle"></span></span><span><span id="user_name" class="account-user-name"></span><span id="user_perfil" class="account-position"></span></span></a><div class="dropdown-menu dropdown-menu-end dropdown-menu-animated topbar-dropdown-menu profile-dropdown"><a href="inicio_control.html" class="dropdown-item notify-item"><i class="mdi mdi-logout me-1"></i><span>Logout</span></a></div></li></ul><button class="button-menu-mobile open-left"><i class="mdi mdi-menu"></i></button></div>
+      <div class="container-fluid">
+        <div class="row"><div class="col-12"><div class="page-title-box"><div class="page-title-right"><ol class="breadcrumb m-0"><li class="breadcrumb-item">Datos</li><li class="breadcrumb-item active">Cobranza</li></ol></div><h4 class="page-title">Cobranza</h4></div></div></div>
+        <div class="card"><div class="card-body">
+          <h4 class="header-title mb-1">Importar exigible diario</h4><p class="text-muted">Seleccione el archivo CSV con fecha, número de cliente e importe exigible.</p>
+          <form id="form_cobranza" class="row g-2 align-items-end mb-3"><div class="col-md-8"><label for="archivo_exigible" class="form-label">Archivo CSV</label><input id="archivo_exigible" name="archivo" type="file" class="form-control" accept=".csv,text/csv" required /></div><div class="col-md-4"><button id="btn_procesar_exigible" type="submit" class="btn btn-success w-100"><i class="mdi mdi-file-table-outline me-1"></i>Procesar archivo</button></div></form>
+          <div id="resumen_cobranza" class="alert alert-info d-none"></div>
+          <table id="tabla_cobranza" class="table dt-responsive nowrap w-100"><thead><tr><th>Recorrido</th><th>N.º de cliente</th><th>Nombre del cliente</th><th class="text-end">Exigible</th><th class="text-center">WhatsApp</th></tr></thead><tbody style="font-size:11px"></tbody></table>
+        </div></div>
+      </div>
+    </div><footer class="footer"><div class="container-fluid">© Dinter - Gestión de Cobranzas</div></footer></div>
+  </div>
+  <script src="saas/assets/js/vendor.min.js"></script><script src="saas/assets/js/app.min.js"></script><script src="saas/assets/js/vendor/jquery.dataTables.min.js"></script><script src="saas/assets/js/vendor/dataTables.bootstrap5.js"></script><script src="saas/assets/js/vendor/dataTables.responsive.min.js"></script><script src="saas/assets/js/vendor/responsive.bootstrap5.min.js"></script><script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script><script src="control/procesos/js/cobranza.js"></script><script src="control/procesos/js/totales.js"></script><script src="control/procesos/js/conexion.js"></script>
+</body>
+</html>
