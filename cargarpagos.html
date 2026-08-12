@@ -84,9 +84,6 @@
               method="post"
               class="dropzone"
               id="myAwesomeDropzone"
-              data-plugin="dropzone"
-              data-previews-container="#file-previews"
-              data-upload-preview-template="#uploadPreviewTemplate"
             >
               <input type="hidden" name="idCobranza" id="id_cobranza_comprobante" value="" />
               <div class="fallback">
@@ -99,6 +96,7 @@
                 <span class="text-muted font-13">(Intente que la <strong>imagen</strong> este nitida y visible.)</span>
               </div>
             </form>
+            <div id="estado_carga_comprobante" class="alert d-none mt-3 mb-0" role="alert"></div>
             <!-- Preview -->
             <div class="dropzone-previews mt-3" id="file-previews">
               <!-- file preview template -->
@@ -127,10 +125,10 @@
           </div>
           <div class="col-12">
             <div class="text-end mt-xl-0 mt-2">
-              <button type="button" class="btn btn-light mb-2 me-2" data-bs-dismiss="modal">
+              <button type="button" id="btn_sin_comprobante" class="btn btn-light mb-2 me-2" data-bs-dismiss="modal">
                 No tengo comprobante
               </button>
-              <button type="button" class="btn btn-success mb-2 me-2" data-bs-dismiss="modal">Aceptar</button>
+              <button type="button" id="btn_aceptar_comprobante" class="btn btn-success mb-2 me-2" data-bs-dismiss="modal" disabled>Aceptar</button>
             </div>
           </div>
         </div>
@@ -370,7 +368,7 @@
 
     <script src="saas/assets/js/vendor.min.js"></script>
     <script src="saas/assets/js/app.min.js"></script>
-    <script src="procesos/js/function.js"></script>
+    <script src="procesos/js/function.js?v=20260812-2"></script>
     <script src="procesos/js/conexion.js"></script>
     <!-- plugin js -->
     <script src="saas/assets/js/vendor/dropzone.min.js"></script>

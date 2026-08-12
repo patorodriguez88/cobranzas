@@ -49,6 +49,70 @@ function mostrarError(mensaje) {
   $("#error_alert").fadeIn();
 }
 
+function estadoCargaComprobante(tipo, mensaje) {
+  const estado = $("#estado_carga_comprobante");
+  estado.removeClass("d-none alert-info alert-success alert-danger")
+    .addClass(`alert-${tipo}`)
+    .text(mensaje);
+}
+
+function prepararCargaComprobante() {
+  const formulario = document.getElementById("myAwesomeDropzone");
+  if (!formulario || typeof Dropzone === "undefined" || formulario.dropzone) return;
+
+  Dropzone.autoDiscover = false;
+  const zona = new Dropzone(formulario, {
+    url: formulario.getAttribute("action"),
+    paramName: "file",
+    maxFiles: 1,
+    maxFilesize: 10,
+    acceptedFiles: "image/jpeg,image/png,image/gif,image/webp,.jpg,.jpeg,.png,.gif,.webp",
+    previewsContainer: "#file-previews",
+    previewTemplate: $("#uploadPreviewTemplate").html(),
+    addRemoveLinks: false,
+    dictInvalidFileType: "El formato de la imagen no es compatible. Use JPG, PNG o WebP.",
+    dictFileTooBig: "La imagen supera el máximo permitido de 10 MB.",
+    init: function () {
+      this.on("addedfile", function () {
+        if (this.files.length > 1) this.removeFile(this.files[0]);
+        $("#btn_aceptar_comprobante").prop("disabled", true);
+        estadoCargaComprobante("info", "Subiendo comprobante, espere...");
+      });
+      this.on("success", function (archivo, respuesta) {
+        let datos = respuesta;
+        try {
+          datos = typeof respuesta === "string" ? JSON.parse(respuesta) : respuesta;
+        } catch (error) {
+          this.emit("error", archivo, "El servidor devolvió una respuesta inválida.");
+          return;
+        }
+        if (!datos || datos.success != 1) {
+          this.emit("error", archivo, datos?.error || "El servidor no pudo guardar la imagen.");
+          return;
+        }
+        $("#btn_aceptar_comprobante").prop("disabled", false);
+        estadoCargaComprobante("success", `Comprobante guardado correctamente: ${datos.archivo}`);
+      });
+      this.on("error", function (archivo, error) {
+        const mensaje = typeof error === "string" ? error : (error?.error || "No se pudo subir el comprobante.");
+        $("#btn_aceptar_comprobante").prop("disabled", true);
+        estadoCargaComprobante("danger", mensaje);
+      });
+      this.on("removedfile", function () {
+        $("#btn_aceptar_comprobante").prop("disabled", true);
+      });
+    },
+  });
+
+  $("#standard-modal").on("show.bs.modal", function () {
+    zona.removeAllFiles(true);
+    $("#btn_aceptar_comprobante").prop("disabled", true);
+    $("#estado_carga_comprobante").addClass("d-none").text("");
+  });
+}
+
+$(document).ready(prepararCargaComprobante);
+
 // ==============================
 // Seguridad / sesión
 // ==============================
