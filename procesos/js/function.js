@@ -67,6 +67,11 @@ function prepararCargaComprobante() {
     maxFiles: 1,
     maxFilesize: 10,
     acceptedFiles: "image/jpeg,image/png,image/gif,image/webp,.jpg,.jpeg,.png,.gif,.webp",
+    resizeWidth: 1600,
+    resizeHeight: 1600,
+    resizeQuality: 0.78,
+    resizeMethod: "contain",
+    resizeMimeType: "image/jpeg",
     previewsContainer: "#file-previews",
     previewTemplate: $("#uploadPreviewTemplate").html(),
     addRemoveLinks: false,
@@ -77,6 +82,9 @@ function prepararCargaComprobante() {
         // Se agrega explícitamente; evita diferencias de serialización entre
         // Safari/iOS, Chrome/Android y los campos internos de Dropzone.
         formData.set("idCobranza", $("#id_cobranza_comprobante").val());
+      });
+      this.on("processing", function () {
+        estadoCargaComprobante("info", "Optimizando y subiendo el comprobante, espere...");
       });
       this.on("addedfile", function () {
         if (this.files.length > 1) this.removeFile(this.files[0]);

@@ -6,6 +6,29 @@ error_reporting(E_ALL);
 session_start();
 header('Content-Type: application/json; charset=utf-8');
 
+function bytesConfiguracion($valor)
+{
+    $valor = trim((string)$valor);
+    if ($valor === '') return 0;
+    $numero = (float)$valor;
+    $unidad = strtolower(substr($valor, -1));
+    if ($unidad === 'g') return (int)($numero * 1024 * 1024 * 1024);
+    if ($unidad === 'm') return (int)($numero * 1024 * 1024);
+    if ($unidad === 'k') return (int)($numero * 1024);
+    return (int)$numero;
+}
+
+$largoPeticion = (int)($_SERVER['CONTENT_LENGTH'] ?? 0);
+$maximoPost = bytesConfiguracion(ini_get('post_max_size'));
+if ($largoPeticion > 0 && $maximoPost > 0 && $largoPeticion > $maximoPost && empty($_POST) && empty($_FILES)) {
+    http_response_code(413);
+    echo json_encode([
+        'success' => 0,
+        'error' => 'La imagen supera el tamaño permitido por el servidor. Intente nuevamente; la app la reducirá automáticamente.'
+    ]);
+    exit;
+}
+
 function uploadErrorTexto($codigo)
 {
     switch ($codigo) {
@@ -46,9 +69,12 @@ if ($idCobranza <= 0) {
 }
 
 if (!isset($_FILES["file"])) {
+    http_response_code(400);
     echo json_encode([
         "success" => 0,
-        "error" => "No se recibió archivo.",
+        "error" => "No se recibió la imagen. Vuelva a seleccionarla y espere la confirmación verde.",
+        "content_length" => $largoPeticion,
+        "post_max_size" => ini_get('post_max_size'),
         "post" => $_POST,
         "files" => $_FILES
     ]);
