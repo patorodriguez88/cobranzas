@@ -1402,7 +1402,7 @@ switch ($accion) {
 
                 $carpetaFisica = __DIR__ . "/../../../images/depositos/";
                 $carpetaWeb = "images/depositos/";
-                $extensiones = array("jpg", "jpeg", "png", "gif");
+                $extensiones = array("jpg", "jpeg", "png", "gif", "webp");
 
                 foreach ($extensiones as $ext) {
                     $archivoFisico = $carpetaFisica . $idCobranza . "." . $ext;

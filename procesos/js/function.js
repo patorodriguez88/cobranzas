@@ -203,6 +203,9 @@ function enviarFormulario() {
             return;
           }
 
+          // Dropzone envía este valor junto con la imagen.
+          $("#id_cobranza_comprobante").val(jsonData.idIngreso);
+
           // Pedir NComprobante
           $.ajax({
             type: "POST",

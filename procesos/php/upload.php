@@ -30,6 +30,12 @@ function uploadErrorTexto($codigo)
 
 $idCobranza = isset($_POST['idCobranza']) ? (int)$_POST['idCobranza'] : 0;
 
+// Compatibilidad con la app de clientes anterior: el ID también se guarda
+// en la sesión inmediatamente después de registrar el pago.
+if ($idCobranza <= 0) {
+    $idCobranza = (int)($_SESSION['NComprobante'] ?? 0);
+}
+
 if ($idCobranza <= 0) {
     echo json_encode([
         "success" => 0,
@@ -64,15 +70,17 @@ $permitidosMime = [
     "image/pjpeg",
     "image/jpeg",
     "image/png",
-    "image/gif"
+    "image/gif",
+    "image/webp"
 ];
 
-$extPermitidas = ['jpg', 'jpeg', 'png', 'gif'];
+$extPermitidas = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
 
-$mime = isset($_FILES["file"]["type"]) ? strtolower(trim($_FILES["file"]["type"])) : '';
+$finfo = new finfo(FILEINFO_MIME_TYPE);
+$mime = strtolower((string)$finfo->file($_FILES["file"]["tmp_name"]));
 $extension = strtolower(pathinfo($_FILES["file"]["name"], PATHINFO_EXTENSION));
 
-if (!in_array($mime, $permitidosMime) && !in_array($extension, $extPermitidas)) {
+if (!in_array($mime, $permitidosMime, true) || !in_array($extension, $extPermitidas, true)) {
     echo json_encode([
         "success" => 0,
         "error" => "Tipo de archivo no permitido.",

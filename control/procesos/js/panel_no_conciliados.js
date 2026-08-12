@@ -489,6 +489,10 @@ $("#centermodal").on("show.bs.modal", function () {
       `images/depositos/${id}.JPEG`,
       `images/depositos/${id}.png`,
       `images/depositos/${id}.PNG`,
+      `images/depositos/${id}.gif`,
+      `images/depositos/${id}.GIF`,
+      `images/depositos/${id}.webp`,
+      `images/depositos/${id}.WEBP`,
     ];
 
     let index = 0;
