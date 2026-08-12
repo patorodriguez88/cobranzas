@@ -38,9 +38,10 @@
         <div class="row"><div class="col-12"><div class="page-title-box"><div class="page-title-right"><ol class="breadcrumb m-0"><li class="breadcrumb-item">Datos</li><li class="breadcrumb-item active">Cobranza</li></ol></div><h4 class="page-title">Cobranza</h4></div></div></div>
         <div class="card"><div class="card-body">
           <h4 class="header-title mb-1">Importar exigible diario</h4><p class="text-muted">Seleccione el archivo CSV con fecha, número de cliente e importe exigible.</p>
+          <div id="ultimo_archivo_cobranza" class="alert alert-danger text-danger">Consultando el último archivo subido...</div>
           <form id="form_cobranza" class="row g-2 align-items-end mb-3"><div class="col-md-8"><label for="archivo_exigible" class="form-label">Archivo CSV</label><input id="archivo_exigible" name="archivo" type="file" class="form-control" accept=".csv,text/csv" required /></div><div class="col-md-4"><button id="btn_procesar_exigible" type="submit" class="btn btn-success w-100"><i class="mdi mdi-file-table-outline me-1"></i>Procesar archivo</button></div></form>
           <div id="resumen_cobranza" class="alert alert-info d-none"></div>
-          <table id="tabla_cobranza" class="table dt-responsive nowrap w-100"><thead><tr><th>Recorrido</th><th>N.º de cliente</th><th>Nombre del cliente</th><th class="text-end">Exigible</th><th class="text-center">WhatsApp</th></tr></thead><tbody style="font-size:11px"></tbody></table>
+          <table id="tabla_cobranza" class="table dt-responsive nowrap w-100"><thead><tr><th>Recorrido</th><th>N.º de cliente</th><th>Nombre del cliente</th><th class="text-end">Exigible</th><th>Teléfono</th><th class="text-center">WhatsApp</th></tr></thead><tbody style="font-size:11px"></tbody></table>
         </div></div>
       </div>
     </div><footer class="footer"><div class="container-fluid">© Dinter - Gestión de Cobranzas</div></footer></div>
