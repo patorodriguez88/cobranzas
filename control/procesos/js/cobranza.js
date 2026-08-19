@@ -123,9 +123,15 @@ function abrirWhatsAppCobranza(fila) {
   }
 
   const nombreCliente = String(fila.RazonSocial || "cliente").trim();
+  const datosBancarios = String(fila.Distribuidora || "DINTER").trim().toUpperCase() === "RAK"
+    ? "Alias: *ELRAK.PANINI*\nCBU: *0200302101000001152701*\nBanco Córdoba\nCUIT: *30669104959*"
+    : "Cuenta 1\nAlias: *DINTER.SA.*\nCBU: *2850331630094145090021*\nBanco Macro\n\nCuenta 2\nAlias: *DINTER.SA.CBA*\nCBU: *0200931901000025067115*\nBanco Córdoba";
   const mensaje = `Estimado ${nombreCliente}:
 
-Queremos informarle que su exigible del día ${fechaArgentina(fila.Fecha)} es de ${importeArgentina(fila.Exigible)}.
+Queremos informarle que su exigible es de ${importeArgentina(fila.Exigible)}.
+
+Puede realizar el pago a la siguiente cuenta bancaria:
+${datosBancarios}
 
 Una vez realizado el pago, tenga a bien informarlo a través de nuestro sistema de gestión de cobranzas:
 

@@ -135,7 +135,7 @@ if (!$handle) {
 }
 
 $stmt = $mysqli->prepare(
-    'SELECT Ncliente, RazonSocial, Recorrido, Celular, Dni FROM Clientes WHERE Ncliente = ? LIMIT 1'
+    'SELECT Ncliente, RazonSocial, Recorrido, Celular, Dni, Distribuidora FROM Clientes WHERE Ncliente = ? LIMIT 1'
 );
 if (!$stmt) {
     fclose($handle);
@@ -183,6 +183,7 @@ while (($campos = fgetcsv($handle, 10000, ';')) !== false) {
         'Recorrido' => $cliente['Recorrido'] ?? '',
         'Celular' => $cliente['Celular'] ?? '',
         'Dni' => $cliente['Dni'] ?? '',
+        'Distribuidora' => $cliente['Distribuidora'] ?? 'DINTER',
         'Exigible' => $importe,
         'Encontrado' => $cliente ? 1 : 0,
     ];
