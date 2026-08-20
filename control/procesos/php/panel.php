@@ -16,7 +16,7 @@ function normalizarFecha($valor) {
 
 $accionesQueRequierenSesion = [
     'Conciliar', 'Rechazar', 'Conciliar_quik', 'Conciliar_quik_cancel',
-    'Vuelve', 'Eliminar', 'AsignarPagoVenta', 'Observaciones_Usuario'
+    'Vuelve', 'Eliminar', 'AsignarPagoVenta', 'Observaciones_Usuario', 'MarcarSinVenta'
 ];
 
 $accionActual = array_keys(array_filter($_POST, fn($v) => $v !== null, ARRAY_FILTER_USE_KEY));
@@ -42,6 +42,46 @@ if (isset($_POST['Observaciones_Usuario'])) {
     echo json_encode(array('success' => 1, 'bloque' => 'Observaciones'));
 }
 
+//MARCAR/DESMARCAR COBRANZA COMO "SIN VENTA" (no requiere vincularse a una venta)
+if (isset($_POST['MarcarSinVenta'])) {
+
+    $idCobranza = isset($_POST['id_cobranza']) ? (int)$_POST['id_cobranza'] : 0;
+    $valor = isset($_POST['valor']) && (int)$_POST['valor'] === 1 ? 1 : 0;
+
+    if ($idCobranza <= 0) {
+        echo json_encode(array('success' => 0, 'error' => 'Cobranza inválida.'));
+        exit;
+    }
+
+    if ($valor === 1) {
+
+        $sqlAplicado = $mysqli->query("
+            SELECT IFNULL(SUM(ImporteAplicado),0) AS TotalAplicado
+            FROM CobranzasVentas
+            WHERE idCobranza = '$idCobranza'
+              AND IFNULL(Eliminado,0) = 0
+        ");
+
+        $totalAplicado = (float)$sqlAplicado->fetch_assoc()['TotalAplicado'];
+
+        if ($totalAplicado > 0) {
+            echo json_encode(array(
+                'success' => 0,
+                'error' => 'Este pago ya está vinculado a una venta, desvincúlelo primero.'
+            ));
+            exit;
+        }
+    }
+
+    if (!$mysqli->query("UPDATE Cobranza SET SinVenta = '$valor' WHERE id = '$idCobranza' LIMIT 1")) {
+        echo json_encode(array('success' => 0, 'error' => $mysqli->error));
+        exit;
+    }
+
+    echo json_encode(array('success' => 1, 'SinVenta' => $valor));
+    exit;
+}
+
 //TABLA CONCILIADOS
 if (isset($_POST['Tabla_conciliados'])) {
 
@@ -51,10 +91,11 @@ if (isset($_POST['Tabla_conciliados'])) {
         $whereFiltro = "WHERE Cobranza_conciliacion.Exportado = ''";
     }
 
-    $sql = $mysqli->query("SELECT 
+    $sql = $mysqli->query("SELECT
             usuarios.Usuario AS User,
             Cobranza_conciliacion.*,
             Cobranza.Importe AS Importe_original,
+            Cobranza.SinVenta,
 
             IFNULL((
                 SELECT SUM(CV.ImporteAplicado)

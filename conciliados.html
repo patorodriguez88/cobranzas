@@ -116,70 +116,93 @@
               </div>
             </div>
 
+            <div class="form-check form-switch mb-3">
+              <input class="form-check-input" type="checkbox" id="asignar_switch_sin_venta" />
+              <label class="form-check-label" for="asignar_switch_sin_venta">
+                Este pago no corresponde a una venta (proviene de Cobranzas / exigibles)
+              </label>
+            </div>
+
             <hr />
 
-            <h5>Ventas pendientes del cliente</h5>
+            <div id="bloque_asignacion_venta">
+              <h5>Ventas pendientes del cliente</h5>
 
-            <div class="table-responsive">
-              <table class="table table-sm table-bordered align-middle" id="tabla_asignar_ventas">
-                <thead class="table-light">
-                  <tr>
-                    <th>Venta</th>
-                    <th>Fecha</th>
-                    <th>Total</th>
-                    <th>Pagado</th>
-                    <th>Saldo</th>
-                    <th style="width: 160px">Aplicar</th>
-                  </tr>
-                </thead>
-                <tbody></tbody>
-              </table>
+              <div class="table-responsive">
+                <table class="table table-sm table-bordered align-middle" id="tabla_asignar_ventas">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Venta</th>
+                      <th>Fecha</th>
+                      <th>Total</th>
+                      <th>Pagado</th>
+                      <th>Saldo</th>
+                      <th style="width: 160px">Aplicar</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+
+              <hr class="mt-3 mb-3" />
+
+              <h5 class="mb-3">Ventas ya aplicadas a este pago</h5>
+
+              <div class="table-responsive">
+                <table class="table table-sm table-bordered align-middle" id="tabla_ventas_aplicadas">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Venta</th>
+                      <th>Fecha</th>
+                      <th>Total</th>
+                      <th>Aplicado</th>
+                      <th>Saldo</th>
+                      <th>Estado</th>
+                      <th width="80">Acción</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    <tr>
+                      <td colspan="7" class="text-center text-muted">Sin aplicaciones.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="row mt-3">
+                <div class="col-md-4">
+                  <h5>Pago: <span id="resumen_pago">$ 0,00</span></h5>
+                </div>
+                <div class="col-md-4">
+                  <h5>Aplicado: <span id="resumen_aplicado">$ 0,00</span></h5>
+                </div>
+                <div class="col-md-4">
+                  <h5>Diferencia: <span id="resumen_diferencia">$ 0,00</span></h5>
+                </div>
+              </div>
+
+              <div class="text-end mt-3">
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
+
+                <button type="button" class="btn btn-success" id="btn_confirmar_asignacion_pago">
+                  Confirmar asignación
+                </button>
+              </div>
             </div>
 
-            <hr class="mt-3 mb-3" />
+            <div id="bloque_sin_venta" class="d-none">
+              <p class="text-muted">
+                Este pago fue marcado como cobranza directa: no requiere vincularse a ninguna venta.
+              </p>
 
-            <h5 class="mb-3">Ventas ya aplicadas a este pago</h5>
+              <div class="text-end mt-3">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
 
-            <div class="table-responsive">
-              <table class="table table-sm table-bordered align-middle" id="tabla_ventas_aplicadas">
-                <thead class="table-light">
-                  <tr>
-                    <th>Venta</th>
-                    <th>Fecha</th>
-                    <th>Total</th>
-                    <th>Aplicado</th>
-                    <th>Saldo</th>
-                    <th>Estado</th>
-                    <th width="80">Acción</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  <tr>
-                    <td colspan="7" class="text-center text-muted">Sin aplicaciones.</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div class="row mt-3">
-              <div class="col-md-4">
-                <h5>Pago: <span id="resumen_pago">$ 0,00</span></h5>
+                <button type="button" class="btn btn-primary" id="btn_ver_comprobante_sin_venta">
+                  Ver comprobante
+                </button>
               </div>
-              <div class="col-md-4">
-                <h5>Aplicado: <span id="resumen_aplicado">$ 0,00</span></h5>
-              </div>
-              <div class="col-md-4">
-                <h5>Diferencia: <span id="resumen_diferencia">$ 0,00</span></h5>
-              </div>
-            </div>
-
-            <div class="text-end mt-3">
-              <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
-
-              <button type="button" class="btn btn-success" id="btn_confirmar_asignacion_pago">
-                Confirmar asignación
-              </button>
             </div>
           </div>
         </div>
