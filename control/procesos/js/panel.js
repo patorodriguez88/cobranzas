@@ -685,6 +685,8 @@ $(document).on("click", "#btn_guardar_sin_venta", function () {
 
   marcarSinVenta(idCobranza, 1, {
     onSuccess: function () {
+      $("#modal_asignar_pago").modal("hide");
+
       Swal.fire({
         icon: "success",
         title: "Guardado",
