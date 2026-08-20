@@ -476,6 +476,7 @@ $("#centermodal").on("show.bs.modal", function () {
 
   let id = $("#id_cobranza").val();
   cargarImagenDeposito(id);
+  resetNombreArchivoComprobante();
 
   function cargarImagenDeposito(id) {
     $("#img_deposito").attr("src", "#");
@@ -523,6 +524,15 @@ $("#centermodal").on("show.bs.modal", function () {
     probarSiguiente();
   }
 });
+function resetNombreArchivoComprobante() {
+  $("#nombre_archivo_comprobante").text("Click para elegir una imagen (jpg, png o gif)");
+}
+
+$(document).on("change", "#archivo_comprobante_conciliacion", function () {
+  let archivo = this.files[0];
+  $("#nombre_archivo_comprobante").text(archivo ? archivo.name : "Click para elegir una imagen (jpg, png o gif)");
+});
+
 function subirComprobanteConciliacion() {
   let idCobranza = $("#id_cobranza").val();
   let archivo = $("#archivo_comprobante_conciliacion")[0].files[0];
@@ -562,6 +572,7 @@ function subirComprobanteConciliacion() {
         $("#img_deposito").attr("src", "images/depositos/" + r.archivo + "?t=" + new Date().getTime());
 
         $("#archivo_comprobante_conciliacion").val("");
+        resetNombreArchivoComprobante();
       } else {
         Swal.fire("Error", r.error || "No se pudo subir el comprobante.", "error");
         console.log(r);

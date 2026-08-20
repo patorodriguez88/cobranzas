@@ -69,25 +69,38 @@
                         </div>
 
                         <div class="card border">
-                          <div class="card-body">
-                            <label class="form-label">Cargar / reemplazar comprobante</label>
+                          <div class="card-body p-3">
+                            <label
+                              for="archivo_comprobante_conciliacion"
+                              id="label_archivo_comprobante"
+                              class="d-block text-center rounded p-3 mb-2"
+                              style="border: 1.5px dashed #cdd4da; cursor: pointer; background: #f8f9fa; transition: background 0.15s"
+                            >
+                              <i class="mdi mdi-cloud-upload-outline text-primary" style="font-size: 26px"></i>
+                              <div class="fw-semibold mt-1">Cargar / reemplazar comprobante</div>
+                              <div id="nombre_archivo_comprobante" class="text-muted font-13 mt-1">
+                                Click para elegir una imagen (jpg, png o gif)
+                              </div>
+                            </label>
 
                             <input
                               type="file"
                               id="archivo_comprobante_conciliacion"
-                              class="form-control"
+                              class="d-none"
                               accept=".jpg,.jpeg,.png,.gif"
                             />
 
                             <button
                               type="button"
-                              class="btn btn-primary btn-sm mt-2 w-100"
+                              class="btn btn-primary btn-sm w-100"
                               onclick="subirComprobanteConciliacion()"
                             >
                               <i class="mdi mdi-upload"></i> Subir comprobante
                             </button>
 
-                            <small class="text-muted d-block mt-2"> Se guardará asociado al movimiento actual. </small>
+                            <small class="text-muted d-block mt-2 text-center">
+                              Se guardará asociado al movimiento actual.
+                            </small>
                           </div>
                         </div>
                       </div>

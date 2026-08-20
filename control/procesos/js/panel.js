@@ -470,48 +470,7 @@ function ver_tabla_conciliados(a) {
           }
 
           // =========================
-          // COBRANZA DIRECTA (SIN VENTA)
-          // =========================
-
-          if (parseInt(row.SinVenta || 0) === 1) {
-            return `
-                <i class="mdi mdi-file-document-outline mdi-18px text-primary ms-2"
-                   title="Ver comprobante"
-                   style="cursor:pointer"
-                   onclick="window.open('control/procesos/php/informe_cobranza.php?id=${row.id_cobranza}', '_blank')"></i>
-
-                <i class="mdi mdi-link-variant mdi-18px text-muted ms-2"
-                   title="Volver a vincular con venta"
-                   style="cursor:pointer"
-                   onclick="marcarSinVenta(${row.id_cobranza}, 0)"></i>
-            `;
-          }
-
-          // =========================
-          // SIN VINCULAR
-          // =========================
-
-          if (totalAplicado <= 0) {
-            return `
-                <i class="mdi mdi-link-variant mdi-18px text-success ms-2"
-                   title="Asignar pago a ventas"
-                   style="cursor:pointer"
-                   onclick="abrirAsignarPago(${row.id_cobranza})"></i>
-
-                <i class="mdi mdi-cash-remove mdi-18px text-secondary ms-2"
-                   title="Marcar como cobranza sin venta (exigible)"
-                   style="cursor:pointer"
-                   onclick="marcarSinVenta(${row.id_cobranza}, 1)"></i>
-
-                <i onclick="eliminar('${row.id_cobranza}')"
-                   class="mdi mdi-18px mdi-trash-can-outline text-danger ms-2"
-                   style="cursor:pointer"
-                   title="Eliminar"></i>
-            `;
-          }
-
-          // =========================
-          // VINCULADO
+          // CHECKBOX DE EXPORTACIÓN (cualquier estado ya resuelto)
           // =========================
 
           let checkboxExportar = "";
@@ -520,9 +479,9 @@ function ver_tabla_conciliados(a) {
             checkboxExportar = `
                 <div class="form-check d-inline-block me-2">
 
-                    <input value="${row.id_cobranza}" 
-                           type="checkbox" 
-                           class="form-check-input dt-checkboxes" 
+                    <input value="${row.id_cobranza}"
+                           type="checkbox"
+                           class="form-check-input dt-checkboxes"
                            onclick="calcular_total(0)">
 
                     <label class="form-check-label">&nbsp;</label>
@@ -531,14 +490,39 @@ function ver_tabla_conciliados(a) {
             `;
           }
 
-          let btnAsignar = `
-            <i class="mdi mdi-link-variant mdi-18px text-success ms-2" 
-               title="Asignar pago a ventas"
-               style="cursor:pointer" 
-               onclick="abrirAsignarPago(${row.id_cobranza})"></i>
-        `;
+          let sinVenta = parseInt(row.SinVenta || 0) === 1;
+          let resuelto = sinVenta || totalAplicado > 0;
 
-          return checkboxExportar + btnAsignar;
+          // =========================
+          // RESUELTO (sin venta o ya vinculado): mismo modal, ícono de recibo
+          // =========================
+
+          if (resuelto) {
+            return `
+                ${checkboxExportar}
+
+                <i class="mdi mdi-file-document-outline mdi-18px text-primary ms-2"
+                   title="Ver / imprimir recibo"
+                   style="cursor:pointer"
+                   onclick="abrirAsignarPago(${row.id_cobranza})"></i>
+            `;
+          }
+
+          // =========================
+          // SIN VINCULAR
+          // =========================
+
+          return `
+              <i class="mdi mdi-link-variant mdi-18px text-success ms-2"
+                 title="Asignar pago a ventas"
+                 style="cursor:pointer"
+                 onclick="abrirAsignarPago(${row.id_cobranza})"></i>
+
+              <i onclick="eliminar('${row.id_cobranza}')"
+                 class="mdi mdi-18px mdi-trash-can-outline text-danger ms-2"
+                 style="cursor:pointer"
+                 title="Eliminar"></i>
+          `;
         },
       },
     ],
@@ -1013,7 +997,14 @@ function cargarVentasAplicadas(idCobranza) {
 
                             <td class="text-center">
 
+                                <i class="mdi mdi-file-document-outline mdi-18px text-primary me-2"
+                                   title="Imprimir recibo"
+                                   style="cursor:pointer"
+                                   onclick="window.open('control/procesos/php/informe_venta.php?id=${v.idVenta}', '_blank')">
+                                </i>
+
                                 <i class="mdi mdi-link-off mdi-18px text-danger ms-2"
+                                   title="Desvincular"
                                    style="cursor:pointer"
                                    onclick="desvincularPagoVenta(${v.id})">
                                 </i>
