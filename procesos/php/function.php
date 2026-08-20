@@ -73,7 +73,7 @@ Banco='$_POST[banco]' AND Importe='$_POST[importe]'");
 
     if ($mysqli->query("INSERT INTO `Cobranza`(`NombreCliente`, `NumeroCliente`, `Fecha`, `Hora`, `Banco`, `Operacion`, `Importe`,`AlertaDuplicidad`,`TipoOperacion`,`Usuario`)
  VALUES ('" . $_POST['name'] . "','" . $_POST['ncliente'] . "','" . $_POST['fecha'] . "','" . $hora . "','" . $_POST['banco'] . "','" . $_POST['noperacion'] . "',
- '" . $_POST['importe'] . "','" . $Alerta . "','" . $_POST['tipooperacion'] . "','Cliente (Autogestión)')")) {
+ '" . $_POST['importe'] . "','" . $Alerta . "','" . $_POST['tipooperacion'] . "','Cliente App')")) {
 
         $id = $mysqli->insert_id;
 
