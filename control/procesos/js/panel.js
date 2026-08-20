@@ -469,10 +469,6 @@ function ver_tabla_conciliados(a) {
             `;
           }
 
-          // =========================
-          // CHECKBOX DE EXPORTACIÓN (cualquier estado ya resuelto)
-          // =========================
-
           let checkboxExportar = "";
 
           if (row.Exportado == "") {
@@ -490,14 +486,11 @@ function ver_tabla_conciliados(a) {
             `;
           }
 
-          let sinVenta = parseInt(row.SinVenta || 0) === 1;
-          let resuelto = sinVenta || totalAplicado > 0;
-
           // =========================
-          // RESUELTO (sin venta o ya vinculado): mismo modal, ícono de recibo
+          // COBRANZA DIRECTA (SIN VENTA)
           // =========================
 
-          if (resuelto) {
+          if (parseInt(row.SinVenta || 0) === 1) {
             return `
                 ${checkboxExportar}
 
@@ -512,17 +505,32 @@ function ver_tabla_conciliados(a) {
           // SIN VINCULAR
           // =========================
 
-          return `
-              <i class="mdi mdi-link-variant mdi-18px text-success ms-2"
-                 title="Asignar pago a ventas"
-                 style="cursor:pointer"
-                 onclick="abrirAsignarPago(${row.id_cobranza})"></i>
+          if (totalAplicado <= 0) {
+            return `
+                <i class="mdi mdi-link-variant mdi-18px text-success ms-2"
+                   title="Asignar pago a ventas"
+                   style="cursor:pointer"
+                   onclick="abrirAsignarPago(${row.id_cobranza})"></i>
 
-              <i onclick="eliminar('${row.id_cobranza}')"
-                 class="mdi mdi-18px mdi-trash-can-outline text-danger ms-2"
-                 style="cursor:pointer"
-                 title="Eliminar"></i>
-          `;
+                <i onclick="eliminar('${row.id_cobranza}')"
+                   class="mdi mdi-18px mdi-trash-can-outline text-danger ms-2"
+                   style="cursor:pointer"
+                   title="Eliminar"></i>
+            `;
+          }
+
+          // =========================
+          // VINCULADO
+          // =========================
+
+          let btnAsignar = `
+            <i class="mdi mdi-link-variant mdi-18px text-success ms-2"
+               title="Asignar pago a ventas"
+               style="cursor:pointer"
+               onclick="abrirAsignarPago(${row.id_cobranza})"></i>
+        `;
+
+          return checkboxExportar + btnAsignar;
         },
       },
     ],
@@ -653,25 +661,48 @@ function marcarSinVenta(idCobranza, valor, opciones) {
 $(document).on("change", "#asignar_switch_sin_venta", function () {
   let checkbox = $(this);
   let idCobranza = $("#asignar_id_cobranza").val();
-  let valor = checkbox.is(":checked") ? 1 : 0;
 
-  marcarSinVenta(idCobranza, valor, {
-    onSuccess: function (sinVenta) {
-      aplicarEstadoSinVentaModal(sinVenta);
+  if (checkbox.is(":checked")) {
+    // Solo cambia la vista: se guarda recién al tocar "Guardar".
+    aplicarEstadoSinVentaModal(true);
+    return;
+  }
 
-      if (!sinVenta) {
-        cargarVentasPendientesAsignacion(window.numeroClienteActual, window.importeRealActual);
-        cargarVentasAplicadas(idCobranza);
-      }
+  marcarSinVenta(idCobranza, 0, {
+    onSuccess: function () {
+      aplicarEstadoSinVentaModal(false);
+      cargarVentasPendientesAsignacion(window.numeroClienteActual, window.importeRealActual);
+      cargarVentasAplicadas(idCobranza);
     },
     onError: function () {
-      checkbox.prop("checked", !valor);
+      checkbox.prop("checked", true);
+    },
+  });
+});
+
+$(document).on("click", "#btn_guardar_sin_venta", function () {
+  let idCobranza = $("#asignar_id_cobranza").val();
+
+  marcarSinVenta(idCobranza, 1, {
+    onSuccess: function () {
+      Swal.fire({
+        icon: "success",
+        title: "Guardado",
+        timer: 1200,
+        showConfirmButton: false,
+      });
     },
   });
 });
 
 $(document).on("click", "#btn_ver_comprobante_sin_venta", function () {
   window.open("control/procesos/php/informe_cobranza.php?id=" + $("#asignar_id_cobranza").val(), "_blank");
+});
+
+$("#modal_asignar_pago").on("hidden.bs.modal", function () {
+  if ($.fn.DataTable.isDataTable("#cobranzas_tabla")) {
+    $("#cobranzas_tabla").DataTable().ajax.reload(null, false);
+  }
 });
 
 function cargarVentasPendientesAsignacion(numeroCliente, importePago) {
@@ -996,12 +1027,6 @@ function cargarVentasAplicadas(idCobranza) {
                             </td>
 
                             <td class="text-center">
-
-                                <i class="mdi mdi-file-document-outline mdi-18px text-primary me-2"
-                                   title="Imprimir recibo"
-                                   style="cursor:pointer"
-                                   onclick="window.open('control/procesos/php/informe_venta.php?id=${v.idVenta}', '_blank')">
-                                </i>
 
                                 <i class="mdi mdi-link-off mdi-18px text-danger ms-2"
                                    title="Desvincular"
