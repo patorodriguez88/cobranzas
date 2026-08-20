@@ -559,6 +559,25 @@ if (isset($_POST['AsignarPagoVenta'])) {
         exit;
     }
 
+    $sqlCobranza = $mysqli->query("SELECT SinVenta FROM Cobranza WHERE id = '$idCobranza' LIMIT 1");
+    $cobranzaActual = $sqlCobranza ? $sqlCobranza->fetch_assoc() : null;
+
+    if (!$cobranzaActual) {
+        echo json_encode(array(
+            "success" => 0,
+            "error" => "Cobranza inexistente."
+        ));
+        exit;
+    }
+
+    if ((int)$cobranzaActual['SinVenta'] === 1) {
+        echo json_encode(array(
+            "success" => 0,
+            "error" => "Este pago está marcado como cobranza sin venta, desmárquelo antes de vincularlo a una venta."
+        ));
+        exit;
+    }
+
     $mysqli->begin_transaction();
 
     try {
