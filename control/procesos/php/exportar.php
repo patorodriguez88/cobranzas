@@ -37,6 +37,21 @@ if (isset($_POST['Exportado'])) {
     }
 }
 
+//ZIP DE COMPROBANTES DESCARGADO
+if (isset($_POST['ZipDescargado'])) {
+
+    $idExport = (int)$_POST['id'];
+
+    if ($mysqli->query("UPDATE Cobranza_exportados SET ZipDescargado=1 WHERE id='$idExport'")) {
+
+        echo json_encode(array('success' => 1));
+    } else {
+
+        echo json_encode(array('success' => 0, 'error' => $mysqli->error));
+    }
+    exit;
+}
+
 //LIMPIAR DUPLICADOS
 if (isset($_POST['limpiar_duplicados'])) {
 
@@ -230,6 +245,60 @@ if (isset($_POST['Exportar'])) {
 
                 $mysqli->query("UPDATE Cobranza_conciliacion SET Exportado='$filled_int',Estado='Exportado' WHERE id_cobranza='" . $ids_unicos[$i] . "'");
             }
+
+            // ZIP de comprobantes: si algo falla acá no debe romper la exportación
+            // del CSV, que ya se generó y es lo importante.
+            $zipNombre = null;
+
+            try {
+                if (class_exists('ZipArchive')) {
+
+                    $carpetaImagenes = __DIR__ . '/../../../images/depositos/';
+                    $carpetaZip = __DIR__ . '/exportaciones/comprobantes/';
+
+                    $imagenesEncontradas = [];
+
+                    foreach ($ids_unicos as $idImagen) {
+                        $coincidencias = glob($carpetaImagenes . $idImagen . '.*');
+                        if ($coincidencias) {
+                            $imagenesEncontradas[] = $coincidencias[0];
+                        }
+                    }
+
+                    if (!empty($imagenesEncontradas)) {
+
+                        if (!is_dir($carpetaZip)) {
+                            mkdir($carpetaZip, 0755, true);
+                        }
+
+                        $zip = new ZipArchive();
+                        $rutaZip = $carpetaZip . $filled_int . '.zip';
+
+                        if ($zip->open($rutaZip, ZipArchive::CREATE) === true) {
+
+                            foreach ($imagenesEncontradas as $rutaImagen) {
+                                $zip->addFile($rutaImagen, basename($rutaImagen));
+                            }
+
+                            $zip->close();
+
+                            foreach ($imagenesEncontradas as $rutaImagen) {
+                                unlink($rutaImagen);
+                            }
+
+                            $zipNombre = $filled_int . '.zip';
+                        }
+                    }
+                }
+            } catch (Exception $e) {
+                $zipNombre = null;
+            }
+
+            $mysqli->query(
+                "UPDATE Cobranza_exportados SET ZipArchivo = " .
+                    ($zipNombre ? "'" . $mysqli->real_escape_string($zipNombre) . "'" : "NULL") .
+                    " WHERE id = '$name'"
+            );
 
             echo json_encode(array('success' => 1, 'name' => $filled_int));
         } else {

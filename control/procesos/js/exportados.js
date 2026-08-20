@@ -60,17 +60,53 @@ function download(file){
     success: function(response)
      {
         var jsonData = JSON.parse(response);
-        
+
         if(jsonData.success==1){
 
             $.NotificationApp.send("Exito !", 'Archivo Descargado.', "bottom-right", "#FFFFFF", "success");
 
             var datatable= $('#exportaciones_tabla').DataTable();
-            datatable.ajax.reload();  
+            datatable.ajax.reload();
 
         }
-     }  
-});  
+     }
+});
+
+}
+
+function downloadZip(file){
+
+    fetch('https://www.dintersa.com.ar/cobranza/control/procesos/php/exportaciones/comprobantes/'+file+'.zip')
+  .then(resp => resp.blob())
+  .then(blob => {
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = url;
+    a.download = file+'_comprobantes.zip';
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+  })
+  .catch(() => alert('No se pudo descargar el ZIP de comprobantes.'));
+
+  $.ajax({
+    data:{'ZipDescargado':1,'id':file},
+    url:'control/procesos/php/exportar.php',
+    type:'post',
+    dataType: 'json',
+    success: function(jsonData)
+     {
+        if(jsonData.success==1){
+
+            $.NotificationApp.send("Exito !", 'Comprobantes descargados.', "bottom-right", "#FFFFFF", "success");
+
+            var datatable= $('#exportaciones_tabla').DataTable();
+            datatable.ajax.reload();
+
+        }
+     }
+});
 
 }
 
@@ -274,9 +310,15 @@ $( document ).ready(function() {
          {data:null,
             render: function(data,type,row){
 
-                let btnDescargar = row.Estado !== 'Anulado'
-                    ? `<i onclick="download('${row.id}')" style="cursor:pointer" title="Descargar" class="mdi mdi-18px mdi-arrow-down-bold-box-outline text-warning me-2"></i>`
-                    : '';
+                let zipPendiente = row.ZipArchivo && row.ZipDescargado != 1;
+
+                let btnDescargar = '';
+
+                if (row.Estado !== 'Anulado' && zipPendiente) {
+                    btnDescargar = `<i onclick="downloadZip('${row.id}')" style="cursor:pointer" title="Descargá primero los comprobantes para habilitar el archivo de exportación" class="mdi mdi-18px mdi-folder-zip-outline text-info me-2"></i>`;
+                } else if (row.Estado !== 'Anulado') {
+                    btnDescargar = `<i onclick="download('${row.id}')" style="cursor:pointer" title="Descargar" class="mdi mdi-18px mdi-arrow-down-bold-box-outline text-warning me-2"></i>`;
+                }
 
                 let btnAnular = row.Estado !== 'Anulado'
                     ? `<i onclick="anularExportacion('${row.id}', ${row.Descargas || 0})" style="cursor:pointer" title="Anular exportación" class="mdi mdi-18px mdi-undo-variant text-danger"></i>`
