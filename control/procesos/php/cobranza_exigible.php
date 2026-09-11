@@ -44,6 +44,21 @@ function importeExigible($valor)
     return is_numeric($valor) ? (float)$valor : null;
 }
 
+function fechaLimiteInformeExigible($valor)
+{
+    $valor = trim((string)$valor);
+    if ($valor === '') {
+        return [null, true];
+    }
+
+    $fecha = DateTime::createFromFormat('Y-m-d\TH:i', $valor) ?: DateTime::createFromFormat('Y-m-d H:i:s', $valor);
+    if (!$fecha) {
+        return [null, false];
+    }
+
+    return [$fecha->format('Y-m-d H:i:s'), true];
+}
+
 function prepararHistorialExigible($mysqli)
 {
     return $mysqli->query("CREATE TABLE IF NOT EXISTS Cobranza_exigible_importaciones (
@@ -57,6 +72,96 @@ function prepararHistorialExigible($mysqli)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 }
 
+function prepararDetalleExigible($mysqli)
+{
+    return $mysqli->query("CREATE TABLE IF NOT EXISTS Cobranza_exigible_detalle (
+        id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+        ImportacionId INT UNSIGNED NOT NULL,
+        Fecha DATE NULL,
+        Ncliente VARCHAR(50) NOT NULL,
+        RazonSocial VARCHAR(255) NOT NULL DEFAULT '',
+        Recorrido VARCHAR(100) NOT NULL DEFAULT '',
+        Celular VARCHAR(50) NOT NULL DEFAULT '',
+        Dni VARCHAR(50) NOT NULL DEFAULT '',
+        Distribuidora VARCHAR(100) NOT NULL DEFAULT 'DINTER',
+        Exigible DECIMAL(12,2) NOT NULL DEFAULT 0,
+        Encontrado TINYINT(1) NOT NULL DEFAULT 0,
+        PRIMARY KEY (id),
+        KEY idx_importacion (ImportacionId),
+        KEY idx_importacion_cliente (ImportacionId, Ncliente)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+}
+
+function prepararMensajesExigible($mysqli)
+{
+    return $mysqli->query("CREATE TABLE IF NOT EXISTS Cobranza_exigible_mensajes (
+        id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+        ImportacionId INT UNSIGNED NOT NULL,
+        Ncliente VARCHAR(50) NOT NULL,
+        Celular VARCHAR(50) NOT NULL,
+        Mensaje TEXT NOT NULL,
+        Fecha DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        Usuario VARCHAR(150) NOT NULL,
+        PRIMARY KEY (id),
+        KEY idx_importacion_cliente (ImportacionId, Ncliente)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+}
+
+function asegurarColumnaFechaLimiteExigible($mysqli)
+{
+    $existe = $mysqli->query("SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'Cobranza_exigible_importaciones' AND COLUMN_NAME = 'FechaLimiteInforme'");
+    if ($existe && $existe->num_rows === 0) {
+        $mysqli->query('ALTER TABLE Cobranza_exigible_importaciones ADD COLUMN FechaLimiteInforme DATETIME NULL AFTER MensajesIniciados');
+    }
+}
+
+function obtenerDetalleExigible($mysqli, $importacionId)
+{
+    $filas = [];
+    $stmtDetalle = $mysqli->prepare(
+        'SELECT Ncliente, RazonSocial, Recorrido, Celular, Dni, Distribuidora, Exigible, Encontrado, Fecha
+         FROM Cobranza_exigible_detalle WHERE ImportacionId = ? ORDER BY id ASC'
+    );
+    $stmtDetalle->bind_param('i', $importacionId);
+    $stmtDetalle->execute();
+    $resultadoDetalle = $stmtDetalle->get_result();
+    while ($fila = $resultadoDetalle->fetch_assoc()) {
+        $fila['Exigible'] = (float)$fila['Exigible'];
+        $fila['Encontrado'] = (int)$fila['Encontrado'];
+        $filas[] = $fila;
+    }
+    $stmtDetalle->close();
+
+    $envios = [];
+    $stmtMensajes = $mysqli->prepare(
+        'SELECT Ncliente, Fecha, Usuario FROM Cobranza_exigible_mensajes WHERE ImportacionId = ? ORDER BY Fecha ASC'
+    );
+    $stmtMensajes->bind_param('i', $importacionId);
+    $stmtMensajes->execute();
+    $resultadoMensajes = $stmtMensajes->get_result();
+    while ($mensaje = $resultadoMensajes->fetch_assoc()) {
+        $ncliente = $mensaje['Ncliente'];
+        if (!isset($envios[$ncliente])) {
+            $envios[$ncliente] = ['CantidadEnvios' => 0];
+        }
+        $envios[$ncliente]['CantidadEnvios']++;
+        $envios[$ncliente]['UltimoEnvio'] = $mensaje['Fecha'];
+        $envios[$ncliente]['UltimoEnvioUsuario'] = $mensaje['Usuario'];
+    }
+    $stmtMensajes->close();
+
+    foreach ($filas as &$fila) {
+        $info = $envios[$fila['Ncliente']] ?? null;
+        $fila['UltimoEnvio'] = $info['UltimoEnvio'] ?? null;
+        $fila['UltimoEnvioUsuario'] = $info['UltimoEnvioUsuario'] ?? null;
+        $fila['CantidadEnvios'] = $info['CantidadEnvios'] ?? 0;
+    }
+    unset($fila);
+
+    return $filas;
+}
+
 function usuarioExigible()
 {
     return trim((string)($_SESSION['name'] ?? $_SESSION['user_name'] ?? $_SESSION['user_control'] ?? 'Usuario desconocido'));
@@ -68,27 +173,63 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $accion = $_POST['accion'] ?? '';
 
-if (in_array($accion, ['ultimo_archivo', 'registrar_mensaje', 'procesar_exigible'], true)
-    && !prepararHistorialExigible($mysqli)) {
-    responderExigible(['success' => 0, 'error' => 'No se pudo preparar el historial de importaciones.'], 500);
+$accionesConHistorial = ['ultimo_archivo', 'registrar_mensaje', 'procesar_exigible', 'actualizar_fecha_limite'];
+if (in_array($accion, $accionesConHistorial, true)) {
+    if (!prepararHistorialExigible($mysqli) || !prepararDetalleExigible($mysqli) || !prepararMensajesExigible($mysqli)) {
+        responderExigible(['success' => 0, 'error' => 'No se pudo preparar el historial de importaciones.'], 500);
+    }
+    asegurarColumnaFechaLimiteExigible($mysqli);
 }
 
 if ($accion === 'ultimo_archivo') {
-    $resultadoUltimo = $mysqli->query('SELECT id, Archivo, Fecha, Usuario, CantidadFilas, MensajesIniciados FROM Cobranza_exigible_importaciones ORDER BY id DESC LIMIT 1');
+    $resultadoUltimo = $mysqli->query('SELECT id, Archivo, Fecha, Usuario, CantidadFilas, MensajesIniciados, FechaLimiteInforme FROM Cobranza_exigible_importaciones ORDER BY id DESC LIMIT 1');
     $ultimo = $resultadoUltimo ? $resultadoUltimo->fetch_assoc() : null;
-    responderExigible(['success' => 1, 'data' => $ultimo]);
+    $filas = $ultimo ? obtenerDetalleExigible($mysqli, (int)$ultimo['id']) : [];
+    responderExigible(['success' => 1, 'data' => $ultimo, 'filas' => $filas]);
 }
 
 if ($accion === 'registrar_mensaje') {
     $importacionId = (int)($_POST['importacion_id'] ?? 0);
+    $ncliente = trim((string)($_POST['ncliente'] ?? ''));
+    $celular = preg_replace('/\D/', '', (string)($_POST['celular'] ?? ''));
+    $mensaje = trim((string)($_POST['mensaje'] ?? ''));
+
+    if ($importacionId <= 0 || $ncliente === '' || $celular === '' || $mensaje === '') {
+        responderExigible(['success' => 0, 'error' => 'Datos incompletos para registrar el envío.'], 400);
+    }
+
+    $usuario = usuarioExigible();
+
+    $stmtMensaje = $mysqli->prepare('INSERT INTO Cobranza_exigible_mensajes (ImportacionId, Ncliente, Celular, Mensaje, Usuario) VALUES (?, ?, ?, ?, ?)');
+    $stmtMensaje->bind_param('issss', $importacionId, $ncliente, $celular, $mensaje, $usuario);
+    $stmtMensaje->execute();
+    $stmtMensaje->close();
+
+    $stmtContador = $mysqli->prepare('UPDATE Cobranza_exigible_importaciones SET MensajesIniciados = MensajesIniciados + 1 WHERE id = ?');
+    $stmtContador->bind_param('i', $importacionId);
+    $stmtContador->execute();
+    $stmtContador->close();
+
+    responderExigible(['success' => 1, 'fecha' => date('Y-m-d H:i:s'), 'usuario' => $usuario]);
+}
+
+if ($accion === 'actualizar_fecha_limite') {
+    $importacionId = (int)($_POST['importacion_id'] ?? 0);
     if ($importacionId <= 0) {
         responderExigible(['success' => 0, 'error' => 'Importación inválida.'], 400);
     }
-    $stmtMensaje = $mysqli->prepare('UPDATE Cobranza_exigible_importaciones SET MensajesIniciados = MensajesIniciados + 1 WHERE id = ?');
-    $stmtMensaje->bind_param('i', $importacionId);
-    $stmtMensaje->execute();
-    $stmtMensaje->close();
-    responderExigible(['success' => 1]);
+
+    [$fechaLimiteSql, $fechaLimiteValida] = fechaLimiteInformeExigible($_POST['fecha_limite'] ?? '');
+    if (!$fechaLimiteValida) {
+        responderExigible(['success' => 0, 'error' => 'La fecha y hora ingresadas no son válidas.'], 400);
+    }
+
+    $stmtFecha = $mysqli->prepare('UPDATE Cobranza_exigible_importaciones SET FechaLimiteInforme = ? WHERE id = ?');
+    $stmtFecha->bind_param('si', $fechaLimiteSql, $importacionId);
+    $stmtFecha->execute();
+    $stmtFecha->close();
+
+    responderExigible(['success' => 1, 'fecha_limite' => $fechaLimiteSql]);
 }
 
 if ($accion === 'actualizar_telefono') {
@@ -118,6 +259,11 @@ if ($accion === 'actualizar_telefono') {
 
 if ($accion !== 'procesar_exigible') {
     responderExigible(['success' => 0, 'error' => 'Acción inválida.'], 400);
+}
+
+[$fechaLimiteSql, $fechaLimiteValida] = fechaLimiteInformeExigible($_POST['fecha_limite'] ?? '');
+if (!$fechaLimiteValida) {
+    responderExigible(['success' => 0, 'error' => 'La fecha y hora límite ingresadas no son válidas.'], 400);
 }
 
 if (!isset($_FILES['archivo']) || $_FILES['archivo']['error'] !== UPLOAD_ERR_OK) {
@@ -195,14 +341,38 @@ fclose($handle);
 $archivo = basename((string)$_FILES['archivo']['name']);
 $usuario = usuarioExigible();
 $cantidadFilas = count($filas);
-$stmtImportacion = $mysqli->prepare('INSERT INTO Cobranza_exigible_importaciones (Archivo, Usuario, CantidadFilas) VALUES (?, ?, ?)');
+$stmtImportacion = $mysqli->prepare('INSERT INTO Cobranza_exigible_importaciones (Archivo, Usuario, CantidadFilas, FechaLimiteInforme) VALUES (?, ?, ?, ?)');
 if (!$stmtImportacion) {
     responderExigible(['success' => 0, 'error' => 'No se pudo registrar la importación.'], 500);
 }
-$stmtImportacion->bind_param('ssi', $archivo, $usuario, $cantidadFilas);
+$stmtImportacion->bind_param('ssis', $archivo, $usuario, $cantidadFilas, $fechaLimiteSql);
 $stmtImportacion->execute();
 $importacionId = $stmtImportacion->insert_id;
 $stmtImportacion->close();
+
+if ($filas) {
+    $stmtDetalle = $mysqli->prepare(
+        'INSERT INTO Cobranza_exigible_detalle (ImportacionId, Fecha, Ncliente, RazonSocial, Recorrido, Celular, Dni, Distribuidora, Exigible, Encontrado)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    );
+    foreach ($filas as $fila) {
+        $stmtDetalle->bind_param(
+            'isssssssdi',
+            $importacionId,
+            $fila['Fecha'],
+            $fila['Ncliente'],
+            $fila['RazonSocial'],
+            $fila['Recorrido'],
+            $fila['Celular'],
+            $fila['Dni'],
+            $fila['Distribuidora'],
+            $fila['Exigible'],
+            $fila['Encontrado']
+        );
+        $stmtDetalle->execute();
+    }
+    $stmtDetalle->close();
+}
 
 responderExigible([
     'success' => 1,
@@ -215,5 +385,6 @@ responderExigible([
         'Usuario' => $usuario,
         'CantidadFilas' => $cantidadFilas,
         'MensajesIniciados' => 0,
+        'FechaLimiteInforme' => $fechaLimiteSql,
     ],
 ]);

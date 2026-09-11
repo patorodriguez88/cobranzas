@@ -1,6 +1,7 @@
 let tablaCobranza = null;
 let importacionActualId = 0;
 let mensajesIniciados = 0;
+let fechaLimiteInformeActual = null;
 
 function escaparCobranza(valor) {
   return String(valor ?? "").replace(/[&<>"']/g, (caracter) => ({
@@ -20,6 +21,20 @@ function telefonoValido(celular) {
   return String(celular || "").trim() !== "" && numero.length >= 12 && numero.length <= 15;
 }
 
+function fechaHoraArgentina(fecha) {
+  if (!fecha) return "";
+  const partes = String(fecha).replace("T", " ").split(/[- :]/);
+  if (partes.length < 5) return fecha;
+  const [anio, mes, dia, hora, minuto] = partes;
+  return `${dia}/${mes}/${anio} ${hora}:${minuto}`;
+}
+
+function fechaParaInputLocal(fecha) {
+  if (!fecha) return "";
+  const normalizada = String(fecha).replace(" ", "T");
+  return normalizada.slice(0, 16);
+}
+
 function mostrarUltimaImportacion(importacion) {
   if (!importacion) {
     $("#ultimo_archivo_cobranza").html("Todavía no hay archivos registrados.");
@@ -27,21 +42,28 @@ function mostrarUltimaImportacion(importacion) {
   }
   importacionActualId = Number(importacion.id || 0);
   mensajesIniciados = Number(importacion.MensajesIniciados || 0);
+  fechaLimiteInformeActual = importacion.FechaLimiteInforme || null;
+
+  const textoLimite = fechaLimiteInformeActual
+    ? `<strong id="texto_fecha_limite_cobranza">${escaparCobranza(fechaHoraArgentina(fechaLimiteInformeActual))}</strong>`
+    : `<span id="texto_fecha_limite_cobranza" class="text-muted">Sin definir</span>`;
+
   $("#ultimo_archivo_cobranza").html(
     `Último archivo: <strong>${escaparCobranza(importacion.Archivo)}</strong> · ` +
     `${escaparCobranza(importacion.Fecha)} · Subido por: <strong>${escaparCobranza(importacion.Usuario)}</strong> · ` +
     `${Number(importacion.CantidadFilas || 0)} clientes · ` +
-    `Envíos iniciados: <strong id="cantidad_mensajes_cobranza">${mensajesIniciados}</strong>`,
+    `Envíos iniciados: <strong id="cantidad_mensajes_cobranza">${mensajesIniciados}</strong><br />` +
+    `Plazo para informar el pago: ${textoLimite} ` +
+    `<button type="button" id="btn_editar_fecha_limite_cobranza" class="btn btn-link btn-sm p-0 ms-1"><i class="mdi mdi-pencil-outline me-1"></i>Editar</button>`,
   );
-}
-
-function fechaArgentina(fecha) {
-  const partes = String(fecha || "").split("-");
-  return partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : fecha;
 }
 
 function importeArgentina(importe) {
   return Number(importe || 0).toLocaleString("es-AR", { style: "currency", currency: "ARS" });
+}
+
+function filaEnviada(fila) {
+  return Boolean(fila && fila.UltimoEnvio);
 }
 
 function guardarTelefonoEnFila(indice, celular) {
@@ -49,6 +71,39 @@ function guardarTelefonoEnFila(indice, celular) {
   const fila = filaTabla.data();
   fila.Celular = celular;
   filaTabla.data(fila).invalidate().draw(false);
+}
+
+async function editarFechaLimiteCobranza() {
+  if (!importacionActualId) return;
+
+  const ingreso = await Swal.fire({
+    title: "Plazo para informar el pago",
+    input: "datetime-local",
+    inputValue: fechaParaInputLocal(fechaLimiteInformeActual),
+    showCancelButton: true,
+    confirmButtonText: "Guardar",
+    cancelButtonText: "Cancelar",
+  });
+
+  if (!ingreso.isConfirmed) return;
+
+  $.post("control/procesos/php/cobranza_exigible.php", {
+    accion: "actualizar_fecha_limite",
+    importacion_id: importacionActualId,
+    fecha_limite: ingreso.value || "",
+  }, null, "json").done(function (respuesta) {
+    if (!respuesta.success) {
+      Swal.fire("Error", respuesta.error || "No se pudo actualizar el plazo.", "error");
+      return;
+    }
+    fechaLimiteInformeActual = respuesta.fecha_limite || null;
+    const texto = fechaLimiteInformeActual
+      ? escaparCobranza(fechaHoraArgentina(fechaLimiteInformeActual))
+      : "Sin definir";
+    $("#texto_fecha_limite_cobranza").removeClass("text-muted").html(texto);
+  }).fail(function (xhr) {
+    Swal.fire("Error", xhr.responseJSON?.error || "No se pudo actualizar el plazo.", "error");
+  });
 }
 
 async function editarTelefonoCobranza(indice) {
@@ -115,24 +170,22 @@ async function editarTelefonoCobranza(indice) {
   });
 }
 
-function abrirWhatsAppCobranza(fila) {
-  const celular = numeroWhatsApp(fila.Celular);
-  if (!telefonoValido(fila.Celular)) {
-    Swal.fire("Teléfono pendiente", "Agregue o corrija el teléfono desde la tabla para poder continuar.", "warning");
-    return;
-  }
-
+function textoMensajeCobranza(fila) {
   const nombreCliente = String(fila.RazonSocial || "cliente").trim();
   const datosBancarios = String(fila.Distribuidora || "DINTER").trim().toUpperCase() === "RAK"
     ? "Alias: *ELRAK.PANINI*\nCBU: *0200302101000001152701*\nBanco Córdoba\nCUIT: *30669104959*"
     : "Cuenta 1\nAlias: *DINTER.SA.*\nCBU: *2850331630094145090021*\nBanco Macro\n\nCuenta 2\nAlias: *DINTER.SA.CBA*\nCBU: *0200931901000025067115*\nBanco Córdoba";
-  const mensaje = `Estimado ${nombreCliente}:
+  const lineaPlazo = fechaLimiteInformeActual
+    ? `\nPor favor informe el pago antes del *${fechaHoraArgentina(fechaLimiteInformeActual)}*.\n`
+    : "";
+
+  return `Estimado ${nombreCliente}:
 
 Queremos informarle que su exigible es de ${importeArgentina(fila.Exigible)}.
 
 Puede realizar el pago a la siguiente cuenta bancaria:
 ${datosBancarios}
-
+${lineaPlazo}
 Una vez realizado el pago, tenga a bien informarlo a través de nuestro sistema de gestión de cobranzas:
 
 Acceso al sistema:
@@ -145,11 +198,48 @@ Clave de acceso: ${fila.Dni || "-"}
 Muchas gracias.
 
 Dinter S.A.`;
+}
 
+function abrirWhatsAppCobranza(fila, indice) {
+  const celular = numeroWhatsApp(fila.Celular);
+  if (!telefonoValido(fila.Celular)) {
+    Swal.fire("Teléfono pendiente", "Agregue o corrija el teléfono desde la tabla para poder continuar.", "warning");
+    return;
+  }
+
+  const mensaje = textoMensajeCobranza(fila);
   $("#texto_whatsapp_cobranza").val(mensaje);
-  $("#btn_enviar_whatsapp_cobranza").data("celular", celular)
+  $("#btn_enviar_whatsapp_cobranza").data("celular", celular).data("fila", indice)
     .attr("href", `https://wa.me/${celular}?text=${encodeURIComponent(mensaje)}`);
   $("#modal_whatsapp_cobranza").modal("show");
+}
+
+async function confirmarYAbrirWhatsAppCobranza(indice) {
+  const fila = tablaCobranza.row(indice).data();
+  if (!fila) return;
+
+  if (filaEnviada(fila)) {
+    const confirmacion = await Swal.fire({
+      icon: "warning",
+      title: "Ya se le envió un aviso",
+      html: `A <strong>${escaparCobranza(fila.RazonSocial)}</strong> ya se le envió un mensaje el ` +
+        `<strong>${escaparCobranza(fechaHoraArgentina(fila.UltimoEnvio))}</strong> (${escaparCobranza(fila.UltimoEnvioUsuario || "")}). ` +
+        `¿Enviar de todas formas?`,
+      showCancelButton: true,
+      confirmButtonText: "Enviar de todas formas",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#f1734f",
+    });
+    if (!confirmacion.isConfirmed) return;
+  }
+
+  abrirWhatsAppCobranza(fila, indice);
+}
+
+function reconstruirTablaCobranza(filas) {
+  tablaCobranza.clear();
+  if (filas && filas.length) tablaCobranza.rows.add(filas);
+  tablaCobranza.draw();
 }
 
 $(document).ready(function () {
@@ -179,19 +269,31 @@ $(document).ready(function () {
         const texto = dato ? escaparCobranza(dato) : "Sin teléfono";
         return `<button type="button" class="btn btn-link btn-sm p-0 btn-editar-telefono ${valido ? "" : "text-danger"}" data-fila="${meta.row}" title="Editar teléfono"><i class="mdi mdi-pencil-outline me-1"></i>${texto}</button>${valido ? "" : '<span class="badge bg-danger ms-2">Revisar</span>'}`;
       } },
+      { data: null, orderable: false, searchable: false, render: (dato, tipo, fila) => {
+        if (tipo !== "display") return filaEnviada(fila) ? 1 : 0;
+        if (!filaEnviada(fila)) return '<span class="text-muted">Sin enviar</span>';
+        const cantidad = Number(fila.CantidadEnvios || 1);
+        const extra = cantidad > 1 ? ` <span class="badge bg-secondary">x${cantidad}</span>` : "";
+        return `<span class="badge bg-success" title="Enviado por ${escaparCobranza(fila.UltimoEnvioUsuario || "")}"><i class="mdi mdi-check"></i> ${escaparCobranza(fechaHoraArgentina(fila.UltimoEnvio))}</span>${extra}`;
+      } },
       { data: null, orderable: false, searchable: false, className: "text-center", render: (dato, tipo, fila, meta) => {
         if (!telefonoValido(fila.Celular)) return `<button type="button" class="btn btn-sm btn-outline-danger btn-editar-telefono" data-fila="${meta.row}" title="Agregar o corregir teléfono"><i class="mdi mdi-phone-plus mdi-18px"></i></button>`;
-        return `<button type="button" class="btn btn-sm btn-success btn-whatsapp" data-fila="${meta.row}" title="Enviar aviso por WhatsApp"><i class="mdi mdi-whatsapp mdi-18px"></i></button>`;
+        const clase = filaEnviada(fila) ? "btn-outline-success" : "btn-success";
+        return `<button type="button" class="btn btn-sm ${clase} btn-whatsapp" data-fila="${meta.row}" title="Enviar aviso por WhatsApp"><i class="mdi mdi-whatsapp mdi-18px"></i></button>`;
       } },
     ],
   });
 
   $("#tabla_cobranza tbody").on("click", ".btn-whatsapp", function () {
-    abrirWhatsAppCobranza(tablaCobranza.row(Number($(this).data("fila"))).data());
+    confirmarYAbrirWhatsAppCobranza(Number($(this).data("fila")));
   });
 
   $("#tabla_cobranza tbody").on("click", ".btn-editar-telefono", function () {
     editarTelefonoCobranza(Number($(this).data("fila")));
+  });
+
+  $("#ultimo_archivo_cobranza").on("click", "#btn_editar_fecha_limite_cobranza", function () {
+    editarFechaLimiteCobranza();
   });
 
   $("#texto_whatsapp_cobranza").on("input", function () {
@@ -201,16 +303,37 @@ $(document).ready(function () {
 
   $("#btn_enviar_whatsapp_cobranza").on("click", function () {
     if (!importacionActualId) return;
+    const indice = $(this).data("fila");
+    const fila = indice !== undefined ? tablaCobranza.row(Number(indice)).data() : null;
+    if (!fila) return;
+
     $.post("control/procesos/php/cobranza_exigible.php", {
-      accion: "registrar_mensaje", importacion_id: importacionActualId,
-    }).done(function () {
+      accion: "registrar_mensaje",
+      importacion_id: importacionActualId,
+      ncliente: fila.Ncliente,
+      celular: $(this).data("celular"),
+      mensaje: $("#texto_whatsapp_cobranza").val(),
+    }, null, "json").done(function (respuesta) {
+      if (!respuesta.success) return;
       mensajesIniciados++;
       $("#cantidad_mensajes_cobranza").text(mensajesIniciados);
+
+      fila.UltimoEnvio = respuesta.fecha;
+      fila.UltimoEnvioUsuario = respuesta.usuario;
+      fila.CantidadEnvios = Number(fila.CantidadEnvios || 0) + 1;
+      tablaCobranza.row(Number(indice)).data(fila).invalidate().draw(false);
     });
   });
 
   $.post("control/procesos/php/cobranza_exigible.php", { accion: "ultimo_archivo" }, null, "json")
-    .done((respuesta) => mostrarUltimaImportacion(respuesta.data));
+    .done((respuesta) => {
+      mostrarUltimaImportacion(respuesta.data);
+      reconstruirTablaCobranza(respuesta.filas);
+      if (respuesta.filas && respuesta.filas.length) {
+        const total = respuesta.filas.reduce((suma, fila) => suma + Number(fila.Exigible || 0), 0);
+        $("#resumen_cobranza").removeClass("d-none").html(`<strong>${respuesta.filas.length}</strong> clientes · Exigible total: <strong>${importeArgentina(total)}</strong>`);
+      }
+    });
 
   $("#form_cobranza").on("submit", function (evento) {
     evento.preventDefault();
@@ -223,6 +346,7 @@ $(document).ready(function () {
     const datos = new FormData();
     datos.append("accion", "procesar_exigible");
     datos.append("archivo", archivo);
+    datos.append("fecha_limite", $("#fecha_limite_exigible").val() || "");
     $("#btn_procesar_exigible").prop("disabled", true).html('<span class="spinner-border spinner-border-sm me-1"></span> Procesando');
 
     $.ajax({
@@ -230,7 +354,7 @@ $(document).ready(function () {
       processData: false, contentType: false, dataType: "json",
     }).done(function (respuesta) {
       if (!respuesta.success) throw new Error(respuesta.error || "No se pudo procesar el archivo.");
-      tablaCobranza.clear().rows.add(respuesta.data).draw();
+      reconstruirTablaCobranza(respuesta.data);
       mostrarUltimaImportacion(respuesta.importacion);
       const total = respuesta.data.reduce((suma, fila) => suma + Number(fila.Exigible || 0), 0);
       $("#resumen_cobranza").removeClass("d-none").html(`<strong>${respuesta.data.length}</strong> clientes · Exigible total: <strong>${importeArgentina(total)}</strong>${respuesta.omitidas ? ` · ${respuesta.omitidas} filas omitidas` : ""}`);
