@@ -176,7 +176,7 @@ function textoMensajeCobranza(fila) {
     ? "Alias: *ELRAK.PANINI*\nCBU: *0200302101000001152701*\nBanco Córdoba\nCUIT: *30669104959*"
     : "Cuenta 1\nAlias: *DINTER.SA.*\nCBU: *2850331630094145090021*\nBanco Macro\n\nCuenta 2\nAlias: *DINTER.SA.CBA*\nCBU: *0200931901000025067115*\nBanco Córdoba";
   const lineaPlazo = fechaLimiteInformeActual
-    ? `\nPor favor informe el pago antes del *${fechaHoraArgentina(fechaLimiteInformeActual)}*.\n`
+    ? `\nLe agradeceríamos poder informar el pago antes del *${fechaHoraArgentina(fechaLimiteInformeActual)}*, ya que de no ser así nos veríamos en la necesidad de postergar el envío del próximo paquete.\n`
     : "";
 
   return `Estimado ${nombreCliente}:
