@@ -568,6 +568,9 @@ $(document).ready(function () {
       maxFiles: 1,
       acceptedFiles: ".jpeg,.jpg,.png,.gif",
       dictDefaultMessage: "Arrastrá una imagen o hacé click",
+      thumbnailWidth: 700,
+      thumbnailHeight: 700,
+      thumbnailMethod: "contain",
       previewTemplate: `
       <div class="dz-preview dz-file-preview">
         <div class="dz-image"><img data-dz-thumbnail /></div>
