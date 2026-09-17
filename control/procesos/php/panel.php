@@ -14,10 +14,6 @@ function normalizarFecha($valor) {
     return null;
 }
 
-// Recorridos y clientes puntuales habilitados para cargar cobranza directa (sin venta)
-const RECORRIDOS_COBRANZA_DIRECTA = ['1', '7', '13', '9', '10', '4', '21'];
-const CLIENTES_COBRANZA_DIRECTA = ['370', '1024', '3045'];
-
 $accionesQueRequierenSesion = [
     'Conciliar', 'Rechazar', 'Conciliar_quik', 'Conciliar_quik_cancel',
     'Vuelve', 'Eliminar', 'AsignarPagoVenta', 'Observaciones_Usuario', 'MarcarSinVenta',
@@ -87,11 +83,8 @@ if (isset($_POST['MarcarSinVenta'])) {
     exit;
 }
 
-//BUSCAR CLIENTES HABILITADOS PARA INGRESAR COBRANZA DIRECTA (solo ciertos recorridos + excepciones puntuales)
+//BUSCAR CLIENTES HABILITADOS PARA INGRESAR COBRANZA DIRECTA (todos los clientes activos)
 if (isset($_POST['BuscarClientesCobranzaDirecta'])) {
-
-    $recorridosSql = implode(',', array_map(fn($r) => "'" . $mysqli->real_escape_string($r) . "'", RECORRIDOS_COBRANZA_DIRECTA));
-    $clientesSql = implode(',', array_map(fn($n) => "'" . $mysqli->real_escape_string($n) . "'", CLIENTES_COBRANZA_DIRECTA));
 
     $term = isset($_POST['term']) ? trim($_POST['term']) : '';
     $buscar = '%' . $mysqli->real_escape_string($term) . '%';
@@ -100,7 +93,7 @@ if (isset($_POST['BuscarClientesCobranzaDirecta'])) {
         SELECT id, RazonSocial, Cuit, Direccion, Ciudad, Celular, Ncliente, Recorrido
         FROM Clientes
         WHERE
-            (Recorrido IN ($recorridosSql) OR Ncliente IN ($clientesSql))
+            IFNULL(Suspendido,0) = 0
             AND (RazonSocial LIKE '$buscar' OR Cuit LIKE '$buscar' OR Celular LIKE '$buscar' OR Ncliente LIKE '$buscar')
         ORDER BY RazonSocial ASC
         LIMIT 20
@@ -158,7 +151,7 @@ if (isset($_POST['IngresarCobranzaDirecta'])) {
     $usuario = !empty($_SESSION['user_name']) ? $mysqli->real_escape_string($_SESSION['user_name']) : 'Sistema';
     $hora = date('H:i:s');
 
-    $resCliente = $mysqli->query("SELECT Ncliente, RazonSocial, Recorrido FROM Clientes WHERE id = '$idCliente' LIMIT 1");
+    $resCliente = $mysqli->query("SELECT Ncliente, RazonSocial, Suspendido FROM Clientes WHERE id = '$idCliente' LIMIT 1");
 
     if (!$resCliente || $resCliente->num_rows == 0) {
         echo json_encode(array('success' => 0, 'error' => 'Cliente inexistente.'));
@@ -167,8 +160,8 @@ if (isset($_POST['IngresarCobranzaDirecta'])) {
 
     $cliente = $resCliente->fetch_assoc();
 
-    if (!in_array((string)$cliente['Recorrido'], RECORRIDOS_COBRANZA_DIRECTA, true) && !in_array((string)$cliente['Ncliente'], CLIENTES_COBRANZA_DIRECTA, true)) {
-        echo json_encode(array('success' => 0, 'error' => 'Este cliente no está habilitado para cargar cobranza directa.'));
+    if (!empty($cliente['Suspendido'])) {
+        echo json_encode(array('success' => 0, 'error' => 'Este cliente está suspendido y no puede cargarse una cobranza directa.'));
         exit;
     }
 
