@@ -4,6 +4,7 @@ let mensajesIniciados = 0;
 let fechaLimiteInformeActual = null;
 let dropzoneCobranzaDirecta = null;
 let idCobranzaDirectaPendienteComprobante = 0;
+Dropzone.autoDiscover = false;
 
 function escaparCobranza(valor) {
   return String(valor ?? "").replace(/[&<>"']/g, (caracter) => ({
@@ -437,18 +438,16 @@ $(document).ready(function () {
     minimumInputLength: 2,
     dropdownParent: $("#modalCobranzaDirecta"),
     ajax: {
-      url: "control/procesos/php/ventas.php",
+      url: "control/procesos/php/panel.php",
       type: "POST",
       dataType: "json",
       delay: 300,
-      data: (params) => ({ accion: "buscar_clientes", term: params.term }),
+      data: (params) => ({ BuscarClientesCobranzaDirecta: 1, term: params.term }),
       processResults: (data) => ({ results: data }),
     },
   });
 
   $("#cobranza_directa_tipo_operacion").on("change", actualizarCamposBancoCobranzaDirecta);
-
-  Dropzone.autoDiscover = false;
 
   if ($("#dropzoneComprobanteCobranzaDirecta").length) {
     dropzoneCobranzaDirecta = new Dropzone("#dropzoneComprobanteCobranzaDirecta", {
