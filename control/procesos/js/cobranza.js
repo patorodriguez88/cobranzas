@@ -297,10 +297,7 @@ function extraerDatosComprobante(texto) {
     }
   }
 
-  const regexImporte = /\$?\s?(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{1,2})?)/;
-
-  // Preferí números pegados a un "$" (más confiable que cualquier número suelto
-  // en una línea que "contenga" un $, ya que el OCR a veces mezcla renglones).
+  // Número pegado a un "$": es la señal más confiable (poco margen para falsos positivos).
   const regexImporteDolar = /\$\s?(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{1,2})?)/g;
   const candidatosDolar = [...texto.matchAll(regexImporteDolar)]
     .map((m) => parsearImporteArgentino(m[1]))
@@ -308,16 +305,21 @@ function extraerDatosComprobante(texto) {
 
   let valorImporte = candidatosDolar.length ? Math.max(...candidatosDolar) : null;
 
+  // Respaldo: sin "$" de por medio, exigí que el número tenga separador de miles o
+  // decimales (ej. "300.000" o "45,50"). Un número suelto como "17" (que puede venir
+  // de una fecha u otro dato) NO cuenta: es mejor dejar el campo vacío que inventar un valor.
+  const regexImporteConSeparador = /\$?\s?(\d{1,3}(?:[.,]\d{3})+(?:[.,]\d{1,2})?|\d+[.,]\d{1,2})/;
+
   if (!valorImporte) {
     let importeTexto = null;
     for (const linea of texto.split("\n")) {
       if (/importe|monto|total|transferiste|enviaste|pagaste/i.test(linea)) {
-        const m = linea.match(regexImporte);
+        const m = linea.match(regexImporteConSeparador);
         if (m) { importeTexto = m[1]; break; }
       }
     }
     if (!importeTexto) {
-      const m = texto.match(regexImporte);
+      const m = texto.match(regexImporteConSeparador);
       if (m) importeTexto = m[1];
     }
     if (importeTexto) valorImporte = parsearImporteArgentino(importeTexto);
