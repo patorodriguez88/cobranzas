@@ -304,6 +304,21 @@ function extraerDatosComprobante(texto) {
     if (numeroLargo) datos.operacion = numeroLargo[0];
   }
 
+  if (/\bmacro\b/i.test(texto)) {
+    datos.banco = "Banco Macro";
+  } else if (/c[oó]rdoba/i.test(texto)) {
+    datos.banco = "Banco Córdoba";
+  }
+
+  const textoMinuscula = texto.toLowerCase();
+  const posTransferencia = textoMinuscula.search(/transferencia/);
+  const posDeposito = textoMinuscula.search(/dep[oó]sito/);
+  if (posTransferencia !== -1 && (posDeposito === -1 || posTransferencia <= posDeposito)) {
+    datos.tipoOperacion = "transferencia";
+  } else if (posDeposito !== -1) {
+    datos.tipoOperacion = "deposito";
+  }
+
   return datos;
 }
 
@@ -329,6 +344,14 @@ function leerComprobanteConOCR(archivo) {
       if (datos.operacion) {
         $("#cobranza_directa_operacion").val(datos.operacion);
         leidos.push("N° de operación");
+      }
+      if (datos.tipoOperacion) {
+        $("#cobranza_directa_tipo_operacion").val(datos.tipoOperacion).trigger("change");
+        leidos.push("tipo de operación");
+      }
+      if (datos.banco) {
+        $("#cobranza_directa_banco").val(datos.banco);
+        leidos.push("banco");
       }
 
       if (leidos.length) {
