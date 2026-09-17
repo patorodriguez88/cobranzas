@@ -258,6 +258,28 @@ function abrirModalCobranzaDirecta() {
   $("#modalCobranzaDirecta").modal("show");
 }
 
+function parsearImporteArgentino(texto) {
+  let limpio = String(texto || "").replace(/\$/g, "").replace(/\s/g, "").trim();
+  if (limpio === "") return 0;
+
+  if (limpio.includes(",")) {
+    limpio = limpio.replace(/\./g, "").replace(",", ".");
+  } else {
+    const partes = limpio.split(".");
+    if (partes.length > 1 && partes[partes.length - 1].length === 3) {
+      limpio = partes.join("");
+    }
+  }
+
+  const numero = parseFloat(limpio);
+  return isNaN(numero) ? 0 : numero;
+}
+
+function formatearImporteArgentino(valor) {
+  const numero = Number(valor) || 0;
+  return numero.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 function extraerDatosComprobante(texto) {
   const datos = {};
 
@@ -272,10 +294,10 @@ function extraerDatosComprobante(texto) {
     }
   }
 
-  const regexImporte = /\$?\s?(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})|\d+[.,]\d{2})/;
+  const regexImporte = /\$?\s?(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{1,2})?)/;
   let importeTexto = null;
   for (const linea of texto.split("\n")) {
-    if (/importe|monto|total|transferiste|enviaste|pagaste/i.test(linea)) {
+    if (/\$|importe|monto|total|transferiste|enviaste|pagaste/i.test(linea)) {
       const m = linea.match(regexImporte);
       if (m) { importeTexto = m[1]; break; }
     }
@@ -285,23 +307,25 @@ function extraerDatosComprobante(texto) {
     if (m) importeTexto = m[1];
   }
   if (importeTexto) {
-    let normalizado = importeTexto;
-    if (normalizado.includes(",") && normalizado.includes(".")) {
-      normalizado = normalizado.replace(/\./g, "").replace(",", ".");
-    } else if (normalizado.includes(",")) {
-      normalizado = normalizado.replace(",", ".");
-    }
-    const valor = parseFloat(normalizado);
-    if (!isNaN(valor) && valor > 0) datos.importe = valor;
+    const valor = parsearImporteArgentino(importeTexto);
+    if (valor > 0) datos.importe = valor;
   }
 
-  const regexOperacion = /(?:operaci[oó]n|comprobante|referencia|transacci[oó]n|nro\.?|n[°º])\D{0,12}(\d{5,20})/i;
-  const matchOperacion = texto.match(regexOperacion);
-  if (matchOperacion) {
-    datos.operacion = matchOperacion[1];
+  // Mercado Pago: el dato que sirve como "número de operación" es el "Código de identificación",
+  // no el "N.° de operación de Mercado Pago" (ese es interno de MP y no lo necesitamos).
+  const regexCodigoIdentificacion = /c[oó]digo\s+de\s+identificaci[oó]n[:\s]{0,15}([A-Za-z0-9]{6,30})/i;
+  const matchCodigo = texto.match(regexCodigoIdentificacion);
+  if (matchCodigo) {
+    datos.operacion = matchCodigo[1];
   } else {
-    const numeroLargo = texto.match(/\b\d{8,20}\b/);
-    if (numeroLargo) datos.operacion = numeroLargo[0];
+    const regexOperacion = /(?:operaci[oó]n|comprobante|referencia|transacci[oó]n|nro\.?|n[°º])\D{0,12}(\d{5,20})/i;
+    const matchOperacion = texto.match(regexOperacion);
+    if (matchOperacion) {
+      datos.operacion = matchOperacion[1];
+    } else {
+      const numeroLargo = texto.match(/\b\d{8,20}\b/);
+      if (numeroLargo) datos.operacion = numeroLargo[0];
+    }
   }
 
   if (/\bmacro\b/i.test(texto)) {
@@ -338,7 +362,7 @@ function leerComprobanteConOCR(archivo) {
         leidos.push("fecha");
       }
       if (datos.importe) {
-        $("#cobranza_directa_importe").val(datos.importe);
+        $("#cobranza_directa_importe").val(formatearImporteArgentino(datos.importe));
         leidos.push("importe");
       }
       if (datos.operacion) {
@@ -375,7 +399,7 @@ function guardarCobranzaDirecta() {
   let tipoOperacion = $("#cobranza_directa_tipo_operacion").val();
   let banco = $("#cobranza_directa_banco").val();
   let operacion = $("#cobranza_directa_operacion").val().trim();
-  const importe = parseFloat($("#cobranza_directa_importe").val()) || 0;
+  const importe = parsearImporteArgentino($("#cobranza_directa_importe").val());
   const observaciones = $("#cobranza_directa_observaciones").val().trim();
 
   if (String(tipoOperacion).toLowerCase() === "efectivo") {
@@ -560,6 +584,11 @@ $(document).ready(function () {
   });
 
   $("#cobranza_directa_tipo_operacion").on("change", actualizarCamposBancoCobranzaDirecta);
+
+  $("#cobranza_directa_importe").on("blur", function () {
+    const valor = parsearImporteArgentino($(this).val());
+    $(this).val(valor > 0 ? formatearImporteArgentino(valor) : "");
+  });
 
   if ($("#dropzoneComprobanteCobranzaDirecta").length) {
     dropzoneCobranzaDirecta = new Dropzone("#dropzoneComprobanteCobranzaDirecta", {
