@@ -362,14 +362,37 @@ function extraerDatosComprobante(texto) {
   return datos;
 }
 
+async function reconocerComprobanteConVariosModos(archivo) {
+  const worker = await Tesseract.createWorker("spa");
+  let textoCompleto = "";
+
+  try {
+    // PSM 4: columna de texto con tamaños variables (el perfil típico de un comprobante:
+    // etiquetas chicas + un importe gigante y estilizado).
+    await worker.setParameters({ tessedit_pageseg_mode: "4" });
+    const resultado1 = await worker.recognize(archivo);
+    textoCompleto += (resultado1.data.text || "") + "\n";
+
+    // PSM 11: texto disperso, sin orden. Suma otra pasada por si el importe grande
+    // quedó afuera de la primera (Tesseract a veces descarta números gigantes aislados).
+    await worker.setParameters({ tessedit_pageseg_mode: "11" });
+    const resultado2 = await worker.recognize(archivo);
+    textoCompleto += (resultado2.data.text || "");
+  } finally {
+    await worker.terminate();
+  }
+
+  return textoCompleto;
+}
+
 function leerComprobanteConOCR(archivo) {
   if (typeof Tesseract === "undefined") return;
 
   $("#ocr_estado_comprobante").addClass("d-none").removeClass("text-success text-danger").text("");
   $("#ocr_overlay_cobranza_directa").removeClass("d-none");
 
-  Tesseract.recognize(archivo, "spa")
-    .then(({ data: { text } }) => {
+  reconocerComprobanteConVariosModos(archivo)
+    .then((text) => {
       $("#ocr_texto_crudo").text(text || "(vacío)");
       $("#ocr_ver_texto_crudo").removeClass("d-none");
 
