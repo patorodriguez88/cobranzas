@@ -256,6 +256,8 @@ function abrirModalCobranzaDirecta() {
   if (dropzoneCobranzaDirecta) dropzoneCobranzaDirecta.removeAllFiles(true);
   $("#ocr_estado_comprobante").addClass("d-none").removeClass("text-success text-danger").text("");
   $("#ocr_overlay_cobranza_directa").addClass("d-none");
+  $("#ocr_ver_texto_crudo").addClass("d-none");
+  $("#ocr_texto_crudo").addClass("d-none").text("");
   $("#modalCobranzaDirecta").modal("show");
 }
 
@@ -366,6 +368,9 @@ function leerComprobanteConOCR(archivo) {
 
   Tesseract.recognize(archivo, "spa")
     .then(({ data: { text } }) => {
+      $("#ocr_texto_crudo").text(text || "(vacío)");
+      $("#ocr_ver_texto_crudo").removeClass("d-none");
+
       const datos = extraerDatosComprobante(text || "");
       const leidos = [];
 
@@ -636,6 +641,8 @@ $(document).ready(function () {
         this.on("removedfile", function () {
           $("#ocr_estado_comprobante").addClass("d-none").removeClass("text-success text-danger").text("");
           $("#ocr_overlay_cobranza_directa").addClass("d-none");
+          $("#ocr_ver_texto_crudo").addClass("d-none");
+          $("#ocr_texto_crudo").addClass("d-none").text("");
         });
         this.on("sending", function (file, xhr, formData) {
           formData.append("idCobranza", idCobranzaDirectaPendienteComprobante);
@@ -660,6 +667,11 @@ $(document).ready(function () {
   }
 
   $("#btn_guardar_cobranza_directa").on("click", guardarCobranzaDirecta);
+
+  $("#ocr_ver_texto_crudo").on("click", function (evento) {
+    evento.preventDefault();
+    $("#ocr_texto_crudo").toggleClass("d-none");
+  });
 
   $("#form_cobranza").on("submit", function (evento) {
     evento.preventDefault();
