@@ -254,7 +254,96 @@ function abrirModalCobranzaDirecta() {
   $("#cobranza_directa_observaciones").val("");
   actualizarCamposBancoCobranzaDirecta();
   if (dropzoneCobranzaDirecta) dropzoneCobranzaDirecta.removeAllFiles(true);
+  $("#ocr_estado_comprobante").addClass("d-none").removeClass("text-success text-danger").text("");
   $("#modalCobranzaDirecta").modal("show");
+}
+
+function extraerDatosComprobante(texto) {
+  const datos = {};
+
+  const matchFecha = texto.match(/(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/);
+  if (matchFecha) {
+    let [, dia, mes, anio] = matchFecha;
+    if (anio.length === 2) anio = `20${anio}`;
+    dia = dia.padStart(2, "0");
+    mes = mes.padStart(2, "0");
+    if (Number(dia) <= 31 && Number(mes) <= 12) {
+      datos.fecha = `${anio}-${mes}-${dia}`;
+    }
+  }
+
+  const regexImporte = /\$?\s?(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})|\d+[.,]\d{2})/;
+  let importeTexto = null;
+  for (const linea of texto.split("\n")) {
+    if (/importe|monto|total|transferiste|enviaste|pagaste/i.test(linea)) {
+      const m = linea.match(regexImporte);
+      if (m) { importeTexto = m[1]; break; }
+    }
+  }
+  if (!importeTexto) {
+    const m = texto.match(regexImporte);
+    if (m) importeTexto = m[1];
+  }
+  if (importeTexto) {
+    let normalizado = importeTexto;
+    if (normalizado.includes(",") && normalizado.includes(".")) {
+      normalizado = normalizado.replace(/\./g, "").replace(",", ".");
+    } else if (normalizado.includes(",")) {
+      normalizado = normalizado.replace(",", ".");
+    }
+    const valor = parseFloat(normalizado);
+    if (!isNaN(valor) && valor > 0) datos.importe = valor;
+  }
+
+  const regexOperacion = /(?:operaci[oó]n|comprobante|referencia|transacci[oó]n|nro\.?|n[°º])\D{0,12}(\d{5,20})/i;
+  const matchOperacion = texto.match(regexOperacion);
+  if (matchOperacion) {
+    datos.operacion = matchOperacion[1];
+  } else {
+    const numeroLargo = texto.match(/\b\d{8,20}\b/);
+    if (numeroLargo) datos.operacion = numeroLargo[0];
+  }
+
+  return datos;
+}
+
+function leerComprobanteConOCR(archivo) {
+  if (typeof Tesseract === "undefined") return;
+
+  $("#ocr_estado_comprobante").removeClass("d-none text-success text-danger")
+    .text("Leyendo comprobante...");
+
+  Tesseract.recognize(archivo, "spa")
+    .then(({ data: { text } }) => {
+      const datos = extraerDatosComprobante(text || "");
+      const leidos = [];
+
+      if (datos.fecha) {
+        $("#cobranza_directa_fecha").val(datos.fecha);
+        leidos.push("fecha");
+      }
+      if (datos.importe) {
+        $("#cobranza_directa_importe").val(datos.importe);
+        leidos.push("importe");
+      }
+      if (datos.operacion) {
+        $("#cobranza_directa_operacion").val(datos.operacion);
+        leidos.push("N° de operación");
+      }
+
+      if (leidos.length) {
+        $("#ocr_estado_comprobante").addClass("text-success").removeClass("text-danger")
+          .text(`Se completó automáticamente: ${leidos.join(", ")}. Revisá los datos antes de guardar.`);
+      } else {
+        $("#ocr_estado_comprobante").addClass("text-danger").removeClass("text-success")
+          .text("No se pudieron leer datos del comprobante. Completá los campos manualmente.");
+      }
+    })
+    .catch((error) => {
+      console.log(error);
+      $("#ocr_estado_comprobante").addClass("text-danger").removeClass("text-success")
+        .text("No se pudo leer el comprobante automáticamente. Completá los campos manualmente.");
+    });
 }
 
 function guardarCobranzaDirecta() {
@@ -470,6 +559,12 @@ $(document).ready(function () {
         this.on("maxfilesexceeded", function (file) {
           this.removeAllFiles(true);
           this.addFile(file);
+        });
+        this.on("addedfile", function (file) {
+          leerComprobanteConOCR(file);
+        });
+        this.on("removedfile", function () {
+          $("#ocr_estado_comprobante").addClass("d-none").removeClass("text-success text-danger").text("");
         });
         this.on("sending", function (file, xhr, formData) {
           formData.append("idCobranza", idCobranzaDirectaPendienteComprobante);
