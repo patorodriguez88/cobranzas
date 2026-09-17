@@ -255,6 +255,7 @@ function abrirModalCobranzaDirecta() {
   actualizarCamposBancoCobranzaDirecta();
   if (dropzoneCobranzaDirecta) dropzoneCobranzaDirecta.removeAllFiles(true);
   $("#ocr_estado_comprobante").addClass("d-none").removeClass("text-success text-danger").text("");
+  $("#ocr_overlay_cobranza_directa").addClass("d-none");
   $("#modalCobranzaDirecta").modal("show");
 }
 
@@ -295,21 +296,32 @@ function extraerDatosComprobante(texto) {
   }
 
   const regexImporte = /\$?\s?(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{1,2})?)/;
-  let importeTexto = null;
-  for (const linea of texto.split("\n")) {
-    if (/\$|importe|monto|total|transferiste|enviaste|pagaste/i.test(linea)) {
-      const m = linea.match(regexImporte);
-      if (m) { importeTexto = m[1]; break; }
+
+  // Preferí números pegados a un "$" (más confiable que cualquier número suelto
+  // en una línea que "contenga" un $, ya que el OCR a veces mezcla renglones).
+  const regexImporteDolar = /\$\s?(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{1,2})?)/g;
+  const candidatosDolar = [...texto.matchAll(regexImporteDolar)]
+    .map((m) => parsearImporteArgentino(m[1]))
+    .filter((v) => v > 0);
+
+  let valorImporte = candidatosDolar.length ? Math.max(...candidatosDolar) : null;
+
+  if (!valorImporte) {
+    let importeTexto = null;
+    for (const linea of texto.split("\n")) {
+      if (/importe|monto|total|transferiste|enviaste|pagaste/i.test(linea)) {
+        const m = linea.match(regexImporte);
+        if (m) { importeTexto = m[1]; break; }
+      }
     }
+    if (!importeTexto) {
+      const m = texto.match(regexImporte);
+      if (m) importeTexto = m[1];
+    }
+    if (importeTexto) valorImporte = parsearImporteArgentino(importeTexto);
   }
-  if (!importeTexto) {
-    const m = texto.match(regexImporte);
-    if (m) importeTexto = m[1];
-  }
-  if (importeTexto) {
-    const valor = parsearImporteArgentino(importeTexto);
-    if (valor > 0) datos.importe = valor;
-  }
+
+  if (valorImporte && valorImporte > 0) datos.importe = valorImporte;
 
   // Mercado Pago: el dato que sirve como "número de operación" es el "Código de identificación",
   // no el "N.° de operación de Mercado Pago" (ese es interno de MP y no lo necesitamos).
@@ -349,8 +361,8 @@ function extraerDatosComprobante(texto) {
 function leerComprobanteConOCR(archivo) {
   if (typeof Tesseract === "undefined") return;
 
-  $("#ocr_estado_comprobante").removeClass("d-none text-success text-danger")
-    .text("Leyendo comprobante...");
+  $("#ocr_estado_comprobante").addClass("d-none").removeClass("text-success text-danger").text("");
+  $("#ocr_overlay_cobranza_directa").removeClass("d-none");
 
   Tesseract.recognize(archivo, "spa")
     .then(({ data: { text } }) => {
@@ -379,17 +391,20 @@ function leerComprobanteConOCR(archivo) {
       }
 
       if (leidos.length) {
-        $("#ocr_estado_comprobante").addClass("text-success").removeClass("text-danger")
+        $("#ocr_estado_comprobante").removeClass("d-none").addClass("text-success").removeClass("text-danger")
           .text(`Se completó automáticamente: ${leidos.join(", ")}. Revisá los datos antes de guardar.`);
       } else {
-        $("#ocr_estado_comprobante").addClass("text-danger").removeClass("text-success")
+        $("#ocr_estado_comprobante").removeClass("d-none").addClass("text-danger").removeClass("text-success")
           .text("No se pudieron leer datos del comprobante. Completá los campos manualmente.");
       }
     })
     .catch((error) => {
       console.log(error);
-      $("#ocr_estado_comprobante").addClass("text-danger").removeClass("text-success")
+      $("#ocr_estado_comprobante").removeClass("d-none").addClass("text-danger").removeClass("text-success")
         .text("No se pudo leer el comprobante automáticamente. Completá los campos manualmente.");
+    })
+    .finally(() => {
+      $("#ocr_overlay_cobranza_directa").addClass("d-none");
     });
 }
 
@@ -620,6 +635,7 @@ $(document).ready(function () {
         });
         this.on("removedfile", function () {
           $("#ocr_estado_comprobante").addClass("d-none").removeClass("text-success text-danger").text("");
+          $("#ocr_overlay_cobranza_directa").addClass("d-none");
         });
         this.on("sending", function (file, xhr, formData) {
           formData.append("idCobranza", idCobranzaDirectaPendienteComprobante);

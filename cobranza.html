@@ -29,6 +29,15 @@
     #modalCobranzaDirecta .select2-container .select2-selection__rendered { line-height: 29px !important; font-size: 13px; }
     #modalCobranzaDirecta .select2-container .select2-selection__arrow { height: 29px !important; }
     #modalCobranzaDirecta .form-control-sm, #modalCobranzaDirecta .form-label.small { font-size: 13px; }
+    .ocr-overlay { position: absolute; inset: 0; background: rgba(255,255,255,.92); display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 8px; z-index: 5; }
+    .chanchito-escena { position: relative; width: 90px; height: 70px; }
+    .chanchito-escena .chanchito { position: absolute; bottom: 0; left: 50%; font-size: 46px; line-height: 1; transform-origin: bottom center; transform: translateX(-50%) rotate(-8deg); animation: wag-cola .4s ease-in-out infinite; }
+    .chanchito-escena .moneda { position: absolute; top: -6px; left: 50%; font-size: 18px; opacity: 0; animation: caer-moneda 1.2s ease-in infinite; }
+    .chanchito-escena .moneda-1 { margin-left: -16px; animation-delay: 0s; }
+    .chanchito-escena .moneda-2 { margin-left: 2px; animation-delay: .4s; }
+    .chanchito-escena .moneda-3 { margin-left: 16px; animation-delay: .8s; }
+    @keyframes wag-cola { 0%, 100% { transform: translateX(-50%) rotate(-8deg); } 50% { transform: translateX(-50%) rotate(8deg); } }
+    @keyframes caer-moneda { 0% { top: -6px; opacity: 0; } 15% { opacity: 1; } 65% { top: 26px; opacity: 1; } 85% { top: 30px; opacity: 0; } 100% { top: 30px; opacity: 0; } }
   </style>
 </head>
 <body class="loading" data-layout-color="light" data-leftbar-theme="dark" data-layout-mode="fluid" data-leftbar-compact-mode="condensed">
@@ -50,13 +59,24 @@
           <div class="row g-3">
             <div class="col-md-5 mb-2">
               <label class="form-label mb-1 small">Comprobante</label>
-              <form action="procesos/php/upload.php" class="dropzone dropzone-grande" id="dropzoneComprobanteCobranzaDirecta">
-                <div class="dz-message needsclick m-0">
-                  <i class="mdi mdi-cloud-upload-outline me-1"></i>
-                  <span>Adjuntar comprobante</span>
-                  <small class="text-muted d-block mt-1">JPG, PNG o GIF</small>
+              <div class="position-relative">
+                <form action="procesos/php/upload.php" class="dropzone dropzone-grande" id="dropzoneComprobanteCobranzaDirecta">
+                  <div class="dz-message needsclick m-0">
+                    <i class="mdi mdi-cloud-upload-outline me-1"></i>
+                    <span>Adjuntar comprobante</span>
+                    <small class="text-muted d-block mt-1">JPG, PNG o GIF</small>
+                  </div>
+                </form>
+                <div id="ocr_overlay_cobranza_directa" class="ocr-overlay d-none">
+                  <div class="chanchito-escena">
+                    <span class="moneda moneda-1">🪙</span>
+                    <span class="moneda moneda-2">🪙</span>
+                    <span class="moneda moneda-3">🪙</span>
+                    <span class="chanchito">🐷</span>
+                  </div>
+                  <div class="mt-2 small text-muted">Leyendo comprobante...</div>
                 </div>
-              </form>
+              </div>
               <small class="text-muted d-block mt-1">Opcional. Se sube después de guardar el pago.</small>
               <small id="ocr_estado_comprobante" class="d-none d-block mt-1"></small>
             </div>
@@ -171,6 +191,6 @@
       </div>
     </div><footer class="footer"><div class="container-fluid">© Dinter - Gestión de Cobranzas</div></footer></div>
   </div>
-  <script src="saas/assets/js/vendor.min.js"></script><script src="saas/assets/js/app.min.js"></script><script src="saas/assets/js/vendor/jquery.dataTables.min.js"></script><script src="saas/assets/js/vendor/dataTables.bootstrap5.js"></script><script src="saas/assets/js/vendor/dataTables.responsive.min.js"></script><script src="saas/assets/js/vendor/responsive.bootstrap5.min.js"></script><script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script><script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script><script src="saas/assets/js/vendor/dropzone.min.js"></script><script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script><script src="control/procesos/js/cobranza.js?v=20260917-5"></script><script src="control/procesos/js/totales.js"></script><script src="control/procesos/js/conexion.js"></script>
+  <script src="saas/assets/js/vendor.min.js"></script><script src="saas/assets/js/app.min.js"></script><script src="saas/assets/js/vendor/jquery.dataTables.min.js"></script><script src="saas/assets/js/vendor/dataTables.bootstrap5.js"></script><script src="saas/assets/js/vendor/dataTables.responsive.min.js"></script><script src="saas/assets/js/vendor/responsive.bootstrap5.min.js"></script><script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script><script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script><script src="saas/assets/js/vendor/dropzone.min.js"></script><script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script><script src="control/procesos/js/cobranza.js?v=20260917-7"></script><script src="control/procesos/js/totales.js"></script><script src="control/procesos/js/conexion.js"></script>
 </body>
 </html>
