@@ -16,7 +16,8 @@ function normalizarFecha($valor) {
 
 $accionesQueRequierenSesion = [
     'Conciliar', 'Rechazar', 'Conciliar_quik', 'Conciliar_quik_cancel',
-    'Vuelve', 'Eliminar', 'AsignarPagoVenta', 'Observaciones_Usuario', 'MarcarSinVenta'
+    'Vuelve', 'Eliminar', 'AsignarPagoVenta', 'Observaciones_Usuario', 'MarcarSinVenta',
+    'IngresarCobranzaDirecta'
 ];
 
 $accionActual = array_keys(array_filter($_POST, fn($v) => $v !== null, ARRAY_FILTER_USE_KEY));
@@ -79,6 +80,88 @@ if (isset($_POST['MarcarSinVenta'])) {
     }
 
     echo json_encode(array('success' => 1, 'SinVenta' => $valor));
+    exit;
+}
+
+//INGRESAR COBRANZA DIRECTA (operador carga un pago de cliente sin vincularlo a una venta)
+if (isset($_POST['IngresarCobranzaDirecta'])) {
+
+    $idCliente = isset($_POST['idCliente']) ? (int)$_POST['idCliente'] : 0;
+    $fecha = isset($_POST['fecha']) ? $mysqli->real_escape_string($_POST['fecha']) : '';
+    $tipoOperacion = isset($_POST['tipoOperacion']) ? trim($_POST['tipoOperacion']) : '';
+    $banco = isset($_POST['banco']) ? trim($_POST['banco']) : '';
+    $operacion = isset($_POST['operacion']) ? trim($_POST['operacion']) : '';
+    $importe = isset($_POST['importe']) ? (float)$_POST['importe'] : 0;
+    $observaciones = isset($_POST['observaciones']) ? trim($_POST['observaciones']) : '';
+
+    if (strtolower($tipoOperacion) === 'efectivo') {
+        $banco = 'CAJA';
+        $operacion = 'EFECTIVO';
+    }
+
+    if (
+        $idCliente <= 0 ||
+        !$fecha ||
+        !$tipoOperacion ||
+        $importe <= 0 ||
+        (strtolower($tipoOperacion) !== 'efectivo' && (!$banco || !$operacion))
+    ) {
+        echo json_encode(array('success' => 0, 'error' => 'Completá cliente, fecha, tipo, banco, operación e importe.'));
+        exit;
+    }
+
+    $banco = $mysqli->real_escape_string($banco);
+    $operacion = $mysqli->real_escape_string($operacion);
+    $tipoOperacion = $mysqli->real_escape_string($tipoOperacion);
+
+    $usuario = !empty($_SESSION['user_name']) ? $mysqli->real_escape_string($_SESSION['user_name']) : 'Sistema';
+    $hora = date('H:i:s');
+
+    $resCliente = $mysqli->query("SELECT Ncliente, RazonSocial FROM Clientes WHERE id = '$idCliente' LIMIT 1");
+
+    if (!$resCliente || $resCliente->num_rows == 0) {
+        echo json_encode(array('success' => 0, 'error' => 'Cliente inexistente.'));
+        exit;
+    }
+
+    $cliente = $resCliente->fetch_assoc();
+    $ncliente = $mysqli->real_escape_string($cliente['Ncliente']);
+    $nombreCliente = $mysqli->real_escape_string($cliente['RazonSocial']);
+
+    if (strtolower($tipoOperacion) !== 'efectivo') {
+        $resDuplicado = $mysqli->query("
+            SELECT id FROM Cobranza
+            WHERE Banco = '$banco' AND Operacion = '$operacion' AND Importe = '$importe'
+              AND IFNULL(Eliminado,0) = 0
+            LIMIT 1
+        ");
+        if ($resDuplicado && $resDuplicado->num_rows > 0) {
+            echo json_encode(array('success' => 0, 'error' => 'Pago posiblemente duplicado: ya existe una cobranza con el mismo banco, operación e importe.'));
+            exit;
+        }
+    }
+
+    $observacionFinal = $mysqli->real_escape_string(
+        'Carga operador (sin venta) desde Cobranza.' . ($observaciones !== '' ? ' ' . $observaciones : '')
+    );
+    $observacionesEscapadas = $mysqli->real_escape_string($observaciones);
+
+    $sqlCobranza = "
+        INSERT INTO Cobranza
+        (NombreCliente, NumeroCliente, Fecha, Hora, Banco, Operacion, Importe, AlertaDuplicidad, TipoOperacion, Observaciones, Usuario_obs, Usuario, SinVenta)
+        VALUES
+        ('$nombreCliente', '$ncliente', '$fecha', '$hora', '$banco', '$operacion', '$importe', 0, '$tipoOperacion', '$observacionFinal', '$observacionesEscapadas', '$usuario', 1)
+    ";
+
+    if (!$mysqli->query($sqlCobranza)) {
+        echo json_encode(array('success' => 0, 'error' => $mysqli->error));
+        exit;
+    }
+
+    $idCobranza = $mysqli->insert_id;
+    $_SESSION['NComprobante'] = $idCobranza;
+
+    echo json_encode(array('success' => 1, 'idCobranza' => $idCobranza));
     exit;
 }
 

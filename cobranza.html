@@ -9,6 +9,16 @@
   <link href="saas/assets/css/vendor/responsive.bootstrap5.css" rel="stylesheet" />
   <link href="saas/assets/css/icons.min.css" rel="stylesheet" />
   <link href="saas/assets/css/app.min.css" rel="stylesheet" id="app-style" />
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <link href="saas/assets/css/vendor/dropzone.css" rel="stylesheet" />
+  <style>
+    .card-accion-cobranza { cursor: pointer; transition: transform .15s ease, box-shadow .15s ease; }
+    .card-accion-cobranza:hover { transform: translateY(-4px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.12) !important; }
+    .dropzone-compact { min-height: 58px !important; padding: 10px 14px !important; border: 1px dashed #cfd8dc !important; border-radius: 8px !important; background: #f8f9fa !important; }
+    .dropzone-compact .dz-message { margin: 0 !important; font-size: 14px; color: #6c757d; }
+    .dropzone-compact .mdi { font-size: 22px; vertical-align: middle; }
+    .dropzone-compact .dz-preview { margin: 6px !important; min-height: auto !important; }
+  </style>
 </head>
 <body class="loading" data-layout-color="light" data-leftbar-theme="dark" data-layout-mode="fluid" data-leftbar-compact-mode="condensed">
   <div class="modal fade" id="modal_whatsapp_cobranza" tabindex="-1">
@@ -17,6 +27,75 @@
       <div class="modal-body"><label class="form-label" for="texto_whatsapp_cobranza">Mensaje</label><textarea id="texto_whatsapp_cobranza" class="form-control" rows="13"></textarea></div>
       <div class="modal-footer"><button class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button><a id="btn_enviar_whatsapp_cobranza" target="_blank" rel="noopener" class="btn btn-success"><i class="mdi mdi-whatsapp me-1"></i>Enviar WhatsApp</a></div>
     </div></div>
+  </div>
+  <div class="modal fade" id="modalCobranzaDirecta" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title"><i class="mdi mdi-cash-plus"></i> Ingresar cobranza</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-2">
+            <label class="form-label">Cliente</label>
+            <select id="cobranza_directa_cliente" class="form-control"></select>
+          </div>
+          <div class="row">
+            <div class="col-md-4 mb-2">
+              <label class="form-label">Fecha</label>
+              <input type="date" id="cobranza_directa_fecha" class="form-control" />
+            </div>
+            <div class="col-md-4 mb-2">
+              <label class="form-label">Tipo operación</label>
+              <select id="cobranza_directa_tipo_operacion" class="form-control">
+                <option value="">Seleccionar</option>
+                <option value="deposito">Depósito Bancario</option>
+                <option value="transferencia">Transferencia</option>
+                <option value="efectivo">Efectivo</option>
+              </select>
+            </div>
+            <div class="col-md-4 mb-2" id="grupo_banco_cobranza_directa">
+              <label class="form-label">Banco destino</label>
+              <select id="cobranza_directa_banco" class="form-control">
+                <option value="">Seleccionar</option>
+                <option value="Banco Macro">Banco Macro</option>
+                <option value="Banco Córdoba">Banco Córdoba</option>
+                <option value="CAJA">Caja / Efectivo</option>
+              </select>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-2" id="grupo_operacion_cobranza_directa">
+              <label class="form-label">Número de operación</label>
+              <input type="text" id="cobranza_directa_operacion" class="form-control" />
+            </div>
+            <div class="col-md-6 mb-2">
+              <label class="form-label">Importe</label>
+              <input type="number" step="0.01" id="cobranza_directa_importe" class="form-control" />
+            </div>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Observaciones internas</label>
+            <textarea id="cobranza_directa_observaciones" class="form-control" rows="2"></textarea>
+          </div>
+          <div class="mb-2">
+            <label class="form-label mb-1">Comprobante</label>
+            <form action="procesos/php/upload.php" class="dropzone dropzone-compact" id="dropzoneComprobanteCobranzaDirecta">
+              <div class="dz-message needsclick m-0">
+                <i class="mdi mdi-cloud-upload-outline me-1"></i>
+                <span>Adjuntar comprobante</span>
+                <small class="text-muted ms-2">JPG, PNG o GIF</small>
+              </div>
+            </form>
+            <small class="text-muted">Opcional. Se sube después de guardar el pago.</small>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-danger" data-bs-dismiss="modal"><i class="mdi mdi-close mdi-18px"></i> Cancelar</button>
+          <button class="btn btn-primary" id="btn_guardar_cobranza_directa"><i class="mdi mdi-content-save mdi-18px"></i> Guardar pago</button>
+        </div>
+      </div>
+    </div>
   </div>
   <div class="wrapper">
     <div class="leftside-menu">
@@ -36,20 +115,43 @@
       <div class="navbar-custom"><ul class="list-unstyled topbar-menu float-end mb-0"><li class="dropdown notification-list"><a class="nav-link dropdown-toggle nav-user arrow-none me-0" data-bs-toggle="dropdown" href="#"><span class="account-user-avatar"><span id="avatar" class="avatar-title bg-warning rounded-circle"></span></span><span><span id="user_name" class="account-user-name"></span><span id="user_perfil" class="account-position"></span></span></a><div class="dropdown-menu dropdown-menu-end dropdown-menu-animated topbar-dropdown-menu profile-dropdown"><a href="inicio_control.html" class="dropdown-item notify-item"><i class="mdi mdi-logout me-1"></i><span>Logout</span></a></div></li></ul><button class="button-menu-mobile open-left"><i class="mdi mdi-menu"></i></button></div>
       <div class="container-fluid">
         <div class="row"><div class="col-12"><div class="page-title-box"><div class="page-title-right"><ol class="breadcrumb m-0"><li class="breadcrumb-item">Datos</li><li class="breadcrumb-item active">Cobranza</li></ol></div><h4 class="page-title">Cobranza</h4></div></div></div>
-        <div class="card"><div class="card-body">
-          <h4 class="header-title mb-1">Importar exigible diario</h4><p class="text-muted">Seleccione el archivo CSV con fecha, número de cliente e importe exigible.</p>
-          <div id="ultimo_archivo_cobranza" class="alert alert-danger text-danger">Consultando el último archivo subido...</div>
-          <form id="form_cobranza" class="row g-2 align-items-end mb-3">
-            <div class="col-md-5"><label for="archivo_exigible" class="form-label">Archivo CSV</label><input id="archivo_exigible" name="archivo" type="file" class="form-control" accept=".csv,text/csv" required /></div>
-            <div class="col-md-4"><label for="fecha_limite_exigible" class="form-label">Fecha y hora límite para informar el pago</label><input id="fecha_limite_exigible" name="fecha_limite" type="datetime-local" class="form-control" /></div>
-            <div class="col-md-3"><button id="btn_procesar_exigible" type="submit" class="btn btn-success w-100"><i class="mdi mdi-file-table-outline me-1"></i>Procesar archivo</button></div>
-          </form>
-          <div id="resumen_cobranza" class="alert alert-info d-none"></div>
-          <table id="tabla_cobranza" class="table dt-responsive nowrap w-100"><thead><tr><th>Recorrido</th><th>N.º de cliente</th><th>Nombre del cliente</th><th class="text-end">Exigible</th><th>Teléfono</th><th>Enviado</th><th class="text-center">WhatsApp</th></tr></thead><tbody style="font-size:11px"></tbody></table>
-        </div></div>
+        <div id="panel_landing_cobranza" class="row justify-content-center">
+          <div class="col-md-4 col-sm-6 mb-4">
+            <div class="card h-100 text-center shadow-sm card-accion-cobranza" id="card_enviar_exigibles">
+              <div class="card-body py-5">
+                <i class="mdi mdi-whatsapp text-success" style="font-size:52px"></i>
+                <h4 class="mt-3 mb-1">Enviar exigibles</h4>
+                <p class="text-muted mb-0">Importar el CSV de exigibles y avisar a los clientes por WhatsApp.</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4 col-sm-6 mb-4">
+            <div class="card h-100 text-center shadow-sm card-accion-cobranza" id="card_ingresar_cobranza">
+              <div class="card-body py-5">
+                <i class="mdi mdi-cash-plus text-primary" style="font-size:52px"></i>
+                <h4 class="mt-3 mb-1">Ingresar cobranza</h4>
+                <p class="text-muted mb-0">Cargar el pago de un cliente con su comprobante, sin vincularlo a una venta.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="panel_exigibles" class="d-none">
+          <button type="button" id="btn_volver_landing_cobranza" class="btn btn-link ps-0 mb-2"><i class="mdi mdi-arrow-left me-1"></i>Volver</button>
+          <div class="card"><div class="card-body">
+            <h4 class="header-title mb-1">Importar exigible diario</h4><p class="text-muted">Seleccione el archivo CSV con fecha, número de cliente e importe exigible.</p>
+            <div id="ultimo_archivo_cobranza" class="alert alert-danger text-danger">Consultando el último archivo subido...</div>
+            <form id="form_cobranza" class="row g-2 align-items-end mb-3">
+              <div class="col-md-5"><label for="archivo_exigible" class="form-label">Archivo CSV</label><input id="archivo_exigible" name="archivo" type="file" class="form-control" accept=".csv,text/csv" required /></div>
+              <div class="col-md-4"><label for="fecha_limite_exigible" class="form-label">Fecha y hora límite para informar el pago</label><input id="fecha_limite_exigible" name="fecha_limite" type="datetime-local" class="form-control" /></div>
+              <div class="col-md-3"><button id="btn_procesar_exigible" type="submit" class="btn btn-success w-100"><i class="mdi mdi-file-table-outline me-1"></i>Procesar archivo</button></div>
+            </form>
+            <div id="resumen_cobranza" class="alert alert-info d-none"></div>
+            <table id="tabla_cobranza" class="table dt-responsive nowrap w-100"><thead><tr><th>Recorrido</th><th>N.º de cliente</th><th>Nombre del cliente</th><th class="text-end">Exigible</th><th>Teléfono</th><th>Enviado</th><th class="text-center">WhatsApp</th></tr></thead><tbody style="font-size:11px"></tbody></table>
+          </div></div>
+        </div>
       </div>
     </div><footer class="footer"><div class="container-fluid">© Dinter - Gestión de Cobranzas</div></footer></div>
   </div>
-  <script src="saas/assets/js/vendor.min.js"></script><script src="saas/assets/js/app.min.js"></script><script src="saas/assets/js/vendor/jquery.dataTables.min.js"></script><script src="saas/assets/js/vendor/dataTables.bootstrap5.js"></script><script src="saas/assets/js/vendor/dataTables.responsive.min.js"></script><script src="saas/assets/js/vendor/responsive.bootstrap5.min.js"></script><script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script><script src="control/procesos/js/cobranza.js?v=20260812-2"></script><script src="control/procesos/js/totales.js"></script><script src="control/procesos/js/conexion.js"></script>
+  <script src="saas/assets/js/vendor.min.js"></script><script src="saas/assets/js/app.min.js"></script><script src="saas/assets/js/vendor/jquery.dataTables.min.js"></script><script src="saas/assets/js/vendor/dataTables.bootstrap5.js"></script><script src="saas/assets/js/vendor/dataTables.responsive.min.js"></script><script src="saas/assets/js/vendor/responsive.bootstrap5.min.js"></script><script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script><script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script><script src="saas/assets/js/vendor/dropzone.min.js"></script><script src="control/procesos/js/cobranza.js?v=20260917-1"></script><script src="control/procesos/js/totales.js"></script><script src="control/procesos/js/conexion.js"></script>
 </body>
 </html>

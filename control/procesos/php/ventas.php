@@ -310,6 +310,7 @@ switch ($accion) {
             RazonSocial LIKE ?
             OR Cuit LIKE ?
             OR Celular LIKE ?
+            OR Ncliente LIKE ?
         ORDER BY RazonSocial ASC
         LIMIT 20
     ";
@@ -317,7 +318,7 @@ switch ($accion) {
         $buscar = "%{$term}%";
 
         $stmt = $mysqli->prepare($sql);
-        $stmt->bind_param("sss", $buscar, $buscar, $buscar);
+        $stmt->bind_param("ssss", $buscar, $buscar, $buscar, $buscar);
         $stmt->execute();
 
         $res = $stmt->get_result();

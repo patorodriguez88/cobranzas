@@ -2,6 +2,8 @@ let tablaCobranza = null;
 let importacionActualId = 0;
 let mensajesIniciados = 0;
 let fechaLimiteInformeActual = null;
+let dropzoneCobranzaDirecta = null;
+let idCobranzaDirectaPendienteComprobante = 0;
 
 function escaparCobranza(valor) {
   return String(valor ?? "").replace(/[&<>"']/g, (caracter) => ({
@@ -236,6 +238,86 @@ async function confirmarYAbrirWhatsAppCobranza(indice) {
   abrirWhatsAppCobranza(fila, indice);
 }
 
+function actualizarCamposBancoCobranzaDirecta() {
+  const esEfectivo = String($("#cobranza_directa_tipo_operacion").val() || "").toLowerCase() === "efectivo";
+  $("#grupo_banco_cobranza_directa, #grupo_operacion_cobranza_directa").toggleClass("d-none", esEfectivo);
+}
+
+function abrirModalCobranzaDirecta() {
+  $("#cobranza_directa_cliente").val(null).trigger("change");
+  $("#cobranza_directa_fecha").val(new Date().toISOString().slice(0, 10));
+  $("#cobranza_directa_tipo_operacion").val("");
+  $("#cobranza_directa_banco").val("");
+  $("#cobranza_directa_operacion").val("");
+  $("#cobranza_directa_importe").val("");
+  $("#cobranza_directa_observaciones").val("");
+  actualizarCamposBancoCobranzaDirecta();
+  if (dropzoneCobranzaDirecta) dropzoneCobranzaDirecta.removeAllFiles(true);
+  $("#modalCobranzaDirecta").modal("show");
+}
+
+function guardarCobranzaDirecta() {
+  const idCliente = $("#cobranza_directa_cliente").val();
+  const fecha = $("#cobranza_directa_fecha").val();
+  let tipoOperacion = $("#cobranza_directa_tipo_operacion").val();
+  let banco = $("#cobranza_directa_banco").val();
+  let operacion = $("#cobranza_directa_operacion").val().trim();
+  const importe = parseFloat($("#cobranza_directa_importe").val()) || 0;
+  const observaciones = $("#cobranza_directa_observaciones").val().trim();
+
+  if (String(tipoOperacion).toLowerCase() === "efectivo") {
+    banco = "CAJA";
+    operacion = "EFECTIVO";
+  }
+
+  if (!idCliente || !fecha || !tipoOperacion || importe <= 0 ||
+      (String(tipoOperacion).toLowerCase() !== "efectivo" && (!banco || !operacion))) {
+    Swal.fire("Atención", "Completá cliente, fecha, tipo, banco, operación e importe.", "warning");
+    return;
+  }
+
+  $.ajax({
+    url: "control/procesos/php/panel.php",
+    type: "POST",
+    dataType: "json",
+    data: {
+      IngresarCobranzaDirecta: 1,
+      idCliente, fecha, tipoOperacion, banco, operacion, importe, observaciones,
+    },
+    beforeSend: function () {
+      $("#btn_guardar_cobranza_directa").prop("disabled", true)
+        .html('<span class="spinner-border spinner-border-sm me-1"></span> Guardando...');
+    },
+    success: function (respuesta) {
+      if (!respuesta.success) {
+        Swal.fire("Error", respuesta.error || "No se pudo guardar el pago.", "error");
+        return;
+      }
+
+      idCobranzaDirectaPendienteComprobante = respuesta.idCobranza || 0;
+
+      if (dropzoneCobranzaDirecta && dropzoneCobranzaDirecta.getQueuedFiles().length > 0) {
+        dropzoneCobranzaDirecta.processQueue();
+      } else {
+        $("#modalCobranzaDirecta").modal("hide");
+        Swal.fire({
+          toast: true, position: "top-end", icon: "success",
+          title: "Pago cargado. Queda pendiente de conciliación.",
+          showConfirmButton: false, timer: 2500, timerProgressBar: true,
+        });
+      }
+    },
+    error: function (xhr) {
+      console.log(xhr.responseText);
+      Swal.fire("Error", "Error de conexión al guardar el pago.", "error");
+    },
+    complete: function () {
+      $("#btn_guardar_cobranza_directa").prop("disabled", false)
+        .html('<i class="mdi mdi-content-save mdi-18px"></i> Guardar pago');
+    },
+  });
+}
+
 function reconstruirTablaCobranza(filas) {
   tablaCobranza.clear();
   if (filas && filas.length) tablaCobranza.rows.add(filas);
@@ -334,6 +416,85 @@ $(document).ready(function () {
         $("#resumen_cobranza").removeClass("d-none").html(`<strong>${respuesta.filas.length}</strong> clientes · Exigible total: <strong>${importeArgentina(total)}</strong>`);
       }
     });
+
+  $("#card_enviar_exigibles").on("click", function () {
+    $("#panel_landing_cobranza").addClass("d-none");
+    $("#panel_exigibles").removeClass("d-none");
+  });
+
+  $("#btn_volver_landing_cobranza").on("click", function () {
+    $("#panel_exigibles").addClass("d-none");
+    $("#panel_landing_cobranza").removeClass("d-none");
+  });
+
+  $("#card_ingresar_cobranza").on("click", function () {
+    abrirModalCobranzaDirecta();
+  });
+
+  $("#cobranza_directa_cliente").select2({
+    placeholder: "Buscar cliente por número, nombre, CUIT o teléfono...",
+    width: "100%",
+    minimumInputLength: 2,
+    dropdownParent: $("#modalCobranzaDirecta"),
+    ajax: {
+      url: "control/procesos/php/ventas.php",
+      type: "POST",
+      dataType: "json",
+      delay: 300,
+      data: (params) => ({ accion: "buscar_clientes", term: params.term }),
+      processResults: (data) => ({ results: data }),
+    },
+  });
+
+  $("#cobranza_directa_tipo_operacion").on("change", actualizarCamposBancoCobranzaDirecta);
+
+  Dropzone.autoDiscover = false;
+
+  if ($("#dropzoneComprobanteCobranzaDirecta").length) {
+    dropzoneCobranzaDirecta = new Dropzone("#dropzoneComprobanteCobranzaDirecta", {
+      url: "procesos/php/upload.php",
+      autoProcessQueue: false,
+      maxFiles: 1,
+      acceptedFiles: ".jpeg,.jpg,.png,.gif",
+      dictDefaultMessage: "Arrastrá una imagen o hacé click",
+      previewTemplate: `
+      <div class="dz-preview dz-file-preview">
+        <div class="dz-image"><img data-dz-thumbnail /></div>
+        <div class="dz-details">
+          <div class="dz-filename"><span data-dz-name></span></div>
+          <div class="dz-size" data-dz-size></div>
+          <a class="dz-remove" href="javascript:undefined;" data-dz-remove>Quitar</a>
+        </div>
+      </div>
+      `,
+      init: function () {
+        this.on("maxfilesexceeded", function (file) {
+          this.removeAllFiles(true);
+          this.addFile(file);
+        });
+        this.on("sending", function (file, xhr, formData) {
+          formData.append("idCobranza", idCobranzaDirectaPendienteComprobante);
+        });
+        this.on("success", function () {
+          Swal.fire({
+            toast: true, position: "top-end", icon: "success",
+            title: "Pago y comprobante cargados. Queda pendiente de conciliación.",
+            showConfirmButton: false, timer: 2500, timerProgressBar: true,
+          });
+          idCobranzaDirectaPendienteComprobante = 0;
+        });
+        this.on("error", function (file, mensajeError) {
+          Swal.fire("Error", typeof mensajeError === "string" ? mensajeError : "No se pudo subir el comprobante.", "error");
+        });
+        this.on("queuecomplete", function () {
+          $("#modalCobranzaDirecta").modal("hide");
+          setTimeout(() => { if (dropzoneCobranzaDirecta) dropzoneCobranzaDirecta.removeAllFiles(false); }, 500);
+        });
+      },
+    });
+  }
+
+  $("#btn_guardar_cobranza_directa").on("click", guardarCobranzaDirecta);
 
   $("#form_cobranza").on("submit", function (evento) {
     evento.preventDefault();
