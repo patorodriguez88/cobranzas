@@ -980,7 +980,7 @@ function abrirEstadoVenta(idVenta) {
         $("#caddy_tarifa").text(formatoMoneda(v.caddy_tarifa || 0));
         $("#caddy_estado").text("Generado");
 
-        $("#btn_tracking_caddy").attr("href", "https://www.caddy.com.ar/seguimiento/" + v.caddy_codigo_seguimiento);
+        $("#btn_tracking_caddy").attr("href", "https://web.caddy.com.ar/seguimiento.html?codigo=" + encodeURIComponent(v.caddy_codigo_seguimiento));
       } else {
         $("#card_caddy").addClass("d-none");
         $("#card_turno").removeClass("d-none");
