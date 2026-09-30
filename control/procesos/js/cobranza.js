@@ -244,9 +244,19 @@ function actualizarCamposBancoCobranzaDirecta() {
   $("#grupo_banco_cobranza_directa, #grupo_operacion_cobranza_directa").toggleClass("d-none", esEfectivo);
 }
 
+// Fecha de pago: de hoy hasta 30 días atrás (en hora local, no UTC). El servidor valida lo mismo.
+function rangoFechaPago(selector) {
+  const fmt = (d) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const hoy = new Date();
+  const desde = new Date();
+  desde.setDate(hoy.getDate() - 30);
+  $(selector).attr({ min: fmt(desde), max: fmt(hoy) }).val(fmt(hoy));
+}
+
 function abrirModalCobranzaDirecta() {
   $("#cobranza_directa_cliente").val(null).trigger("change");
-  $("#cobranza_directa_fecha").val(new Date().toISOString().slice(0, 10));
+  rangoFechaPago("#cobranza_directa_fecha");
   $("#cobranza_directa_tipo_operacion").val("");
   $("#cobranza_directa_banco").val("");
   $("#cobranza_directa_operacion").val("");
@@ -450,6 +460,12 @@ function guardarCobranzaDirecta() {
   if (!idCliente || !fecha || !tipoOperacion || importe <= 0 ||
       (String(tipoOperacion).toLowerCase() !== "efectivo" && (!banco || !operacion))) {
     Swal.fire("Atención", "Completá cliente, fecha, tipo, banco, operación e importe.", "warning");
+    return;
+  }
+
+  const $fecha = $("#cobranza_directa_fecha");
+  if (fecha > $fecha.attr("max") || fecha < $fecha.attr("min")) {
+    Swal.fire("Atención", "La fecha del pago tiene que ser de hoy o de los últimos 30 días.", "warning");
     return;
   }
 

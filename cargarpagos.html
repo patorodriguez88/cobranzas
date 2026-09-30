@@ -12,45 +12,22 @@
     <link href="saas/assets/css/icons.min.css" rel="stylesheet" type="text/css" />
   <link href="saas/assets/css/app.min.css" rel="stylesheet" type="text/css" id="app-style" />
     <style>
-      #standard-modal .modal-dialog {
-        min-height: calc(100dvh - 1rem);
-        margin: .5rem auto;
-        display: flex;
-        align-items: center;
+      .comprobante-box {
+        display: block;
+        border: 2px dashed #b8c2cc;
+        border-radius: 10px;
+        padding: 1.25rem 1rem;
+        text-align: center;
+        cursor: pointer;
+        background: #f8fafc;
       }
-      #standard-modal .modal-content {
-        max-height: calc(100dvh - 1rem);
-        overflow: hidden;
-      }
-      #standard-modal .modal-body {
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-      }
-      #standard-modal .dropzone {
-        min-height: 240px;
-        padding: 1rem;
-      }
-      #standard-modal .dz-message {
-        margin: 2rem 0;
-      }
-      @media (max-width: 576px) {
-        #standard-modal .modal-dialog { width: calc(100% - 1rem); }
-        #standard-modal .modal-header { padding: 1rem; }
-        #standard-modal .modal-title { font-size: 1.25rem; }
-        #standard-modal .modal-body { padding: 1rem; }
-        #standard-modal .dropzone { min-height: 210px; }
-        #standard-modal .dz-message h3 { font-size: 1.15rem; }
-        #standard-modal .col-12 > .text-end {
-          display: flex;
-          gap: .5rem;
-          padding: 0 1rem 1rem;
-        }
-        #standard-modal .col-12 > .text-end .btn {
-          flex: 1 1 0;
-          margin: 0 !important;
-          white-space: nowrap;
-        }
-      }
+      .comprobante-box:hover { border-color: #727cf5; }
+      .was-validated .comprobante-box.sin-archivo { border-color: #fa5c7c; background: #fff5f7; }
+      .comprobante-box.con-archivo { border-style: solid; border-color: #0acf97; background: #f3fdf9; }
+      .comprobante-box img { max-width: 100%; max-height: 260px; border-radius: 6px; }
+      /* iPhone: el input date vacío se achica y queda más bajo que el select de al lado */
+      #fecha { min-height: calc(1.5em + .9rem + 2px); -webkit-appearance: none; appearance: none; }
+      .comprobante-box .comprobante-nombre { font-size: .8rem; color: #6c757d; word-break: break-all; }
     </style>
     <!-- pwa -->
     <meta name="theme-color" content="#273746" />
@@ -98,83 +75,6 @@
     </div>
     <!-- end modal-->
 
-    <!-- Standard modal -->
-
-    <div
-      id="standard-modal"
-      class="modal fade"
-      tabindex="-1"
-      role="dialog"
-      data-bs-backdrop="static"
-      data-bs-keyboard="false"
-      tabindex="-1"
-      aria-labelledby="standard-modalLabel"
-      aria-hidden="true"
-    >
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h4 class="modal-title" id="standard-modalLabel">Ingresar Foto del Comprobante</h4>
-            <!-- <button type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true"></button> -->
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-          </div>
-          <div class="modal-body">
-            <!-- File Upload -->
-            <form
-              action="procesos/php/upload.php"
-              method="post"
-              class="dropzone"
-              id="myAwesomeDropzone"
-            >
-              <input type="hidden" name="idCobranza" id="id_cobranza_comprobante" value="" />
-
-              <div class="dz-message needsclick">
-                <i class="h1 text-muted dripicons-cloud-upload"></i>
-                <h3>Presione aquí para subir una foto del comprobante del depósito.</h3>
-                <span class="text-muted font-13">(Intente que la <strong>imagen</strong> este nitida y visible.)</span>
-              </div>
-            </form>
-            <div id="estado_carga_comprobante" class="alert d-none mt-3 mb-0" role="alert"></div>
-            <!-- Preview -->
-            <div class="dropzone-previews mt-3" id="file-previews">
-              <!-- file preview template -->
-              <div class="d-none" id="uploadPreviewTemplate">
-                <div class="card mt-1 mb-0 shadow-none border">
-                  <div class="p-2">
-                    <div class="row align-items-center">
-                      <div class="col-auto">
-                        <img data-dz-thumbnail src="#" class="avatar-sm rounded bg-light" alt="" />
-                      </div>
-                      <div class="col ps-0">
-                        <a href="javascript:void(0);" class="text-muted fw-bold" data-dz-name></a>
-                        <p class="mb-0" data-dz-size></p>
-                      </div>
-                      <div class="col-auto">
-                        <!-- Button -->
-                        <a href="" class="btn btn-link btn-lg text-muted erase" data-dz-remove>
-                          <i class="dripicons-cross"></i>
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="col-12">
-            <div class="text-end mt-xl-0 mt-2">
-              <button type="button" id="btn_sin_comprobante" class="btn btn-light mb-2 me-2" data-bs-dismiss="modal">
-                No tengo comprobante
-              </button>
-              <button type="button" id="btn_aceptar_comprobante" class="btn btn-success mb-2 me-2" data-bs-dismiss="modal" disabled>Aceptar</button>
-            </div>
-          </div>
-        </div>
-        <!-- /.modal-content -->
-      </div>
-      <!-- /.modal-dialog -->
-    </div>
-    <!-- /.modal -->
 
     <div
       style="display: none"
@@ -262,25 +162,25 @@
               <form id="form_cobranza" class="needs-validation" novalidate>
                 <div class="tab-content">
                   <div class="row">
-                    <div class="col-sm-2">
+                    <div class="col-4 col-sm-2">
                       <div class="form-group mb-3 position-relative">
-                        <label for="validationCustom02">Numero de Cliente</label>
+                        <label for="ncliente">N° Cliente</label>
                         <input
                           id="ncliente"
                           type="text"
                           class="form-control"
                           max="4"
                           id="validationCustom02"
-                          placeholder="Número de Cliente Dinter"
+                          placeholder="N°"
                           value=""
                           required
                           readonly
                         />
                       </div>
                     </div>
-                    <div class="col-sm-10">
+                    <div class="col-8 col-sm-10">
                       <div class="form-group mb-3 position-relative">
-                        <label for="validationCustom01">Nombre Cliente</label>
+                        <label for="name">Nombre Cliente</label>
                         <input
                           id="name"
                           type="text"
@@ -295,24 +195,22 @@
                     </div>
                   </div>
                 </div>
-                <div class="form-group mb-3">
-                  <label for="validationDate">Fecha en la que se realizó el Depósito</label>
+                <div class="row">
+                <div class="col-6 form-group mb-3">
+                  <label for="fecha">Fecha del depósito</label>
                   <input
                     id="fecha"
                     name="fecha"
                     type="date"
                     class="form-control"
-                    max="4"
-                    id="validationDate"
                     placeholder="Fecha de Depósito"
                     value=""
                     required
                   />
                   <div class="invalid-feedback">Por favor ingrese una Fecha.</div>
-                  <div class="valid-feedback">Fecha seleccionada correctamente</div>
                 </div>
-                <div class="form-group mb-3">
-                  <label for="validationTypeOperation">Tipo de Operación</label>
+                <div class="col-6 form-group mb-3">
+                  <label for="tipo_operacion">Tipo de operación</label>
                   <select
                     id="tipo_operacion"
                     class="form-control"
@@ -321,15 +219,17 @@
                     required
                   >
                     <option></option>
-                    <option value="deposito">Deposito Bancario</option>
+                    <option value="deposito">Depósito bancario</option>
                     <option value="transferencia">Transferencia</option>
                   </select>
 
                   <div class="invalid-feedback">Por favor seleccione tipo de operación.</div>
                 </div>
+                </div>
 
-                <div class="form-group mb-3">
-                  <label for="validationCustomUsername">Banco Destino</label>
+                <div class="row">
+                <div class="col-6 form-group mb-3">
+                  <label for="banco">Banco destino</label>
                   <select
                     id="banco"
                     class="form-control"
@@ -344,17 +244,18 @@
 
                   <div class="invalid-feedback">Por favor seleccione un Banco.</div>
                 </div>
-                <div class="form-group mb-3">
-                  <label for="validationCustom03">Numero de Operacion</label>
+                <div class="col-6 form-group mb-3">
+                  <label for="noperacion">N° de operación</label>
                   <input
                     id="noperacion"
                     type="text"
                     class="form-control"
                     id="validationCustom03"
-                    placeholder="Número de Operación"
+                    placeholder="N° de operación"
                     required
                   />
                   <div class="invalid-feedback">Ingrese el Número de Operación.</div>
+                </div>
                 </div>
                 <div class="form-group mb-3">
                   <label for="validationCustom04">Importe</label>
@@ -373,6 +274,24 @@
                   <div class="invalid-feedback">Por favor ingrese un importe válido.</div>
                 </div>
 
+                <div class="form-group mb-3">
+                  <label for="comprobante">Foto del comprobante <span class="text-danger">*</span></label>
+                  <label for="comprobante" id="comprobante_box" class="comprobante-box sin-archivo">
+                    <span id="comprobante_vacio">
+                      <i class="h1 text-muted dripicons-camera"></i>
+                      <span class="d-block fw-bold">Tocá acá para sacar una foto o elegir la imagen del comprobante</span>
+                      <span class="text-muted font-13">Que se vea nítido el número de operación y el importe.</span>
+                    </span>
+                    <span id="comprobante_preview" class="d-none">
+                      <img id="comprobante_img" src="" alt="Comprobante" />
+                      <span class="d-block comprobante-nombre mt-1" id="comprobante_nombre"></span>
+                      <span class="d-block text-primary font-13 mt-1">Tocá para cambiarla</span>
+                    </span>
+                  </label>
+                  <input id="comprobante" name="comprobante" type="file" class="d-none"
+                    accept="image/*" required />
+                  <div class="invalid-feedback" id="comprobante_error">Tenés que adjuntar la foto del comprobante.</div>
+                </div>
                 <div class="col-12">
                   <div class="text-end mt-xl-0 mt-2">
                     <button id="cnl" type="button" class="btn btn-block btn-danger mb-2">Cancelar</button>
@@ -406,12 +325,8 @@
 
     <script src="saas/assets/js/vendor.min.js"></script>
     <script src="saas/assets/js/app.min.js"></script>
-    <script src="procesos/js/function.js?v=20260812-4"></script>
+    <script src="procesos/js/function.js?v=20260930-1"></script>
     <script src="procesos/js/conexion.js"></script>
-    <!-- plugin js -->
-    <script src="saas/assets/js/vendor/dropzone.min.js"></script>
-    <!-- init js -->
-    <script src="saas/assets/js/ui/component.fileupload.js"></script>
     <script src="./script.js"></script>
   </body>
 </html>

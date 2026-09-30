@@ -139,6 +139,13 @@ if (!move_uploaded_file($_FILES["file"]["tmp_name"], $destino)) {
     exit;
 }
 
+// Deja registrado en la cobranza qué archivo es su comprobante
+include_once __DIR__ . "/../../conexion/conexioni.php";
+$archivoComprobante = $idCobranza . "." . $extension;
+$st = $mysqli->prepare("UPDATE Cobranza SET Comprobante = ? WHERE id = ?");
+$st->bind_param('si', $archivoComprobante, $idCobranza);
+$st->execute();
+
 echo json_encode([
     "success" => 1,
     "archivo" => $idCobranza . "." . $extension,

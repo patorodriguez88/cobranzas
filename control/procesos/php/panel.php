@@ -1,6 +1,7 @@
 <?php
 session_start();
 include_once "../../../conexion/conexioni.php";
+include_once __DIR__ . "/../../../procesos/php/fecha_pago.php";
 
 function normalizarFecha($valor) {
     if (empty($valor)) return null;
@@ -14,9 +15,53 @@ function normalizarFecha($valor) {
     return null;
 }
 
+// Archivo del comprobante de una cobranza ('' si no tiene). Es el registrado en
+// Cobranza.Comprobante; los pagos anteriores a esa columna solo tienen el archivo
+// images/depositos/<id>.<ext>: si aparece en disco se registra en la columna.
+function comprobanteCobranza(mysqli $mysqli, int $idCobranza, ?string $registrado): string
+{
+    $carpeta = __DIR__ . '/../../../images/depositos/';
+    if ($registrado !== null && $registrado !== '' && is_file($carpeta . $registrado)) {
+        return $registrado;
+    }
+    foreach (['jpg', 'jpeg', 'png', 'gif', 'webp', 'JPG', 'JPEG', 'PNG', 'GIF', 'WEBP'] as $ext) {
+        $archivo = $idCobranza . '.' . $ext;
+        if (is_file($carpeta . $archivo)) {
+            $st = $mysqli->prepare("UPDATE Cobranza SET Comprobante = ? WHERE id = ?");
+            $st->bind_param('si', $archivo, $idCobranza);
+            $st->execute();
+            return $archivo;
+        }
+    }
+    return '';
+}
+
+// Los pagos en efectivo no tienen comprobante bancario; el resto sí lo necesita.
+function requiereComprobante(?string $tipoOperacion): bool
+{
+    return strtolower(trim((string)$tipoOperacion)) !== 'efectivo';
+}
+
+// Un pago sin comprobante no se puede tomar como válido (conciliar).
+function exigirComprobante(mysqli $mysqli, int $idCobranza): void
+{
+    $st = $mysqli->prepare("SELECT TipoOperacion, Comprobante FROM Cobranza WHERE id = ?");
+    $st->bind_param('i', $idCobranza);
+    $st->execute();
+    $row = $st->get_result()->fetch_assoc();
+    if (!$row) {
+        echo json_encode(['success' => 0, 'error' => 'Cobranza inexistente.']);
+        exit;
+    }
+    if (requiereComprobante($row['TipoOperacion']) && comprobanteCobranza($mysqli, $idCobranza, $row['Comprobante']) === '') {
+        echo json_encode(['success' => 0, 'error' => 'Este pago no tiene el comprobante cargado. Subí la foto del comprobante antes de conciliarlo.']);
+        exit;
+    }
+}
+
 $accionesQueRequierenSesion = [
     'Conciliar', 'Rechazar', 'Conciliar_quik', 'Conciliar_quik_cancel',
-    'Vuelve', 'Eliminar', 'AsignarPagoVenta', 'Observaciones_Usuario', 'MarcarSinVenta',
+    'Vuelve', 'Eliminar', 'AsignarPagoVenta', 'Observaciones_Usuario', 'MarcarSinVenta', 'MarcarSinVentaLote',
     'IngresarCobranzaDirecta'
 ];
 
@@ -83,6 +128,38 @@ if (isset($_POST['MarcarSinVenta'])) {
     exit;
 }
 
+//MARCAR VARIOS PAGOS COMO COBRANZA DIRECTA DE UNA VEZ (los ya vinculados a una venta se saltean)
+if (isset($_POST['MarcarSinVentaLote'])) {
+
+    $ids = array_values(array_unique(array_filter(array_map('intval', (array)($_POST['ids'] ?? [])), fn($id) => $id > 0)));
+    if (!$ids) {
+        echo json_encode(['success' => 0, 'error' => 'No se seleccionó ningún pago.']);
+        exit;
+    }
+
+    $aplicado = $mysqli->prepare("SELECT IFNULL(SUM(ImporteAplicado), 0) FROM CobranzasVentas WHERE idCobranza = ? AND IFNULL(Eliminado, 0) = 0");
+    $marcar = $mysqli->prepare("UPDATE Cobranza SET SinVenta = 1 WHERE id = ? AND Conciliado = 1 LIMIT 1");
+    $marcados = 0;
+    $omitidos = [];
+
+    $mysqli->begin_transaction();
+    foreach ($ids as $id) {
+        $aplicado->bind_param('i', $id);
+        $aplicado->execute();
+        if ((float)$aplicado->get_result()->fetch_row()[0] > 0) {
+            $omitidos[] = $id;
+            continue;
+        }
+        $marcar->bind_param('i', $id);
+        $marcar->execute();
+        $marcados += $marcar->affected_rows;
+    }
+    $mysqli->commit();
+
+    echo json_encode(['success' => 1, 'marcados' => $marcados, 'omitidos' => $omitidos]);
+    exit;
+}
+
 //BUSCAR CLIENTES HABILITADOS PARA INGRESAR COBRANZA DIRECTA (todos los clientes activos)
 if (isset($_POST['BuscarClientesCobranzaDirecta'])) {
 
@@ -144,6 +221,11 @@ if (isset($_POST['IngresarCobranzaDirecta'])) {
         exit;
     }
 
+    if ($errorFecha = errorFechaPago($fecha)) {
+        echo json_encode(array('success' => 0, 'error' => $errorFecha));
+        exit;
+    }
+
     $banco = $mysqli->real_escape_string($banco);
     $operacion = $mysqli->real_escape_string($operacion);
     $tipoOperacion = $mysqli->real_escape_string($tipoOperacion);
@@ -172,7 +254,6 @@ if (isset($_POST['IngresarCobranzaDirecta'])) {
         $resDuplicado = $mysqli->query("
             SELECT id FROM Cobranza
             WHERE Banco = '$banco' AND Operacion = '$operacion' AND Importe = '$importe'
-              AND IFNULL(Eliminado,0) = 0
             LIMIT 1
         ");
         if ($resDuplicado && $resDuplicado->num_rows > 0) {
@@ -257,6 +338,8 @@ if (isset($_POST['Tabla_no_conciliados'])) {
 
     while ($row = $sql->fetch_array(MYSQLI_ASSOC)) {
 
+        $row['Comprobante'] = comprobanteCobranza($mysqli, (int)$row['id'], $row['Comprobante']);
+        $row['SinComprobante'] = requiereComprobante($row['TipoOperacion']) && $row['Comprobante'] === '' ? 1 : 0;
         $rows[] = $row;
     }
 
@@ -271,6 +354,7 @@ if (isset($_POST['Conciliar'])) {
         echo json_encode(['success' => 0, 'error' => 'Este pago ya fue conciliado.']);
         exit;
     }
+    exigirComprobante($mysqli, $idCobConciliar);
 
     $fechaConciliar = normalizarFecha($_POST['Fecha'] ?? '');
     if (!$fechaConciliar) {
@@ -491,6 +575,7 @@ if (isset($_POST['Conciliar_quik'])) {
         echo json_encode(['success' => 0, 'error' => 'Este pago ya fue conciliado.']);
         exit;
     }
+    exigirComprobante($mysqli, $idCobQuik);
 
     $sql = $mysqli->query("SELECT * FROM Cobranza WHERE id='$idCobQuik'");
     $row = $sql->fetch_array(MYSQLI_ASSOC);
@@ -559,6 +644,8 @@ if (isset($_POST['Datos'])) {
     $rows = array();
 
     while ($row = $sql->fetch_array(MYSQLI_ASSOC)) {
+        $row['Comprobante'] = comprobanteCobranza($mysqli, (int)$row['id'], $row['Comprobante']);
+        $row['SinComprobante'] = requiereComprobante($row['TipoOperacion']) && $row['Comprobante'] === '' ? 1 : 0;
         $rows[] = $row;
     }
 

@@ -2,7 +2,7 @@
 // Navegación
 // ==============================
 $("#cnl").on("click", function () {
-  window.location.href = "https://www.dintersa.com.ar/cobranza/inicio.html";
+  window.location.href = "inicio.html";
 });
 
 // ==============================
@@ -49,82 +49,85 @@ function mostrarError(mensaje) {
   $("#error_alert").fadeIn();
 }
 
-function estadoCargaComprobante(tipo, mensaje) {
-  const estado = $("#estado_carga_comprobante");
-  estado.removeClass("d-none alert-info alert-success alert-danger")
-    .addClass(`alert-${tipo}`)
-    .text(mensaje);
+// ==============================
+// Comprobante (obligatorio, viaja con el pago)
+// ==============================
+const COMPROBANTE_MAX_MB = 10;
+let comprobanteArchivo = null;
+
+function limpiarComprobante() {
+  comprobanteArchivo = null;
+  $("#comprobante").val("");
+  $("#comprobante_img").attr("src", "");
+  $("#comprobante_nombre").text("");
+  $("#comprobante_preview").addClass("d-none");
+  $("#comprobante_vacio").removeClass("d-none");
+  $("#comprobante_box").removeClass("con-archivo").addClass("sin-archivo");
+  $("#comprobante_error").text("Tenés que adjuntar la foto del comprobante.");
 }
 
-function prepararCargaComprobante() {
-  const formulario = document.getElementById("myAwesomeDropzone");
-  if (!formulario || typeof Dropzone === "undefined" || formulario.dropzone) return;
-
-  Dropzone.autoDiscover = false;
-  const zona = new Dropzone(formulario, {
-    url: formulario.getAttribute("action"),
-    paramName: "file",
-    maxFiles: 1,
-    maxFilesize: 10,
-    acceptedFiles: "image/jpeg,image/png,image/gif,image/webp,.jpg,.jpeg,.png,.gif,.webp",
-    resizeWidth: 1600,
-    resizeHeight: 1600,
-    resizeQuality: 0.78,
-    resizeMethod: "contain",
-    resizeMimeType: "image/jpeg",
-    previewsContainer: "#file-previews",
-    previewTemplate: $("#uploadPreviewTemplate").html(),
-    addRemoveLinks: false,
-    dictInvalidFileType: "El formato de la imagen no es compatible. Use JPG, PNG o WebP.",
-    dictFileTooBig: "La imagen supera el máximo permitido de 10 MB.",
-    init: function () {
-      this.on("sending", function (archivo, xhr, formData) {
-        // Se agrega explícitamente; evita diferencias de serialización entre
-        // Safari/iOS, Chrome/Android y los campos internos de Dropzone.
-        formData.set("idCobranza", $("#id_cobranza_comprobante").val());
-      });
-      this.on("processing", function () {
-        estadoCargaComprobante("info", "Optimizando y subiendo el comprobante, espere...");
-      });
-      this.on("addedfile", function () {
-        if (this.files.length > 1) this.removeFile(this.files[0]);
-        $("#btn_aceptar_comprobante").prop("disabled", true);
-        estadoCargaComprobante("info", "Subiendo comprobante, espere...");
-      });
-      this.on("success", function (archivo, respuesta) {
-        let datos = respuesta;
-        try {
-          datos = typeof respuesta === "string" ? JSON.parse(respuesta) : respuesta;
-        } catch (error) {
-          this.emit("error", archivo, "El servidor devolvió una respuesta inválida.");
-          return;
-        }
-        if (!datos || datos.success != 1) {
-          this.emit("error", archivo, datos?.error || "El servidor no pudo guardar la imagen.");
-          return;
-        }
-        $("#btn_aceptar_comprobante").prop("disabled", false);
-        estadoCargaComprobante("success", `Comprobante guardado correctamente: ${datos.archivo}`);
-      });
-      this.on("error", function (archivo, error) {
-        const mensaje = typeof error === "string" ? error : (error?.error || "No se pudo subir el comprobante.");
-        $("#btn_aceptar_comprobante").prop("disabled", true);
-        estadoCargaComprobante("danger", mensaje);
-      });
-      this.on("removedfile", function () {
-        $("#btn_aceptar_comprobante").prop("disabled", true);
-      });
-    },
-  });
-
-  $("#standard-modal").on("show.bs.modal", function () {
-    zona.removeAllFiles(true);
-    $("#btn_aceptar_comprobante").prop("disabled", true);
-    $("#estado_carga_comprobante").addClass("d-none").text("");
-  });
+function comprobanteInvalido(mensaje) {
+  limpiarComprobante();
+  $("#comprobante_error").text(mensaje).show();
 }
 
-$(document).ready(prepararCargaComprobante);
+$("#comprobante").on("change", function () {
+  const archivo = this.files && this.files[0];
+  $("#comprobante_error").removeAttr("style");
+  if (!archivo) {
+    limpiarComprobante();
+    return;
+  }
+  const esImagen = /^image\//.test(archivo.type) || /\.(jpe?g|png|gif|webp|heic|heif)$/i.test(archivo.name);
+  if (!esImagen) {
+    comprobanteInvalido("El archivo tiene que ser una foto o imagen (JPG, PNG o WebP).");
+    return;
+  }
+  if (archivo.size > COMPROBANTE_MAX_MB * 1024 * 1024) {
+    comprobanteInvalido(`La imagen supera los ${COMPROBANTE_MAX_MB} MB.`);
+    return;
+  }
+  comprobanteArchivo = archivo;
+  $("#comprobante_nombre").text(archivo.name);
+  $("#comprobante_img").attr("src", URL.createObjectURL(archivo));
+  $("#comprobante_vacio").addClass("d-none");
+  $("#comprobante_preview").removeClass("d-none");
+  $("#comprobante_box").removeClass("sin-archivo").addClass("con-archivo");
+});
+
+// Achica la foto a 1600 px en JPEG (como hacía el Dropzone) para que suba rápido
+// desde el celular. Si el navegador no la puede leer, se manda la original.
+function optimizarComprobante(archivo) {
+  return new Promise((resolve) => {
+    if (!/^image\/(jpeg|png|webp|gif)$/i.test(archivo.type)) {
+      resolve({ blob: archivo, nombre: archivo.name });
+      return;
+    }
+    const url = URL.createObjectURL(archivo);
+    const img = new Image();
+    img.onload = () => {
+      const escala = Math.min(1, 1600 / Math.max(img.naturalWidth, img.naturalHeight));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(img.naturalWidth * escala);
+      canvas.height = Math.round(img.naturalHeight * escala);
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(url);
+      canvas.toBlob(
+        (blob) => resolve(blob ? { blob, nombre: "comprobante.jpg" } : { blob: archivo, nombre: archivo.name }),
+        "image/jpeg",
+        0.78,
+      );
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve({ blob: archivo, nombre: archivo.name });
+    };
+    img.src = url;
+  });
+}
 
 // ==============================
 // Seguridad / sesión
@@ -139,18 +142,18 @@ function CompruebaConexion() {
       try {
         jsonData = typeof response === "string" ? JSON.parse(response) : response;
       } catch (e) {
-        window.location.href = "https://www.dintersa.com.ar/cobranza/inicio.html";
+        window.location.href = "inicio.html";
         return;
       }
 
       if (jsonData.success == 1) {
         $("#name").val(jsonData?.data?.[0]?.RazonSocial || "");
       } else {
-        window.location.href = "https://www.dintersa.com.ar/cobranza/inicio.html";
+        window.location.href = "inicio.html";
       }
     },
     error: function () {
-      window.location.href = "https://www.dintersa.com.ar/cobranza/inicio.html";
+      window.location.href = "inicio.html";
     },
   });
 }
@@ -175,7 +178,7 @@ $("#ingreso_btn")
       dataType: "json",
       success: function (jsonData) {
         if (jsonData.success == 1) {
-          window.location.href = "https://www.dintersa.com.ar/cobranza/cargarpagos.html";
+          window.location.href = "cargarpagos.html";
           return;
         }
 
@@ -207,8 +210,9 @@ $("#form_cobranza")
   .on("submit", function (e) {
     e.preventDefault();
 
-    // validación HTML5
-    if (!this.checkValidity()) {
+    // validación HTML5 (incluye el comprobante obligatorio)
+    if (!comprobanteArchivo) $("#comprobante").val("");
+    if (!this.checkValidity() || !comprobanteArchivo) {
       this.classList.add("was-validated");
       return;
     }
@@ -240,7 +244,7 @@ function enviarFormulario() {
       const importe = ($("#importe").val() || "").replace(/,/g, "");
       const tipooperacion = $("#tipo_operacion").val();
 
-      if (!name || !ncliente || !fecha || !banco || !noperacion || !importe || !tipooperacion) {
+      if (!name || !ncliente || !fecha || !banco || !noperacion || !importe || !tipooperacion || !comprobanteArchivo) {
         return;
       }
 
@@ -248,81 +252,72 @@ function enviarFormulario() {
       document.activeElement?.blur();
       hideStaticBackdrop();
       resetValidationUI();
+      $("#send").prop("disabled", true);
+      bootstrap.Modal.getOrCreateInstance(document.getElementById("loading")).show();
 
-      $.ajax({
-        type: "POST",
-        url: "procesos/php/function.php",
-        data: {
-          IngresarPago: 1,
-          name,
-          ncliente,
-          fecha,
-          banco,
-          noperacion,
-          importe,
-          tipooperacion,
-        },
-        success: function (response) {
-          let jsonData;
-          try {
-            jsonData = typeof response === "string" ? JSON.parse(response) : response;
-          } catch (e) {
-            console.log("Respuesta inválida:", response);
-            $("#loading").modal("hide");
-            bootstrap.Modal.getOrCreateInstance(document.getElementById("danger-alert-modal")).show();
-            return;
-          }
+      optimizarComprobante(comprobanteArchivo).then(({ blob, nombre }) => {
+        const datos = new FormData();
+        datos.append("IngresarPago", 1);
+        datos.append("name", name);
+        datos.append("ncliente", ncliente);
+        datos.append("fecha", fecha);
+        datos.append("banco", banco);
+        datos.append("noperacion", noperacion);
+        datos.append("importe", importe);
+        datos.append("tipooperacion", tipooperacion);
+        datos.append("comprobante", blob, nombre);
 
-          $("#loading").modal("hide");
-
-          if (jsonData.success != 1) {
-            bootstrap.Modal.getOrCreateInstance(document.getElementById("danger-alert-modal")).show();
-            return;
-          }
-
-          // Dropzone envía este valor junto con la imagen.
-          $("#id_cobranza_comprobante").val(jsonData.idIngreso);
-
-          // Pedir NComprobante
-          $.ajax({
-            type: "POST",
-            url: "procesos/php/function.php",
-            dataType: "json",
-            data: { NComprobante: 1, n: jsonData.idIngreso },
-            success: function () {
-              // Mostrar modal standard
-              bootstrap.Modal.getOrCreateInstance(document.getElementById("standard-modal"), {
-                backdrop: "static",
-                keyboard: false,
-              }).show();
-
-              // Al cerrar standard -> mostrar éxito
-              $("#standard-modal")
-                .off("hidden.bs.modal")
-                .one("hidden.bs.modal", function () {
-                  $("#texto_exito").html(
-                    "Cargamos tu Pago en nuestro sistema, el número de registro es: <b>" + jsonData.idIngreso + "</b>",
-                  );
-
-                  bootstrap.Modal.getOrCreateInstance(document.getElementById("success-alert-modal")).show();
-                  $("#form_cobranza")[0].reset();
-                  resetValidationUI();
-                });
-            },
-            error: function () {
-              $("#loading").modal("hide");
-              bootstrap.Modal.getOrCreateInstance(document.getElementById("danger-alert-modal")).show();
-            },
-          });
-        },
-        error: function (xhr) {
-          console.log("Error IngresarPago:", xhr.responseText);
-          $("#loading").modal("hide");
-          bootstrap.Modal.getOrCreateInstance(document.getElementById("danger-alert-modal")).show();
-        },
+        $.ajax({
+          type: "POST",
+          url: "procesos/php/function.php",
+          data: datos,
+          processData: false,
+          contentType: false,
+          dataType: "json",
+          success: function (jsonData) {
+            ocultarLoading();
+            if (!jsonData || jsonData.success != 1) {
+              mostrarErrorPago(jsonData?.error);
+              return;
+            }
+            $("#texto_exito").html(
+              "Cargamos tu Pago en nuestro sistema, el número de registro es: <b>" + jsonData.idIngreso + "</b>",
+            );
+            bootstrap.Modal.getOrCreateInstance(document.getElementById("success-alert-modal")).show();
+            $("#form_cobranza")[0].reset();
+            limpiarComprobante();
+            resetValidationUI();
+          },
+          error: function (xhr) {
+            console.log("Error IngresarPago:", xhr.responseText);
+            ocultarLoading();
+            mostrarErrorPago(xhr.responseJSON?.error);
+          },
+        });
       });
     });
 }
+
+function ocultarLoading() {
+  $("#send").prop("disabled", false);
+  const el = document.getElementById("loading");
+  // si el modal todavía se está abriendo, Bootstrap ignora el hide(): se cierra al terminar de mostrarse
+  if (loadingVisible) bootstrap.Modal.getOrCreateInstance(el).hide();
+  else $(el).one("shown.bs.modal", () => bootstrap.Modal.getOrCreateInstance(el).hide());
+}
+
+let loadingVisible = false;
+$("#loading")
+  .on("shown.bs.modal", () => (loadingVisible = true))
+  .on("hidden.bs.modal", () => (loadingVisible = false));
+
+function mostrarErrorPago(mensaje) {
+  $("#danger-alert-modal p").text(
+    mensaje || "Ocurrió algún error al intentar cargar tu pago, por favor volvé a intentarlo.",
+  );
+  bootstrap.Modal.getOrCreateInstance(document.getElementById("danger-alert-modal")).show();
+}
+
 function limitarFechaUltimos30Dias() {
   const el = document.getElementById("fecha");
   if (!el) return;
@@ -357,19 +352,3 @@ $("#fecha").on("change blur", function () {
   if (v > max) this.value = max;
 });
 document.addEventListener("DOMContentLoaded", limitarFechaUltimos30Dias);
-// ==============================
-// Eventos del modal standard (si existe)
-// ==============================
-const standardEl = document.getElementById("standard-modal");
-if (standardEl) {
-  standardEl.addEventListener("show.bs.modal", () => {
-    hideFormScreen();
-    resetValidationUI();
-  });
-
-  standardEl.addEventListener("hidden.bs.modal", () => {
-    showFormScreen();
-    $("#form_cobranza")[0].reset();
-    resetValidationUI();
-  });
-}

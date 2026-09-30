@@ -79,7 +79,7 @@ function calcular_total(a) {
   var oTable = $("#cobranzas_tabla").dataTable();
   var allPages = oTable.fnGetNodes();
   var checked = [];
-  $("input.form-check-input:checked", allPages).each(function () {
+  $("input.dt-checkboxes:checked", allPages).each(function () {
     if ($(this).attr("value") != null) {
       checked.push($(this).attr("value"));
     }
@@ -109,7 +109,7 @@ function calcular_total_exportaciones(a) {
   var oTable = $("#cobranzas_tabla").dataTable();
   var allPages = oTable.fnGetNodes();
   var checked = [];
-  $("input.form-check-input:checked", allPages).each(function () {
+  $("input.dt-checkboxes:checked", allPages).each(function () {
     if ($(this).attr("value") != null) {
       checked.push($(this).attr("value"));
     }
@@ -172,7 +172,7 @@ $("#btn_exportar").click(function (e) {
   var allPages = oTable.fnGetNodes();
 
   var checked = [];
-  $("input.form-check-input:checked", allPages).each(function () {
+  $("input.dt-checkboxes:checked", allPages).each(function () {
     var v = $(this).attr("value");
     if (v != null) checked.push(v);
   });
@@ -507,6 +507,10 @@ function ver_tabla_conciliados(a) {
 
           if (totalAplicado <= 0) {
             return `
+                <div class="form-check form-check-inline me-1" title="Seleccionar para marcar como cobranza directa">
+                    <input value="${row.id_cobranza}" type="checkbox" class="form-check-input chk-directa">
+                </div>
+
                 <i class="mdi mdi-link-variant mdi-18px text-success ms-2"
                    title="Asignar pago a ventas"
                    style="cursor:pointer"
@@ -537,6 +541,78 @@ function ver_tabla_conciliados(a) {
   });
 
 }
+
+// ==============================
+// Marcar varios pagos "Sin vincular" como cobranza directa de una vez
+// ==============================
+function idsCobranzaDirectaSeleccionados() {
+  let nodos = $("#cobranzas_tabla").DataTable().rows().nodes();
+  return $("input.chk-directa:checked", nodos)
+    .map(function () {
+      return this.value;
+    })
+    .get();
+}
+
+function actualizarBotonCobranzaDirecta() {
+  let cantidad = idsCobranzaDirectaSeleccionados().length;
+  $("#cant_directa").text(cantidad);
+  $("#btn_marcar_directa").prop("disabled", cantidad === 0);
+}
+
+$(document).on("change", "input.chk-directa", actualizarBotonCobranzaDirecta);
+$("#cobranzas_tabla").on("draw.dt", actualizarBotonCobranzaDirecta);
+
+$("#btn_sel_sin_vincular").on("click", function () {
+  let nodos = $("#cobranzas_tabla").DataTable().rows({ search: "applied" }).nodes();
+  let $chk = $("input.chk-directa", nodos);
+  let marcar = $chk.filter(":not(:checked)").length > 0;
+  $chk.prop("checked", marcar);
+  actualizarBotonCobranzaDirecta();
+});
+
+$("#btn_marcar_directa").on("click", function () {
+  let ids = idsCobranzaDirectaSeleccionados();
+  if (!ids.length) return;
+  let $btn = $(this);
+
+  Swal.fire({
+    title: "¿Marcar como cobranza directa?",
+    text: `Se van a marcar ${ids.length} pago(s) como cobranza directa (sin venta vinculada).`,
+    icon: "question",
+    showCancelButton: true,
+    confirmButtonText: "Sí, marcar",
+    cancelButtonText: "Cancelar",
+  }).then((result) => {
+    if (!result.isConfirmed) return;
+    $btn.prop("disabled", true);
+
+    $.ajax({
+      type: "POST",
+      url: "control/procesos/php/panel.php",
+      dataType: "json",
+      data: { MarcarSinVentaLote: 1, ids: ids },
+      success: function (r) {
+        if (!r.success) {
+          Swal.fire("Atención", r.error || "No se pudo actualizar.", "warning");
+          actualizarBotonCobranzaDirecta();
+          return;
+        }
+        let texto = `Se marcaron ${r.marcados} pago(s) como cobranza directa.`;
+        if (r.omitidos && r.omitidos.length) {
+          texto += ` ${r.omitidos.length} no se marcaron porque ya están vinculados a una venta: ${r.omitidos.join(", ")}.`;
+        }
+        Swal.fire({ icon: r.omitidos && r.omitidos.length ? "warning" : "success", title: "Listo", text: texto });
+        $("#cobranzas_tabla").DataTable().ajax.reload(null, false);
+      },
+      error: function (xhr) {
+        console.log(xhr.responseText);
+        Swal.fire("Error", "No se pudo actualizar el estado de los pagos.", "error");
+        actualizarBotonCobranzaDirecta();
+      },
+    });
+  });
+});
 
 function abrirAsignarPago(idCobranza) {
   $.ajax({

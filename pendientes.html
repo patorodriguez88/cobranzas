@@ -87,7 +87,7 @@
                               type="file"
                               id="archivo_comprobante_conciliacion"
                               class="d-none"
-                              accept=".jpg,.jpeg,.png,.gif"
+                              accept=".jpg,.jpeg,.png,.gif,.webp"
                             />
 
                             <button
@@ -106,6 +106,7 @@
                       </div>
 
                       <div class="col-lg-7">
+                        <div id="alerta_comprobante"></div>
                         <div id="alerta"></div>
 
                         <div class="row">
@@ -296,28 +297,28 @@
             <li class="side-nav-title side-nav-item">Datos</li>
 
             <li class="side-nav-item">
-              <a href="https://www.dintersa.com.ar/cobranza/cobranza.html" class="side-nav-link">
+              <a href="cobranza.html" class="side-nav-link">
                 <i class="mdi mdi-cash-multiple"></i>
                 <span> Cobranza </span>
               </a>
             </li>
 
             <li class="side-nav-item">
-              <a href="https://www.dintersa.com.ar/cobranza/Clientes.html" class="side-nav-link">
+              <a href="Clientes.html" class="side-nav-link">
                 <i class="mdi mdi-account"></i>
                 <span> Clientes </span>
               </a>
             </li>
 
             <li class="side-nav-item">
-              <a href="https://www.dintersa.com.ar/cobranza/productos_ventas.html#productos" class="side-nav-link">
+              <a href="productos_ventas.html#productos" class="side-nav-link">
                 <i class="mdi mdi-package-variant"></i>
                 <span> Productos </span>
               </a>
             </li>
             <li class="side-nav-title side-nav-item">Compras</li>
             <li class="side-nav-item">
-              <a href="https://www.dintersa.com.ar/cobranza/compras.html" class="side-nav-link">
+              <a href="compras.html" class="side-nav-link">
                 <i class="mdi mdi-view-dashboard-outline"></i>
                 <span> Orden de Ingreso</span>
               </a>
@@ -326,21 +327,21 @@
             <li class="side-nav-title side-nav-item">Ventas</li>
 
             <li class="side-nav-item">
-              <a href="https://www.dintersa.com.ar/cobranza/productos_ventas.html#dashboard" class="side-nav-link">
+              <a href="productos_ventas.html#dashboard" class="side-nav-link">
                 <i class="mdi mdi-view-dashboard-outline"></i>
                 <span> Dashboard </span>
               </a>
             </li>
 
             <li class="side-nav-item">
-              <a href="https://www.dintersa.com.ar/cobranza/ventas.html#ventas" class="side-nav-link">
+              <a href="ventas.html#ventas" class="side-nav-link">
                 <i class="mdi mdi-cart-plus"></i>
                 <span> Nueva Venta </span>
               </a>
             </li>
 
             <li class="side-nav-item">
-              <a href="https://www.dintersa.com.ar/cobranza/ventas.html#listado_ventas" class="side-nav-link">
+              <a href="ventas.html#listado_ventas" class="side-nav-link">
                 <i class="mdi mdi-format-list-bulleted"></i>
                 <span> Ventas Cargadas </span>
               </a>
@@ -349,7 +350,7 @@
             <li class="side-nav-title side-nav-item">Admin</li>
 
             <li class="side-nav-item">
-              <a href="https://www.dintersa.com.ar/cobranza/pendientes.html" class="side-nav-link active">
+              <a href="pendientes.html" class="side-nav-link active">
                 <i class="mdi mdi-archive-cancel-outline text-dark"></i>
                 <span id="total_no_conciliados" class="badge bg-danger float-end"></span>
                 <span class="text-dark"> Pendientes </span>
@@ -357,7 +358,7 @@
             </li>
 
             <li class="side-nav-item">
-              <a href="https://www.dintersa.com.ar/cobranza/conciliados.html" class="side-nav-link">
+              <a href="conciliados.html" class="side-nav-link">
                 <i class="mdi mdi-archive-check-outline"></i>
                 <span id="total_conciliados" class="badge bg-success float-end"></span>
                 <span> Conciliados </span>
@@ -365,7 +366,7 @@
             </li>
 
             <li class="side-nav-item">
-              <a href="https://www.dintersa.com.ar/cobranza/exportados.html" class="side-nav-link">
+              <a href="exportados.html" class="side-nav-link">
                 <i class="mdi mdi-cloud-download-outline"></i>
                 <span id="total_exportados" class="badge bg-warning float-end"></span>
                 <span> Exportados </span>
@@ -413,7 +414,7 @@
                 <div
                   class="dropdown-menu dropdown-menu-end dropdown-menu-animated topbar-dropdown-menu profile-dropdown"
                 >
-                  <a href="https://www.dintersa.com.ar/cobranza/inicio_control.html" class="dropdown-item notify-item">
+                  <a href="inicio_control.html" class="dropdown-item notify-item">
                     <i class="mdi mdi-logout me-1"></i>
                     <span>Logout</span>
                   </a>
@@ -511,7 +512,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
     <script src="https://cdn.datatables.net/select/1.3.3/js/dataTables.select.min.js"></script>
 
-    <script src="control/procesos/js/panel_no_conciliados.js"></script>
+    <script src="control/procesos/js/panel_no_conciliados.js?v=20260930-1"></script>
     <script src="control/procesos/js/totales.js"></script>
     <script src="control/procesos/js/conexion.js"></script>
   </body>

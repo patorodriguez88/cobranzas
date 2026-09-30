@@ -31,7 +31,7 @@ $("#ingreso_btn").click(function(){
                 
                 if(jsonData.success==1){
                 
-                window.location.href = 'http://www.dintersa.com.ar/cobranza/pendientes.html';     
+                window.location.href = 'pendientes.html';     
     
                 }else{
     

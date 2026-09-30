@@ -4,6 +4,7 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 session_start();
 include_once __DIR__ . "/../../../conexion/conexioni.php";
+include_once __DIR__ . "/../../../procesos/php/fecha_pago.php";
 
 function recalcularEstadoVenta($mysqli, $idVenta)
 {
@@ -2530,6 +2531,11 @@ switch ($accion) {
             )
         ) {
             echo json_encode(["success" => false, "error" => "Datos incompletos."]);
+            exit;
+        }
+
+        if ($errorFecha = errorFechaPago($fecha)) {
+            echo json_encode(["success" => false, "error" => $errorFecha]);
             exit;
         }
 

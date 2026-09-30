@@ -1954,9 +1954,7 @@ function abrirModalDepositoVenta(idVenta) {
       $("#deposito_cliente").val(v.RazonSocial || "");
       $("#deposito_saldo").val(v.Saldo || 0);
 
-      let hoy = new Date().toISOString().slice(0, 10);
-
-      $("#deposito_fecha").val(hoy);
+      rangoFechaPago("#deposito_fecha");
       $("#deposito_tipo_operacion").val("");
       $("#deposito_banco").val("");
       $("#deposito_operacion").val("");
@@ -1971,6 +1969,16 @@ function abrirModalDepositoVenta(idVenta) {
       alerta("Error", "No se pudo abrir el depósito.", "error");
     },
   });
+}
+
+// Fecha de pago: de hoy hasta 30 días atrás (en hora local, no UTC). El servidor valida lo mismo.
+function rangoFechaPago(selector) {
+  const fmt = (d) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const hoy = new Date();
+  const desde = new Date();
+  desde.setDate(hoy.getDate() - 30);
+  $(selector).attr({ min: fmt(desde), max: fmt(hoy) }).val(fmt(hoy));
 }
 
 function guardarDepositoVenta() {
@@ -1988,6 +1996,11 @@ function guardarDepositoVenta() {
   }
   if (!fecha || !tipoOperacion || !importe || (tipoOperacion.toLowerCase() !== "efectivo" && (!banco || !operacion))) {
     alerta("Atención", "Completá fecha, tipo, banco, operación e importe.", "warning");
+    return;
+  }
+
+  if (fecha > $("#deposito_fecha").attr("max") || fecha < $("#deposito_fecha").attr("min")) {
+    alerta("Atención", "La fecha del pago tiene que ser de hoy o de los últimos 30 días.", "warning");
     return;
   }
 

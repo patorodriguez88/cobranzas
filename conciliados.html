@@ -230,27 +230,27 @@
             <li class="side-nav-title side-nav-item">Datos</li>
 
             <li class="side-nav-item">
-              <a href="https://www.dintersa.com.ar/cobranza/cobranza.html" class="side-nav-link">
+              <a href="cobranza.html" class="side-nav-link">
                 <i class="mdi mdi-cash-multiple"></i>
                 <span> Cobranza </span>
               </a>
             </li>
 
             <li class="side-nav-item">
-              <a href="https://www.dintersa.com.ar/cobranza/Clientes.html" class="side-nav-link">
+              <a href="Clientes.html" class="side-nav-link">
                 <i class="mdi mdi-account"></i>
                 <span> Clientes </span>
               </a>
             </li>
 
             <li class="side-nav-item">
-              <a href="https://www.dintersa.com.ar/cobranza/productos_ventas.html#productos" class="side-nav-link">
+              <a href="productos_ventas.html#productos" class="side-nav-link">
                 <i class="mdi mdi-package-variant"></i>
                 <span> Productos </span>
               </a>
             </li>
             <li class="side-nav-item">
-              <a href="https://www.dintersa.com.ar/cobranza/turnos.html" class="side-nav-link">
+              <a href="turnos.html" class="side-nav-link">
                 <i class="mdi mdi-calendar-clock"></i>
                 <span> Turnos de Retiro </span>
               </a>
@@ -258,7 +258,7 @@
 
             <li class="side-nav-title side-nav-item">Compras</li>
             <li class="side-nav-item">
-              <a href="https://www.dintersa.com.ar/cobranza/compras.html" class="side-nav-link">
+              <a href="compras.html" class="side-nav-link">
                 <i class="mdi mdi-view-dashboard-outline"></i>
                 <span> Orden de Ingreso</span>
               </a>
@@ -267,21 +267,21 @@
             <li class="side-nav-title side-nav-item">Ventas</li>
 
             <li class="side-nav-item">
-              <a href="https://www.dintersa.com.ar/cobranza/productos_ventas.html#dashboard" class="side-nav-link">
+              <a href="productos_ventas.html#dashboard" class="side-nav-link">
                 <i class="mdi mdi-view-dashboard-outline"></i>
                 <span> Dashboard </span>
               </a>
             </li>
 
             <li class="side-nav-item">
-              <a href="https://www.dintersa.com.ar/cobranza/ventas.html#ventas" class="side-nav-link">
+              <a href="ventas.html#ventas" class="side-nav-link">
                 <i class="mdi mdi-cart-plus"></i>
                 <span> Nueva Venta </span>
               </a>
             </li>
 
             <li class="side-nav-item">
-              <a href="https://www.dintersa.com.ar/cobranza/ventas.html#listado_ventas" class="side-nav-link">
+              <a href="ventas.html#listado_ventas" class="side-nav-link">
                 <i class="mdi mdi-format-list-bulleted"></i>
                 <span> Ventas Cargadas </span>
               </a>
@@ -290,7 +290,7 @@
             <li class="side-nav-title side-nav-item">Admin</li>
 
             <li class="side-nav-item">
-              <a href="https://www.dintersa.com.ar/cobranza/pendientes.html" class="side-nav-link">
+              <a href="pendientes.html" class="side-nav-link">
                 <i class="mdi mdi-archive-cancel-outline"></i>
                 <span id="total_no_conciliados" class="badge bg-danger float-end"></span>
                 <span> Pendientes </span>
@@ -298,7 +298,7 @@
             </li>
 
             <li class="side-nav-item">
-              <a href="https://www.dintersa.com.ar/cobranza/conciliados.html" class="side-nav-link active">
+              <a href="conciliados.html" class="side-nav-link active">
                 <i class="mdi mdi-archive-check-outline text-dark"></i>
                 <span id="total_conciliados" class="badge bg-success float-end"></span>
                 <span class="text-dark"> Conciliados </span>
@@ -306,7 +306,7 @@
             </li>
 
             <li class="side-nav-item">
-              <a href="https://www.dintersa.com.ar/cobranza/exportados.html" class="side-nav-link">
+              <a href="exportados.html" class="side-nav-link">
                 <i class="mdi mdi-cloud-download-outline"></i>
                 <span id="total_exportados" class="badge bg-warning float-end"></span>
                 <span> Exportados </span>
@@ -359,7 +359,7 @@
                 <div
                   class="dropdown-menu dropdown-menu-end dropdown-menu-animated topbar-dropdown-menu profile-dropdown"
                 >
-                  <a href="https://www.dintersa.com.ar/cobranza/inicio_control.html" class="dropdown-item notify-item">
+                  <a href="inicio_control.html" class="dropdown-item notify-item">
                     <i class="mdi mdi-logout me-1"></i>
                     <span>Logout</span>
                   </a>
@@ -397,7 +397,15 @@
                 <div class="card">
                   <div class="card-body">
                     <div class="row mb-2">
-                      <div class="col-sm-12">
+                      <div class="col-sm-6">
+                        <button type="button" id="btn_sel_sin_vincular" class="btn btn-light mb-2 me-1">
+                          <i class="mdi mdi-checkbox-multiple-marked-outline"></i> Seleccionar sin vincular
+                        </button>
+                        <button type="button" id="btn_marcar_directa" class="btn btn-secondary mb-2" disabled>
+                          <i class="mdi mdi-cash-check"></i> Marcar como cobranza directa (<span id="cant_directa">0</span>)
+                        </button>
+                      </div>
+                      <div class="col-sm-6">
                         <div class="text-sm-end">
                           <button type="button" id="filtro_pendientes" class="btn btn-success mb-2 me-1">
                             Pendientes
@@ -496,6 +504,6 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="control/procesos/js/conexion.js"></script>
     <script src="control/procesos/js/totales.js"></script>
-    <script src="control/procesos/js/panel.js"></script>
+    <script src="control/procesos/js/panel.js?v=20260930-1"></script>
   </body>
 </html>

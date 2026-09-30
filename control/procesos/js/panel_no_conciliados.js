@@ -140,10 +140,22 @@ function conciliar(id) {
       $("#observaciones_cliente").html("Obs. Cliente: " + jsonData.data[0].Observaciones);
       $("#centermodal_title").html("Conciliar el Movimiento N " + id);
       $("#id_cobranza").val(id);
+      mostrarComprobanteConciliacion(jsonData.data[0].Comprobante, jsonData.data[0].SinComprobante == 1);
 
       $("#centermodal").modal("show");
     },
   });
+}
+
+// Sin comprobante no se puede conciliar: se avisa y se bloquea "Aceptar" hasta que se suba.
+function mostrarComprobanteConciliacion(archivo, sinComprobante) {
+  $("#img_deposito").attr("src", archivo ? `images/depositos/${archivo}?v=${Date.now()}` : "images/NoImageAvailable.png");
+  $("#btn_conciliar").toggleClass("disabled", sinComprobante).attr("aria-disabled", sinComprobante);
+  $("#alerta_comprobante").html(
+    sinComprobante
+      ? `<div class="alert alert-danger" role="alert"><i class="mdi mdi-image-off-outline"></i> <strong>Sin comprobante.</strong> Para conciliar este pago primero subí la foto del comprobante.</div>`
+      : "",
+  );
 }
 
 $("#btn_conciliar").click(function () {
@@ -320,6 +332,12 @@ $(document).ready(function () {
       {
         data: null,
         render: function (data, type, row) {
+          if (row.Conciliado == 0 && row.SinComprobante == 1) {
+            return (
+              `<td><a style='cursor:pointer' class='action-icon' title='Abrir para subir el comprobante' onclick='conciliar(${row.id})'><i class='mdi mdi-text-box-check-outline text-warning'></i></a>` +
+              `<br><span class='badge bg-danger'><i class='mdi mdi-image-off-outline'></i> Sin comprobante</span></td>`
+            );
+          }
           if (row.Conciliado == 0) {
             if (row.AlertaDuplicidad == 0) {
               return (
@@ -474,63 +492,15 @@ $("#centermodal").on("show.bs.modal", function () {
     //   });
   });
 
-  let id = $("#id_cobranza").val();
-  cargarImagenDeposito(id);
   resetNombreArchivoComprobante();
-
-  function cargarImagenDeposito(id) {
-    $("#img_deposito").attr("src", "#");
-
-    const noimg = "images/NoImageAvailable.png";
-
-    const posiblesImagenes = [
-      `images/depositos/${id}.jpg`,
-      `images/depositos/${id}.jpeg`,
-      `images/depositos/${id}.JPG`,
-      `images/depositos/${id}.JPEG`,
-      `images/depositos/${id}.png`,
-      `images/depositos/${id}.PNG`,
-      `images/depositos/${id}.gif`,
-      `images/depositos/${id}.GIF`,
-      `images/depositos/${id}.webp`,
-      `images/depositos/${id}.WEBP`,
-    ];
-
-    let index = 0;
-
-    function probarSiguiente() {
-      if (index >= posiblesImagenes.length) {
-        $("#img_deposito").attr("src", noimg);
-        return;
-      }
-
-      const img = posiblesImagenes[index];
-      index++;
-
-      const request = new XMLHttpRequest();
-      request.open("HEAD", img, true);
-      request.onload = function () {
-        if (request.status === 200) {
-          $("#img_deposito").attr("src", img + "?v=" + Date.now());
-        } else {
-          probarSiguiente();
-        }
-      };
-
-      request.onerror = probarSiguiente;
-      request.send();
-    }
-
-    probarSiguiente();
-  }
 });
 function resetNombreArchivoComprobante() {
-  $("#nombre_archivo_comprobante").text("Click para elegir una imagen (jpg, png o gif)");
+  $("#nombre_archivo_comprobante").text("Click para elegir una imagen (jpg, png, gif o webp)");
 }
 
 $(document).on("change", "#archivo_comprobante_conciliacion", function () {
   let archivo = this.files[0];
-  $("#nombre_archivo_comprobante").text(archivo ? archivo.name : "Click para elegir una imagen (jpg, png o gif)");
+  $("#nombre_archivo_comprobante").text(archivo ? archivo.name : "Click para elegir una imagen (jpg, png, gif o webp)");
 });
 
 function subirComprobanteConciliacion() {
@@ -569,7 +539,8 @@ function subirComprobanteConciliacion() {
           timer: 2000,
         });
 
-        $("#img_deposito").attr("src", "images/depositos/" + r.archivo + "?t=" + new Date().getTime());
+        mostrarComprobanteConciliacion(r.archivo, false);
+        $("#cobranzas_tabla").DataTable().ajax.reload(null, false);
 
         $("#archivo_comprobante_conciliacion").val("");
         resetNombreArchivoComprobante();

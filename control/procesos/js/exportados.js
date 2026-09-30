@@ -37,7 +37,7 @@ function anularExportacion(id, descargas) {
 
 function download(file){
     
-    fetch('https://www.dintersa.com.ar/cobranza/control/procesos/php/exportaciones/'+file+'.csv')
+    fetch('control/procesos/php/exportaciones/'+file+'.csv')
   .then(resp => resp.blob())
   .then(blob => {
     const url = window.URL.createObjectURL(blob);
@@ -76,7 +76,7 @@ function download(file){
 
 function downloadZip(file){
 
-    fetch('https://www.dintersa.com.ar/cobranza/control/procesos/php/exportaciones/comprobantes/'+file+'.zip')
+    fetch('control/procesos/php/exportaciones/comprobantes/'+file+'.zip')
   .then(resp => resp.blob())
   .then(blob => {
     const url = window.URL.createObjectURL(blob);
