@@ -1,0 +1,9 @@
+# Las páginas y el service worker se revalidan siempre con el servidor (responde 304 si
+# no cambiaron). Sin esto el navegador guardaba cargarpagos.html por días y, después del
+# deploy del 30/9, clientes seguían con la pantalla vieja sin el campo del comprobante.
+# Los .js/.css los sirve nginx con caché de 7 días; por eso se piden con ?v=<versión>.
+<IfModule mod_headers.c>
+    <FilesMatch "\.html$|^sw\.js$">
+        Header set Cache-Control "no-cache, must-revalidate"
+    </FilesMatch>
+</IfModule>
