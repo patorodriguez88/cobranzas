@@ -240,8 +240,52 @@ async function confirmarYAbrirWhatsAppCobranza(indice) {
 }
 
 function actualizarCamposBancoCobranzaDirecta() {
-  const esEfectivo = String($("#cobranza_directa_tipo_operacion").val() || "").toLowerCase() === "efectivo";
-  $("#grupo_banco_cobranza_directa, #grupo_operacion_cobranza_directa").toggleClass("d-none", esEfectivo);
+  const tipo = String($("#cobranza_directa_tipo_operacion").val() || "").toLowerCase();
+  // Efectivo no lleva banco ni operación; el cheque tiene sus propios campos (banco emisor, número,
+  // fecha y localidad) en lugar de "banco destino" y "número de operación".
+  $("#grupo_banco_cobranza_directa, #grupo_operacion_cobranza_directa").toggleClass("d-none", tipo === "efectivo" || tipo === "cheque");
+  $("#grupo_cheque_cobranza_directa").toggleClass("d-none", tipo !== "cheque");
+}
+
+// Bancos emisores de cheques: lista que el operador va completando (tabla BancosCheques).
+function cargarBancosCheque(seleccionar) {
+  return $.post("control/procesos/php/panel.php", { ListarBancosCheque: 1 }, null, "json").done(function (r) {
+    const $s = $("#cobranza_directa_cheque_banco").empty().append('<option value="">Seleccionar</option>');
+    (r.bancos || []).forEach((b) => $s.append($("<option>").val(b).text(b)));
+    if (seleccionar) $s.val(seleccionar);
+  });
+}
+
+$(document).on("click", "#btn_agregar_banco_cheque", function () {
+  Swal.fire({
+    title: "Agregar banco",
+    input: "text",
+    inputPlaceholder: "Nombre del banco",
+    showCancelButton: true,
+    confirmButtonText: "Agregar",
+    cancelButtonText: "Cancelar",
+    inputValidator: (v) => (!v || v.trim().length < 3 ? "Escribí el nombre del banco." : undefined),
+  }).then((res) => {
+    if (!res.isConfirmed) return;
+    $.post("control/procesos/php/panel.php", { AgregarBancoCheque: 1, nombre: res.value.trim() }, null, "json").done(function (r) {
+      if (!r.success) {
+        Swal.fire("Atención", r.error || "No se pudo agregar el banco.", "warning");
+        return;
+      }
+      cargarBancosCheque(r.nombre);
+    });
+  });
+});
+
+// Fecha del cheque: hasta 30 días atrás y hasta un año adelante (cheques diferidos). El servidor valida lo mismo.
+function rangoFechaCheque(selector) {
+  const fmt = (d) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const desde = new Date();
+  desde.setDate(desde.getDate() - 30);
+  const hasta = new Date();
+  hasta.setDate(hasta.getDate() + 365);
+  $(selector).attr({ min: fmt(desde), max: fmt(hasta) }).val("");
 }
 
 // Fecha de pago: de hoy hasta 30 días atrás (en hora local, no UTC). El servidor valida lo mismo.
@@ -262,6 +306,9 @@ function abrirModalCobranzaDirecta() {
   $("#cobranza_directa_operacion").val("");
   $("#cobranza_directa_importe").val("");
   $("#cobranza_directa_observaciones").val("");
+  $("#cobranza_directa_cheque_numero, #cobranza_directa_cheque_localidad").val("");
+  rangoFechaCheque("#cobranza_directa_cheque_fecha");
+  cargarBancosCheque();
   actualizarCamposBancoCobranzaDirecta();
   if (dropzoneCobranzaDirecta) dropzoneCobranzaDirecta.removeAllFiles(true);
   $("#ocr_estado_comprobante").addClass("d-none").removeClass("text-success text-danger").text("");
@@ -457,6 +504,28 @@ function guardarCobranzaDirecta() {
     operacion = "EFECTIVO";
   }
 
+  let chequeFecha = "";
+  let chequeLocalidad = "";
+  if (String(tipoOperacion).toLowerCase() === "cheque") {
+    banco = $("#cobranza_directa_cheque_banco").val();
+    operacion = $("#cobranza_directa_cheque_numero").val().trim();
+    chequeFecha = $("#cobranza_directa_cheque_fecha").val();
+    chequeLocalidad = $("#cobranza_directa_cheque_localidad").val().trim();
+    if (!banco || !operacion || !chequeFecha || !chequeLocalidad) {
+      Swal.fire("Atención", "Completá banco, número, fecha y localidad del cheque.", "warning");
+      return;
+    }
+    const $fc = $("#cobranza_directa_cheque_fecha");
+    if (chequeFecha < $fc.attr("min") || chequeFecha > $fc.attr("max")) {
+      Swal.fire("Atención", "La fecha del cheque tiene que estar entre 30 días atrás y un año adelante.", "warning");
+      return;
+    }
+    if (!dropzoneCobranzaDirecta || dropzoneCobranzaDirecta.getQueuedFiles().length === 0) {
+      Swal.fire("Atención", "Subí la foto del cheque como comprobante.", "warning");
+      return;
+    }
+  }
+
   if (!idCliente || !fecha || !tipoOperacion || importe <= 0 ||
       (String(tipoOperacion).toLowerCase() !== "efectivo" && (!banco || !operacion))) {
     Swal.fire("Atención", "Completá cliente, fecha, tipo, banco, operación e importe.", "warning");
@@ -475,7 +544,7 @@ function guardarCobranzaDirecta() {
     dataType: "json",
     data: {
       IngresarCobranzaDirecta: 1,
-      idCliente, fecha, tipoOperacion, banco, operacion, importe, observaciones,
+      idCliente, fecha, tipoOperacion, banco, operacion, importe, observaciones, chequeFecha, chequeLocalidad,
     },
     beforeSend: function () {
       $("#btn_guardar_cobranza_directa").prop("disabled", true)

@@ -63,7 +63,7 @@ function exigirComprobante(mysqli $mysqli, int $idCobranza): void
 $accionesQueRequierenSesion = [
     'Conciliar', 'Rechazar', 'Conciliar_quik', 'Conciliar_quik_cancel',
     'Vuelve', 'Eliminar', 'AsignarPagoVenta', 'Observaciones_Usuario', 'MarcarSinVenta', 'MarcarSinVentaLote',
-    'IngresarCobranzaDirecta'
+    'IngresarCobranzaDirecta', 'ListarBancosCheque', 'AgregarBancoCheque'
 ];
 
 $accionActual = array_keys(array_filter($_POST, fn($v) => $v !== null, ARRAY_FILTER_USE_KEY));
@@ -195,6 +195,27 @@ if (isset($_POST['BuscarClientesCobranzaDirecta'])) {
     exit;
 }
 
+//BANCOS EMISORES DE CHEQUES (lista que el operador va completando desde la cobranza directa)
+if (isset($_POST['ListarBancosCheque'])) {
+    $res = $mysqli->query("SELECT Nombre FROM BancosCheques WHERE Activo = 1 ORDER BY Nombre");
+    echo json_encode(array('success' => 1, 'bancos' => array_column($res->fetch_all(MYSQLI_ASSOC), 'Nombre')));
+    exit;
+}
+if (isset($_POST['AgregarBancoCheque'])) {
+    $nombre = trim(preg_replace('/\s+/', ' ', strip_tags((string) ($_POST['nombre'] ?? ''))));
+    if (mb_strlen($nombre) < 3 || mb_strlen($nombre) > 80) {
+        echo json_encode(array('success' => 0, 'error' => 'Escribí el nombre del banco (entre 3 y 80 caracteres).'));
+        exit;
+    }
+    $usuario = (string) ($_SESSION['user_name'] ?? '');
+    // Si ya existía (aunque esté dado de baja) se reactiva en vez de duplicarlo
+    $st = $mysqli->prepare("INSERT INTO BancosCheques (Nombre, Usuario) VALUES (?, ?) ON DUPLICATE KEY UPDATE Activo = 1");
+    $st->bind_param('ss', $nombre, $usuario);
+    $st->execute();
+    echo json_encode(array('success' => 1, 'nombre' => $nombre));
+    exit;
+}
+
 //INGRESAR COBRANZA DIRECTA (operador carga un pago de cliente sin vincularlo a una venta)
 if (isset($_POST['IngresarCobranzaDirecta'])) {
 
@@ -209,6 +230,41 @@ if (isset($_POST['IngresarCobranzaDirecta'])) {
     if (strtolower($tipoOperacion) === 'efectivo') {
         $banco = 'CAJA';
         $operacion = 'EFECTIVO';
+    }
+
+    // Cheque: Banco = banco emisor (de la lista BancosCheques), Operacion = número de cheque, más
+    // la fecha del cheque (puede ser diferido) y su localidad. La foto va como el comprobante.
+    $chequeFecha = null;
+    $chequeLocalidad = null;
+    if (strtolower($tipoOperacion) === 'cheque') {
+        $tipoOperacion = 'cheque';
+        $st = $mysqli->prepare("SELECT Nombre FROM BancosCheques WHERE Nombre = ? AND Activo = 1");
+        $st->bind_param('s', $banco);
+        $st->execute();
+        if (!$st->get_result()->num_rows) {
+            echo json_encode(array('success' => 0, 'error' => 'Elegí el banco del cheque de la lista (o agregalo con el botón +).'));
+            exit;
+        }
+        if (!preg_match('/\d{4,}/', $operacion)) {
+            echo json_encode(array('success' => 0, 'error' => 'Revisá el número de cheque.'));
+            exit;
+        }
+        $chequeFecha = trim((string) ($_POST['chequeFecha'] ?? ''));
+        $f = DateTime::createFromFormat('!Y-m-d', $chequeFecha, new DateTimeZone('America/Argentina/Cordoba'));
+        $hoy = new DateTime('today', new DateTimeZone('America/Argentina/Cordoba'));
+        if (!$f || $f->format('Y-m-d') !== $chequeFecha) {
+            echo json_encode(array('success' => 0, 'error' => 'La fecha del cheque no es válida.'));
+            exit;
+        }
+        if ($f < (clone $hoy)->modify('-30 days') || $f > (clone $hoy)->modify('+365 days')) {
+            echo json_encode(array('success' => 0, 'error' => 'La fecha del cheque tiene que estar entre 30 días atrás y un año adelante.'));
+            exit;
+        }
+        $chequeLocalidad = mb_substr(trim((string) ($_POST['chequeLocalidad'] ?? '')), 0, 80);
+        if ($chequeLocalidad === '') {
+            echo json_encode(array('success' => 0, 'error' => 'Completá la localidad del cheque.'));
+            exit;
+        }
     }
 
     if (
@@ -265,11 +321,13 @@ if (isset($_POST['IngresarCobranzaDirecta'])) {
     );
     $observacionesEscapadas = $mysqli->real_escape_string($observaciones);
 
+    $chequeFechaSql = $chequeFecha !== null ? "'" . $mysqli->real_escape_string($chequeFecha) . "'" : 'NULL';
+    $chequeLocalidadSql = $chequeLocalidad !== null ? "'" . $mysqli->real_escape_string($chequeLocalidad) . "'" : 'NULL';
     $sqlCobranza = "
         INSERT INTO Cobranza
-        (NombreCliente, NumeroCliente, Fecha, Hora, Banco, Operacion, Importe, AlertaDuplicidad, TipoOperacion, Observaciones, Usuario_obs, Usuario, SinVenta)
+        (NombreCliente, NumeroCliente, Fecha, Hora, Banco, Operacion, Importe, AlertaDuplicidad, TipoOperacion, Observaciones, Usuario_obs, Usuario, SinVenta, ChequeFecha, ChequeLocalidad)
         VALUES
-        ('$nombreCliente', '$ncliente', '$fecha', '$hora', '$banco', '$operacion', '$importe', 0, '$tipoOperacion', '$observacionFinal', '$observacionesEscapadas', '$usuario', 1)
+        ('$nombreCliente', '$ncliente', '$fecha', '$hora', '$banco', '$operacion', '$importe', 0, '$tipoOperacion', '$observacionFinal', '$observacionesEscapadas', '$usuario', 1, $chequeFechaSql, $chequeLocalidadSql)
     ";
 
     if (!$mysqli->query($sqlCobranza)) {

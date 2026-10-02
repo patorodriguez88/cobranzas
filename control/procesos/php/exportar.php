@@ -3,6 +3,16 @@ session_start();
 include_once "../../../conexion/conexioni.php";
 date_default_timezone_set("America/Argentina/Cordoba");
 
+// Formato del CSV que importa el sistema de Fernando Ramírez:
+//   false -> como siempre: 8 columnas, banco 03 Macro / 04 todo lo demás (incluido efectivo);
+//            los pagos con cheque NO se exportan todavía (quedan pendientes, no se marcan
+//            como exportados).
+//   true  -> formato nuevo: 12 columnas (las 8 de siempre + tipo de operación, banco del
+//            cheque, fecha del cheque y localidad) y códigos de banco 03 Macro, 04 Córdoba,
+//            05 cheque, 06 efectivo.
+// Pasar a true recién cuando Fernando confirme que su sistema lee el formato nuevo.
+const EXPORTACION_FORMATO_NUEVO = false;
+
 //ANULAR EXPORTACION
 if (isset($_POST['Anular'])) {
 
@@ -195,7 +205,18 @@ if (isset($_POST['Exportar'])) {
     //si se crea el archivo correctamente genero un nuevo registro en exportacion
 
     // Deduplicar IDs para evitar registros repetidos en el CSV
-    $ids_unicos = array_values(array_unique($_POST['id_cobranza']));
+    $ids_unicos = array_values(array_unique(array_map('intval', (array) $_POST['id_cobranza'])));
+    $chequesPendientes = 0;
+    if (!EXPORTACION_FORMATO_NUEVO && $ids_unicos) {
+        $resCh = $mysqli->query("SELECT id FROM Cobranza WHERE TipoOperacion = 'cheque' AND id IN (" . implode(',', $ids_unicos) . ")");
+        $idsCheque = array_map('intval', array_column($resCh->fetch_all(MYSQLI_ASSOC), 'id'));
+        $chequesPendientes = count($idsCheque);
+        $ids_unicos = array_values(array_diff($ids_unicos, $idsCheque));
+    }
+    if (!$ids_unicos) {
+        echo json_encode(array('success' => 0, 'error' => 'Los pagos con cheque todavía no se pueden exportar: falta que se habilite el formato nuevo del archivo.'));
+        exit;
+    }
     $dato = join(',', $ids_unicos);
 
     $sql = $mysqli->query("SELECT SUM(Importe)as total,COUNT(id)as registros FROM Cobranza_conciliacion WHERE id_cobranza IN($dato)");
@@ -216,15 +237,31 @@ if (isset($_POST['Exportar'])) {
 
             $dato = $ids_unicos[$i];
 
-            $sql = $mysqli->query("SELECT Fecha,Hora,NumeroCliente,Importe,Banco,Operacion
-                FROM Cobranza_conciliacion WHERE id_cobranza='$dato'
-                ORDER BY id DESC LIMIT 1");
+            $sql = $mysqli->query("SELECT cc.Fecha, cc.Hora, cc.NumeroCliente, cc.Importe, cc.Banco, cc.Operacion,
+                    co.TipoOperacion, co.ChequeFecha, co.ChequeLocalidad
+                FROM Cobranza_conciliacion cc
+                LEFT JOIN Cobranza co ON co.id = cc.id_cobranza
+                WHERE cc.id_cobranza='$dato'
+                ORDER BY cc.id DESC LIMIT 1");
             $row = $sql->fetch_array(MYSQLI_ASSOC);
 
             if (!$row) continue;
 
+            $tipo = strtolower(trim((string) $row['TipoOperacion']));
+            $esCheque = $tipo === 'cheque';
+            // Columna 4 (banco): formato de siempre 03 Macro / 04 resto. Formato nuevo: 05 cheque (en un
+            // cheque el Banco es el emisor, no la cuenta de Dinter: un cheque del Macro no es un depósito
+            // en el Macro) y 06 efectivo (antes salía como 04, como si fuera un depósito en Banco Córdoba).
             $Banco = ($row['Banco'] == 'Banco Macro') ? '03' : '04';
+            if (EXPORTACION_FORMATO_NUEVO && $esCheque) {
+                $Banco = '05';
+            } elseif (EXPORTACION_FORMATO_NUEVO && $tipo === 'efectivo') {
+                $Banco = '06';
+            }
 
+            // Las 8 primeras columnas no cambian (las importa el sistema de Fernando). Desde 2026-10-02
+            // se agregan al final: tipo de operación, banco emisor del cheque, fecha del cheque y localidad.
+            $sinComas = fn($v) => str_replace([',', "\r", "\n"], [' ', ' ', ' '], (string) $v);
             $campos = [
                 $dato,
                 $row['Fecha'],
@@ -234,7 +271,14 @@ if (isset($_POST['Exportar'])) {
                 $row['Importe'],
                 $row['Fecha'],
                 $row['Hora'],
+                $tipo,
+                $esCheque ? $sinComas($row['Banco']) : '',
+                $esCheque ? (string) $row['ChequeFecha'] : '',
+                $esCheque ? $sinComas($row['ChequeLocalidad']) : '',
             ];
+            if (!EXPORTACION_FORMATO_NUEVO) {
+                $campos = array_slice($campos, 0, 8);
+            }
             $actual .= implode(",", $campos) . "\n";
         }
 
@@ -300,7 +344,7 @@ if (isset($_POST['Exportar'])) {
                     " WHERE id = '$name'"
             );
 
-            echo json_encode(array('success' => 1, 'name' => $filled_int));
+            echo json_encode(array('success' => 1, 'name' => $filled_int, 'cheques_pendientes' => $chequesPendientes));
         } else {
 
             echo json_encode(array('success' => 0));
