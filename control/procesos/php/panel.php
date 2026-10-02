@@ -2,6 +2,7 @@
 session_start();
 include_once "../../../conexion/conexioni.php";
 include_once __DIR__ . "/../../../procesos/php/fecha_pago.php";
+include_once __DIR__ . "/../../../procesos/php/duplicados.php";
 
 function normalizarFecha($valor) {
     if (empty($valor)) return null;
@@ -251,13 +252,10 @@ if (isset($_POST['IngresarCobranzaDirecta'])) {
     $nombreCliente = $mysqli->real_escape_string($cliente['RazonSocial']);
 
     if (strtolower($tipoOperacion) !== 'efectivo') {
-        $resDuplicado = $mysqli->query("
-            SELECT id FROM Cobranza
-            WHERE Banco = '$banco' AND Operacion = '$operacion' AND Importe = '$importe'
-            LIMIT 1
-        ");
-        if ($resDuplicado && $resDuplicado->num_rows > 0) {
-            echo json_encode(array('success' => 0, 'error' => 'Pago posiblemente duplicado: ya existe una cobranza con el mismo banco, operación e importe.'));
+        $dups = buscarPagosDuplicados($mysqli, (string) $_POST['banco'], (string) $_POST['operacion'], $importe, (string) $cliente['Ncliente']);
+        if ($dups) {
+            $d = $dups[0];
+            echo json_encode(array('success' => 0, 'error' => "Pago posiblemente duplicado: ya está cargado el pago #{$d['id']} del {$d['Fecha']} ({$d['NombreCliente']}) con el mismo banco, operación e importe."));
             exit;
         }
     }
@@ -656,18 +654,19 @@ if (isset($_POST['Datos'])) {
 //BUSCO DUPLICIDAD
 if (isset($_POST['Duplicados'])) {
 
-    $sql = $mysqli->query("SELECT id FROM Cobranza WHERE Fecha='$_POST[fecha]' AND Operacion='$_POST[noperacion]' AND
-Banco='$_POST[banco]' AND Importe='$_POST[importe]' AND id<>'$_POST[id_cobranza]'");
-
-    $rows = array();
-
-    while ($row = $sql->fetch_array(MYSQLI_ASSOC)) {
-
-        $mysqli->query("UPDATE Cobranza SET AlertaDuplicidad=1 WHERE id='$_POST[id_cobranza]' AND AlertaDuplicidad=0");
-
-        $mysqli->query("UPDATE Cobranza SET AlertaDuplicidad=1 WHERE id='$row[id]' AND AlertaDuplicidad=0");
-
-        $rows[] = $row;
+    // Antes comparaba con la fecha del formulario en formato dd/mm/aaaa contra la base (aaaa-mm-dd):
+    // nunca encontraba nada. Ahora toma los datos del propio pago y usa el criterio de duplicados.php.
+    $idCob = (int) ($_POST['id_cobranza'] ?? 0);
+    $st = $mysqli->prepare("SELECT Banco, Operacion, Importe, NumeroCliente, TipoOperacion FROM Cobranza WHERE id = ?");
+    $st->bind_param('i', $idCob);
+    $st->execute();
+    $pago = $st->get_result()->fetch_assoc();
+    $rows = ($pago && strtolower(trim((string) $pago['TipoOperacion'])) !== 'efectivo')
+        ? buscarPagosDuplicados($mysqli, (string) $pago['Banco'], (string) $pago['Operacion'], (float) $pago['Importe'], (string) $pago['NumeroCliente'], $idCob)
+        : array();
+    if ($rows) {
+        $ids = array_merge([$idCob], array_map('intval', array_column($rows, 'id')));
+        $mysqli->query("UPDATE Cobranza SET AlertaDuplicidad = 1 WHERE AlertaDuplicidad = 0 AND id IN (" . implode(',', $ids) . ")");
     }
 
     if ($rows) {
@@ -682,18 +681,18 @@ Banco='$_POST[banco]' AND Importe='$_POST[importe]' AND id<>'$_POST[id_cobranza]
 //TABLA DUPLICADOS
 if (isset($_POST['Duplicados_tabla'])) {
 
-    $sql = $mysqli->query("SELECT Fecha,Operacion,Banco,Importe FROM Cobranza WHERE id='$_POST[id_cobranza]'");
-
-    $row = $sql->fetch_array(MYSQLI_ASSOC);
-
+    $idCob = (int) ($_POST['id_cobranza'] ?? 0);
+    $st = $mysqli->prepare("SELECT Banco, Operacion, Importe, NumeroCliente FROM Cobranza WHERE id = ?");
+    $st->bind_param('i', $idCob);
+    $st->execute();
+    $pago = $st->get_result()->fetch_assoc();
     $rows = array();
-
-    $sql_1 = $mysqli->query("SELECT * FROM Cobranza WHERE Fecha='$row[Fecha]' AND Operacion='$row[Operacion]' AND
-    Banco='$row[Banco]' AND Importe='$row[Importe]' AND id<>'{$_POST['id_cobranza']}'");
-
-    while ($row_1 = $sql_1->fetch_array(MYSQLI_ASSOC)) {
-
-        $rows[] = $row_1;
+    if ($pago) {
+        $ids = array_map('intval', array_column(buscarPagosDuplicados($mysqli, (string) $pago['Banco'], (string) $pago['Operacion'], (float) $pago['Importe'], (string) $pago['NumeroCliente'], $idCob), 'id'));
+        if ($ids) {
+            $res = $mysqli->query("SELECT * FROM Cobranza WHERE id IN (" . implode(',', $ids) . ")");
+            $rows = $res->fetch_all(MYSQLI_ASSOC);
+        }
     }
     echo json_encode(array('data' => $rows));
 }

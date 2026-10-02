@@ -5,6 +5,7 @@ error_reporting(E_ALL);
 session_start();
 include_once __DIR__ . "/../../../conexion/conexioni.php";
 include_once __DIR__ . "/../../../procesos/php/fecha_pago.php";
+include_once __DIR__ . "/../../../procesos/php/duplicados.php";
 
 function recalcularEstadoVenta($mysqli, $idVenta)
 {
@@ -2576,37 +2577,15 @@ switch ($accion) {
 
             if (strtolower($tipoOperacion) !== 'efectivo') {
 
-                $sqlDuplicado = "SELECT 
-                        C.id,
-                        C.Fecha,
-                        C.Banco,
-                        C.Operacion,
-                        C.Importe,
-                        C.Usuario,
-                        CV.idVenta
-                    FROM Cobranza C
-                    LEFT JOIN CobranzasVentas CV 
-                        ON CV.idCobranza = C.id
-                        AND IFNULL(CV.Eliminado,0) = 0
-                    WHERE C.Banco = '$banco'
-                    AND C.Operacion = '$operacion'
-                    AND C.Importe = '$importe'
-                    AND IFNULL(C.Eliminado,0) = 0
-                    LIMIT 1
-                ";
-
-                $resDuplicado = $mysqli->query($sqlDuplicado);
-
-                if ($resDuplicado && $resDuplicado->num_rows > 0) {
-
-                    $dup = $resDuplicado->fetch_assoc();
-
+                // Criterio único de duplicados.php. Antes filtraba por Cobranza.Eliminado (columna que
+                // no existe): la consulta fallaba en silencio y el control nunca se ejecutaba.
+                $dups = buscarPagosDuplicados($mysqli, (string) $banco, (string) $operacion, (float) $importe, (string) $venta['Ncliente']);
+                if ($dups) {
+                    $dup = $dups[0];
                     throw new Exception(
-                        "Pago posiblemente duplicado. " .
-                            "Banco: " . $dup['Banco'] . " | " .
-                            "Operación: " . $dup['Operacion'] . " | " .
-                            "Importe: $ " . number_format((float)$dup['Importe'], 2, ',', '.') . " | " .
-                            "Venta vinculada: #" . $dup['idVenta']
+                        "Pago posiblemente duplicado: ya está cargado el pago #" . $dup['id'] . " del " . $dup['Fecha'] .
+                            " (" . $dup['NombreCliente'] . "). Banco: " . $dup['Banco'] . " | Operación: " . $dup['Operacion'] .
+                            " | Importe: $ " . number_format((float) $dup['Importe'], 2, ',', '.')
                     );
                 }
             }

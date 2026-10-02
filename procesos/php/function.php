@@ -2,6 +2,7 @@
 session_start();
 include_once "../../conexion/conexioni.php";
 include_once __DIR__ . "/fecha_pago.php";
+include_once __DIR__ . "/duplicados.php";
 
 if (isset($_POST['NComprobante'])) {
 
@@ -116,11 +117,9 @@ if (isset($_POST['IngresarPago'])) {
         mkdir($carpeta, 0755, true);
     }
 
-    // Duplicidad: mismo depósito ya informado (queda marcado para que lo revise administración)
-    $st = $mysqli->prepare("SELECT 1 FROM Cobranza WHERE Fecha = ? AND Operacion = ? AND Banco = ? AND Importe = ? LIMIT 1");
-    $st->bind_param('sssd', $fecha, $operacion, $banco, $importe);
-    $st->execute();
-    $alerta = $st->get_result()->num_rows ? 1 : 0;
+    // Duplicidad: mismo depósito ya informado (queda marcado para que lo revise administración;
+    // al cliente no se le bloquea para no perder un pago real). Criterio en duplicados.php.
+    $alerta = buscarPagosDuplicados($mysqli, $banco, $operacion, $importe, (string) $cliente['Ncliente']) ? 1 : 0;
 
     $destino = null;
     try {
