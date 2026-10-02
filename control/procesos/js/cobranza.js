@@ -258,6 +258,10 @@ function cargarBancosCheque(seleccionar) {
 
 $(document).on("click", "#btn_agregar_banco_cheque", function () {
   Swal.fire({
+    // El botón está dentro de un modal de Bootstrap, que retiene el foco: si el
+    // SweetAlert se abre en el body, el modal le saca el foco al campo y no se
+    // puede escribir. Abriéndolo dentro del mismo modal, el campo queda adentro.
+    target: $(this).closest(".modal")[0] || "body",
     title: "Agregar banco",
     input: "text",
     inputPlaceholder: "Nombre del banco",
