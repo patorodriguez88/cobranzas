@@ -10,8 +10,8 @@ date_default_timezone_set("America/Argentina/Cordoba");
 //   true  -> formato nuevo: 12 columnas (las 8 de siempre + tipo de operación, banco del
 //            cheque, fecha del cheque y localidad) y códigos de banco 03 Macro, 04 Córdoba,
 //            05 cheque, 06 efectivo.
-// Pasar a true recién cuando Fernando confirme que su sistema lee el formato nuevo.
-const EXPORTACION_FORMATO_NUEVO = false;
+// Activado el 02/10/2026: Fernando confirmó que su sistema ya importa el formato nuevo.
+const EXPORTACION_FORMATO_NUEVO = true;
 
 //ANULAR EXPORTACION
 if (isset($_POST['Anular'])) {
