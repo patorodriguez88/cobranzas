@@ -270,27 +270,25 @@ $(document).ready(function () {
   });
 });
 
-$("#filtro_pendientes").click(function () {
-  var datatable_seguimiento = $("#cobranzas_tabla").DataTable();
-  datatable_seguimiento.destroy();
+// Filtros: 1 = Pendientes, 0 = Todos, 2 = Rechazados (últimos 15 días)
+function aplicarFiltroConciliados(filtro, $boton) {
+  $("#cobranzas_tabla").DataTable().destroy();
+  ver_tabla_conciliados(filtro);
 
-  ver_tabla_conciliados(1);
-  // $('#filtro_pendientes').addClass('success');
-  $(this).removeClass("btn btn-light mb-2 me-1");
-  $(this).addClass("btn btn-success mb-2 me-1 ");
-  $("#filtro_todos").removeClass("btn btn-success mb-2 me-1");
-  $("#filtro_todos").addClass("btn btn-light mb-2 me-1");
+  $("#filtro_pendientes, #filtro_rechazados, #filtro_todos").removeClass("btn-success btn-danger").addClass("btn-light");
+  $boton.removeClass("btn-light").addClass(filtro === 2 ? "btn-danger" : "btn-success");
+}
+
+$("#filtro_pendientes").click(function () {
+  aplicarFiltroConciliados(1, $(this));
+});
+
+$("#filtro_rechazados").click(function () {
+  aplicarFiltroConciliados(2, $(this));
 });
 
 $("#filtro_todos").click(function () {
-  var datatable_seguimiento = $("#cobranzas_tabla").DataTable();
-  datatable_seguimiento.destroy();
-
-  ver_tabla_conciliados(0);
-  $(this).removeClass("btn btn-light mb-2 me-1");
-  $(this).addClass("btn btn-success mb-2 me-1");
-  $("#filtro_pendientes").removeClass("btn btn-success mb-2 me-1");
-  $("#filtro_pendientes").addClass("btn btn-light mb-2 me-1");
+  aplicarFiltroConciliados(0, $(this));
 });
 
 function ver_tabla_conciliados(a) {

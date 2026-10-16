@@ -339,6 +339,45 @@ function crearClienteWepointSiNoExiste($mysqli, $cliente, $token)
     return $nuevoId;
 }
 
+// Texto legible del rechazo de Wepoint: el message más los errors, vengan como lista (falta de
+// stock) o como objeto campo => [mensajes] (validación).
+function motivoRechazoWepoint($data, $response, $httpCode)
+{
+    if (!is_array($data)) {
+        $texto = trim(strip_tags((string)$response));
+        return $texto !== '' ? "HTTP $httpCode - " . mb_substr($texto, 0, 300) : "HTTP $httpCode sin respuesta";
+    }
+
+    $partes = [];
+
+    $mensaje = $data['message'] ?? $data['error'] ?? '';
+    if (is_string($mensaje) && trim($mensaje) !== '') {
+        $partes[] = trim($mensaje);
+    }
+
+    $errores = $data['errors'] ?? null;
+    if (is_array($errores)) {
+        foreach ($errores as $campo => $error) {
+            if (is_array($error) && isset($error['nombre'])) {
+                $partes[] = $error['nombre'] . ": disponible " . ($error['disponible_para_venta'] ?? 0)
+                    . ", solicitado " . ($error['cantidadRequerida'] ?? 0);
+            } elseif (is_array($error)) {
+                $partes[] = (is_string($campo) ? "$campo: " : '') . implode(' ', array_map(function ($e) {
+                    return is_scalar($e) ? (string)$e : json_encode($e, JSON_UNESCAPED_UNICODE);
+                }, $error));
+            } elseif (is_scalar($error)) {
+                $partes[] = (is_string($campo) ? "$campo: " : '') . $error;
+            }
+        }
+    }
+
+    if (empty($partes)) {
+        $partes[] = "HTTP $httpCode - " . mb_substr(json_encode($data, JSON_UNESCAPED_UNICODE), 0, 300);
+    }
+
+    return implode(' | ', $partes);
+}
+
 $idVenta = isset($_POST['idVenta']) ? (int)$_POST['idVenta'] : 0;
 $idTransportista = isset($_POST['idTransportista']) ? (int)$_POST['idTransportista'] : 0;
 
@@ -692,9 +731,15 @@ if ($error) {
 $data = json_decode($response, true);
 
 if ($httpCode < 200 || $httpCode >= 300 || empty($data['success'])) {
+    // Antes solo se informaba "Wepoint rechazó la orden" y el motivo real (validación, transportista,
+    // cliente, etc.) quedaba escondido. Ahora se arma con lo que devuelve Wepoint y queda en el log.
+    $motivo = motivoRechazoWepoint($data, $response, $httpCode);
+    error_log("Wepoint rechazó la OV de la venta $idVenta (HTTP $httpCode): " . $response);
+
     responder([
         "success" => false,
-        "message" => "Wepoint rechazó la orden",
+        "message" => "Wepoint rechazó la orden: " . $motivo,
+        "motivo" => $motivo,
         "http_code" => $httpCode,
         "response" => $data ?: $response,
         "payload" => $payload

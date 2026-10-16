@@ -1741,7 +1741,10 @@ function generarOrdenVentaWepoint(idVenta) {
         } else {
           let htmlError = "";
 
-          if (res.response && res.response.errors && Array.isArray(res.response.errors)) {
+          let erroresStock =
+            res.response && Array.isArray(res.response.errors) && res.response.errors.length && res.response.errors[0].nombre;
+
+          if (erroresStock) {
             htmlError += `
               <div class="text-start">
                 <p><b>${res.response.message || "Wepoint rechazó la orden."}</b></p>

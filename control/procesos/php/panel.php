@@ -345,10 +345,18 @@ if (isset($_POST['IngresarCobranzaDirecta'])) {
 //TABLA CONCILIADOS
 if (isset($_POST['Tabla_conciliados'])) {
 
-    $whereFiltro = "";
+    // Filtro: 1 = Pendientes (aceptados sin exportar), 0 = Todos, 2 = Rechazados.
+    // Antes se chequeaba solo isset(Filtro), que siempre es verdadero: "Todos" mostraba lo mismo que "Pendientes".
+    // Los rechazados se ven 15 días (desde que se rechazaron) y después dejan de mostrarse.
+    $filtro = isset($_POST['Filtro']) ? (int)$_POST['Filtro'] : 1;
+    $rechazoVigente = "Cobranza_conciliacion.TimeStamp >= DATE_SUB(NOW(), INTERVAL 15 DAY)";
 
-    if (isset($_POST['Filtro'])) {
-        $whereFiltro = "WHERE Cobranza_conciliacion.Exportado = ''";
+    if ($filtro === 2) {
+        $whereFiltro = "WHERE Cobranza_conciliacion.Estado = 'Rechazado' AND $rechazoVigente";
+    } elseif ($filtro === 0) {
+        $whereFiltro = "WHERE (Cobranza_conciliacion.Estado != 'Rechazado' OR $rechazoVigente)";
+    } else {
+        $whereFiltro = "WHERE Cobranza_conciliacion.Exportado = '' AND Cobranza_conciliacion.Estado != 'Rechazado'";
     }
 
     $sql = $mysqli->query("SELECT
