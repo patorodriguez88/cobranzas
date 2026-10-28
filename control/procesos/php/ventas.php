@@ -6,6 +6,7 @@ session_start();
 include_once __DIR__ . "/../../../conexion/conexioni.php";
 include_once __DIR__ . "/../../../procesos/php/fecha_pago.php";
 include_once __DIR__ . "/../../../procesos/php/duplicados.php";
+include_once __DIR__ . "/wepoint_api.php";
 
 function recalcularEstadoVenta($mysqli, $idVenta)
 {
@@ -81,11 +82,10 @@ function recalcularEstadoVenta($mysqli, $idVenta)
 
 function eliminarOrdenVentaWepoint($mysqli, $idVenta)
 {
-    $token = '1383|1w3olMBz6851a6JdfbA1GH0jdF5QdUnwUtAfehSL0f00e3a5';
-
     $sql = "
         SELECT 
             wepoint_id_orden_venta,
+            wepoint_cuenta,
             NumeroOrdenVenta
         FROM Ventas
         WHERE id = '$idVenta'
@@ -112,24 +112,11 @@ function eliminarOrdenVentaWepoint($mysqli, $idVenta)
         return;
     }
 
-    $curl = curl_init();
-
-    curl_setopt_array($curl, [
-        CURLOPT_URL => 'https://sistema.wepoint.ar/api/v2/egresos/productos/' . $idOrdenWepoint,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT => 30,
-        CURLOPT_CUSTOMREQUEST => 'DELETE',
-        CURLOPT_HTTPHEADER => [
-            'Accept: application/json',
-            'Authorization: Bearer ' . $token
-        ],
-    ]);
-
-    $response = curl_exec($curl);
-    $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-    $error = curl_error($curl);
-
-    curl_close($curl);
+    // Se borra con la cuenta que la creó: en Wepoint cada empresa solo ve sus órdenes.
+    $borrado = wepointPedido($mysqli, wepointCuentaDeVenta($venta), 'DELETE', '/egresos/productos/' . $idOrdenWepoint);
+    $response = $borrado['body'];
+    $httpCode = $borrado['http'];
+    $error = $borrado['error'];
 
     if ($error) {
         throw new Exception("Error eliminando OV en Wepoint: " . $error);
@@ -2152,7 +2139,8 @@ switch ($accion) {
             NumeroOrdenVenta,
             wepoint_id_orden_venta,
             wepoint_nro_orden_venta,
-            wepoint_estado
+            wepoint_estado,
+            wepoint_cuenta
         FROM Ventas
         WHERE id = '$idVenta'
         LIMIT 1
@@ -2194,30 +2182,21 @@ switch ($accion) {
             exit;
         }
 
-        $token = '1383|1w3olMBz6851a6JdfbA1GH0jdF5QdUnwUtAfehSL0f00e3a5';
-
         $idOrdenVentaWepoint = (int)$venta['wepoint_id_orden_venta'];
 
-        $url = "https://sistema.wepoint.ar/api/v2/egresos/productos/" . $idOrdenVentaWepoint;
+        try {
+            $consulta = wepointPedido($mysqli, wepointCuentaDeVenta($venta), 'GET', '/egresos/productos/' . $idOrdenVentaWepoint);
+        } catch (Exception $e) {
+            echo json_encode(array(
+                "success" => 0,
+                "error" => $e->getMessage()
+            ));
+            exit;
+        }
 
-        $curl = curl_init();
-
-        curl_setopt_array($curl, array(
-            CURLOPT_URL => $url,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT => 30,
-            CURLOPT_CUSTOMREQUEST => 'GET',
-            CURLOPT_HTTPHEADER => array(
-                'Accept: application/json',
-                'Authorization: Bearer ' . $token
-            ),
-        ));
-
-        $response = curl_exec($curl);
-        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-        $curlError = curl_error($curl);
-
-        curl_close($curl);
+        $response = $consulta['body'];
+        $httpCode = $consulta['http'];
+        $curlError = $consulta['error'];
 
         if ($curlError != '') {
             echo json_encode(array(
@@ -2227,7 +2206,7 @@ switch ($accion) {
             exit;
         }
 
-        $data = json_decode($response, true);
+        $data = $consulta['data'];
 
         if ($httpCode == 401) {
             echo json_encode(array(

@@ -6,6 +6,7 @@ error_reporting(E_ALL);
 session_start();
 
 include_once __DIR__ . "/../../../conexion/conexioni.php";
+include_once __DIR__ . "/wepoint_api.php";
 
 header('Content-Type: application/json; charset=utf-8');
 date_default_timezone_set('America/Argentina/Cordoba');
@@ -255,7 +256,9 @@ function enviarServicioCaddy($baseUrl, $token, $payload)
     return $data;
 }
 
-function crearClienteWepointSiNoExiste($mysqli, $cliente, $token)
+// Cliente de la venta en la cuenta de Wepoint: el ya vinculado; si no, el que tenga su N° de cliente
+// como código en esa cuenta (ej. los kioscos cargados en DINTER SA); si no, se crea con ese código.
+function crearClienteWepointSiNoExiste($mysqli, $cliente, $cuenta)
 {
     $idClienteLocal = isset($cliente['idCliente']) ? (int)$cliente['idCliente'] : 0;
     $wepointId = isset($cliente['wepoint_id_cliente']) ? (int)$cliente['wepoint_id_cliente'] : 0;
@@ -268,51 +271,46 @@ function crearClienteWepointSiNoExiste($mysqli, $cliente, $token)
         throw new Exception("La venta no tiene cliente local válido.");
     }
 
-    $payloadCliente = [
-        "nombre" => $cliente['RazonSocial'] ?? '',
-        "telefono" => $cliente['Celular'] ?? '',
-        "email" => "",
-        "direccion" => $cliente['Direccion'] ?? '',
-        "provincia" => "Cordoba",
-        "ciudad" => $cliente['Ciudad'] ?? 'Cordoba',
-        "codigo_postal" => "5000",
-        "barrio" => "",
-        "entre_calles" => ""
-    ];
+    $codigo = trim((string)($cliente['Ncliente'] ?? ''));
+    $data = null;
 
-    $curl = curl_init();
-
-    curl_setopt_array($curl, [
-        CURLOPT_URL => 'https://sistema.wepoint.ar/api/v2/clientes',
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_ENCODING => '',
-        CURLOPT_MAXREDIRS => 10,
-        CURLOPT_TIMEOUT => 30,
-        CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-        CURLOPT_CUSTOMREQUEST => 'POST',
-        CURLOPT_POSTFIELDS => json_encode($payloadCliente, JSON_UNESCAPED_UNICODE),
-        CURLOPT_HTTPHEADER => [
-            'Accept: application/json',
-            'Content-Type: application/json',
-            'Authorization: Bearer ' . $token
-        ],
-    ]);
-
-    $response = curl_exec($curl);
-    $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-    $error = curl_error($curl);
-
-    curl_close($curl);
-
-    if ($error) {
-        throw new Exception("Error cURL creando cliente Wepoint: " . $error);
+    if ($codigo !== '') {
+        $busqueda = wepointPedido($mysqli, $cuenta, 'GET', '/clientes?per_page=100&search_text=' . urlencode($codigo));
+        $sinCeros = ltrim($codigo, '0');
+        foreach ($busqueda['data']['data']['data'] ?? [] as $existente) {
+            if (ltrim((string)($existente['codigo'] ?? ''), '0') === $sinCeros && $sinCeros !== '') {
+                $data = ['success' => true, 'data' => $existente, 'encontrado_por_codigo' => true];
+                break;
+            }
+        }
     }
 
-    $data = json_decode($response, true);
+    if ($data === null) {
+        $payloadCliente = [
+            "codigo" => $codigo !== '' ? $codigo : null,
+            "nombre" => $cliente['RazonSocial'] ?? '',
+            "telefono" => $cliente['Celular'] ?? '',
+            "email" => "",
+            "direccion" => $cliente['Direccion'] ?? '',
+            "provincia" => "Cordoba",
+            "ciudad" => $cliente['Ciudad'] ?? 'Cordoba',
+            "codigo_postal" => "5000",
+            "barrio" => "",
+            "entre_calles" => "",
+            "id_transportista" => wepointDatosCuenta($cuenta)['transportista_clientes'] ?? null,
+        ];
 
-    if ($httpCode < 200 || $httpCode >= 300 || empty($data['success'])) {
-        throw new Exception("Wepoint rechazó la creación del cliente: " . $response);
+        $alta = wepointPedido($mysqli, $cuenta, 'POST', '/clientes', $payloadCliente);
+
+        if ($alta['error']) {
+            throw new Exception("Error cURL creando cliente Wepoint: " . $alta['error']);
+        }
+
+        $data = $alta['data'];
+
+        if ($alta['http'] < 200 || $alta['http'] >= 300 || empty($data['success'])) {
+            throw new Exception("Wepoint rechazó la creación del cliente: " . $alta['body']);
+        }
     }
 
     $nuevoId = isset($data['data']['id_cliente']) ? (int)$data['data']['id_cliente'] : 0;
@@ -394,42 +392,6 @@ if ($idTransportista <= 0) {
         "message" => "Debe seleccionar una forma de entrega."
     ]);
 }
-
-function obtenerCredencialesWepoint($distribuidora = 'Dinter')
-{
-    $distribuidora = trim(strtoupper($distribuidora));
-
-    switch ($distribuidora) {
-
-        case 'RAK':
-
-            return [
-                "empresa" => "Rak",
-                "token" => '1399|NSig5lAhgbqxjS7ColR2OLqe0d9GN0uZ6H9ZiJkW790b636e',
-                "id_cliente_origen" => 219 //999
-            ];
-
-        case 'MISAS':
-
-            return [
-                "empresa" => "Dinter", //aca deberia ser misas
-                "token" => '1383|1w3olMBz6851a6JdfbA1GH0jdF5QdUnwUtAfehSL0f00e3a5',
-                "id_cliente_origen" => 219 //999
-            ];
-
-        case 'DINTER':
-        default:
-
-            return [
-                "empresa" => "Dinter",
-                "token" => '1383|1w3olMBz6851a6JdfbA1GH0jdF5QdUnwUtAfehSL0f00e3a5',
-                "id_cliente_origen" => 219
-            ];
-    }
-}
-// $token = '1383|1w3olMBz6851a6JdfbA1GH0jdF5QdUnwUtAfehSL0f00e3a5';
-
-
 
 $sqlEstado = "
     SELECT
@@ -562,8 +524,15 @@ if ($resVenta->num_rows === 0) {
 
 $venta = $resVenta->fetch_assoc();
 $distribuidora = $venta['Distribuidora'] ?? 'Dinter';
-$wepoint = obtenerCredencialesWepoint($distribuidora);
-$token = $wepoint['token'];
+
+try {
+    $cuentaWepoint = wepointCuentaDeDistribuidora($distribuidora);
+} catch (Exception $e) {
+    responder([
+        "success" => false,
+        "message" => $e->getMessage()
+    ]);
+}
 
 if (!empty($venta['NumeroOrdenVenta'])) {
     responder([
@@ -576,7 +545,7 @@ if (!empty($venta['NumeroOrdenVenta'])) {
 }
 
 try {
-    $idClienteWepoint = crearClienteWepointSiNoExiste($mysqli, $venta, $token);
+    $idClienteWepoint = crearClienteWepointSiNoExiste($mysqli, $venta, $cuentaWepoint);
 } catch (Exception $e) {
     responder([
         "success" => false,
@@ -696,30 +665,17 @@ $payload = [
     "detalle_orden_venta" => $detalle
 ];
 
-$curl = curl_init();
-
-curl_setopt_array($curl, [
-    CURLOPT_URL => 'https://sistema.wepoint.ar/api/v2/egresos/productos',
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_ENCODING => '',
-    CURLOPT_MAXREDIRS => 10,
-    CURLOPT_TIMEOUT => 30,
-    CURLOPT_FOLLOWLOCATION => true,
-    CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-    CURLOPT_CUSTOMREQUEST => 'POST',
-    CURLOPT_POSTFIELDS => json_encode($payload, JSON_UNESCAPED_UNICODE),
-    CURLOPT_HTTPHEADER => [
-        'Accept: application/json',
-        'Content-Type: application/json',
-        'Authorization: Bearer ' . $token
-    ],
-]);
-
-$response = curl_exec($curl);
-$httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-$error = curl_error($curl);
-
-curl_close($curl);
+try {
+    $envio = wepointPedido($mysqli, $cuentaWepoint, 'POST', '/egresos/productos', $payload);
+} catch (Exception $e) {
+    responder([
+        "success" => false,
+        "message" => $e->getMessage()
+    ]);
+}
+$response = $envio['body'];
+$httpCode = $envio['http'];
+$error = $envio['error'];
 
 if ($error) {
     responder([
@@ -728,7 +684,7 @@ if ($error) {
     ]);
 }
 
-$data = json_decode($response, true);
+$data = $envio['data'];
 
 if ($httpCode < 200 || $httpCode >= 300 || empty($data['success'])) {
     // Antes solo se informaba "Wepoint rechazó la orden" y el motivo real (validación, transportista,
@@ -770,7 +726,8 @@ $sqlUpdate = "UPDATE Ventas
         wepoint_estado = ?,
         wepoint_total = ?,
         wepoint_response = ?,
-        wepoint_created_at = ?
+        wepoint_created_at = ?,
+        wepoint_cuenta = ?
     WHERE id = ?
     LIMIT 1
 ";
@@ -786,7 +743,7 @@ if (!$stmtUpd) {
 }
 
 $stmtUpd->bind_param(
-    "sissdssi",
+    "sissdsssi",
     $nroOrdenVenta,
     $idOrdenWepoint,
     $nroOrdenVenta,
@@ -794,6 +751,7 @@ $stmtUpd->bind_param(
     $total,
     $responseJson,
     $createdAt,
+    $cuentaWepoint,
     $idVenta
 );
 

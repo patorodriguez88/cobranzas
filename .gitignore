@@ -1,5 +1,7 @@
 # Configuración local de pruebas (nunca a producción)
 conexion/config_local.php
+# Credenciales de Wepoint (ver conexion/config_wepoint.sample.php)
+conexion/config_wepoint.php
 .claude/
 .DS_Store
 images/depositos/*
